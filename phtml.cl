@@ -19,11 +19,14 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.21 2000/12/05 21:26:50 sdj Exp $
+;; $Id: phtml.cl,v 1.22 2001/02/05 19:14:34 sdj Exp $
 
 ;; phtml.cl  - parse html
 
 ;; Change Log
+;;
+;; 02/05/01 symbols mapped to preferred case at runtime (as opposed to
+;;            a compile time macro determining the case mapping)
 ;;
 ;; 10/27/00 :callbacks arg now processed correctly for tags with no body
 ;;
@@ -287,7 +290,10 @@
 	 then (setf (car bufs) buf)
 	      (return)))))
 
-
+(defun to-preferred-case (ch)
+  (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
+     then (char-upcase ch)
+     else (char-downcase ch)))
     
     
 (defun next-token (stream ignore-strings raw-mode-delimiter
@@ -328,12 +334,6 @@
 		     else (setf (schar (collector-data ,coll) .next.)
 			    ,ch)
 			  (setf (collector-next ,coll) (1+ .next.)))))
-	     
-	     (to-preferred-case (ch)
-	       ;; should check the case mode
-	       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
-		       then `(char-upcase ,ch)
-		       else `(char-downcase ,ch)))
 	       
 	     )
     

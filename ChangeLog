@@ -1,3 +1,8 @@
+2001-02-05 Steve Jacobson <sdj>
+
+	phtml.cl: symbols mapped to preferred case at runtime (as opposed to
+                    a compile time macro determining the case mapping)
+
 2000-12-20 Steve Jacobson <sdj>
 
 	pxml-test.cl: NameSpace example change to reflect URI module fix
