@@ -1,3 +1,21 @@
+2000-08-9  Steve Jacobson <sdj>
+
+	phtml-test.cl: add tests for latest changes
+	phtml.cl: allow underscore as tag character
+	          fix <![if ..]> --> (:! "if ..]") bug ('[' lost)
+		  add collect-rogue-tags & no-body-tags arguments to
+	              support 2 pass parse for really bad pages (e.g. New
+		      York Times page)
+		  special inline character formatting close/reopen strategy
+	              preserves any attributes (smh reported bug)
+	phtml.txt: new argument and <! processing documentation
+	pxml0.cl,pxml1.cl,pxml2.cl,pxml3.cl: continued development - now in a state
+	                                     to be used by others
+	pxml-test.cl: new file (pending task: add xmltest directories to cvs -
+	                                      it will take some work because
+					      binary files must be indentified)
+	pxml.txt: new documentation file
+
 2000-07-24 Steve Jacobson <sdj>
 
 	* phtml.cl: handle <script></script> pair with no text between the tags

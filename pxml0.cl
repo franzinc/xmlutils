@@ -1,9 +1,9 @@
-;; $Id: pxml0.cl,v 1.2 2000/07/17 20:03:07 layer Exp $
+;; $Id: pxml0.cl,v 1.3 2000/08/10 22:16:27 sdj Exp $
 
 ;; pxml.cl - parse xml
 
 (defpackage net.xml.parser
-  (:use :lisp :clos :excl)
+  (:use :lisp :clos :excl :net.uri)
   (:export
    #:parse-xml)
   )

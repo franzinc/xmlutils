@@ -61,7 +61,7 @@ Here are some additional details about parse-html output:
 
 --> ((:comment " this is a comment"))
 
-3. All <SCRIPT> and <STYLE> content is not parsed; it is returned as test content.
+3. All <SCRIPT> and <STYLE> content is not parsed; it is returned as text content.
 
    For example,
 
@@ -69,7 +69,14 @@ Here are some additional details about parse-html output:
 
 --> ((:script "this <B>will not</B> be parsed"))
 
-4. There is plenty of illegal and deprecated HTML on the web that popular browsers
+4. Since, some HTML pages contain special XML/SGML tags, non-comment tags
+   starting with '<!' are treated specially:
+
+   (parse-html "<!doctype this is some text>")
+
+--> ((:!doctype " this is some text"))
+
+5. There is plenty of illegal and deprecated HTML on the web that popular browsers
    nonetheless successfully display. The parse-html parser is generous - it will not
    raise an error condition upon encountering most input. In particular, it does not
    maintain a list of legal HTML tags and will successfully parse nonsense input.
@@ -80,7 +87,21 @@ Here are some additional details about parse-html output:
 
 --> ((:this (:is (:some (:nonsense :input)))))
 
-5. As per the HTML 4.0 specification, attributes without specified values are given a lower case
+   In some situations, you may prefer a two-pass parse that results in a parse where
+   deep nesting related to unrecognized tags is minimized:
+
+   (let ((string "<this> <is> <some> <nonsense> </some> <input>"))
+		(multiple-value-bind (res rogues)
+		    (parse-html string :collect-rogue-tags t)
+		  (declare (ignorable res))
+		  (parse-html string :no-body-tags rogues)))
+
+--> (:this :is (:some (:nonsense)) :input)
+
+   See the :collect-rogue-tags and :no-body-tags argument descriptions in the reference
+   section below for more information.
+
+6. As per the HTML 4.0 specification, attributes without specified values are given a lower case
    string value that matches the attribute name.
 
    For example,
@@ -89,7 +110,7 @@ Here are some additional details about parse-html output:
 
 --> (((:p :here "here" :are "are" :some "some" :attributes "attributes")))
 
-6. Existing HTML pages often have character format tags that are interleaved among
+7. Existing HTML pages often have character format tags that are interleaved among
    other tags. Such interleaving is removed in a manner consistent with the HTML 4.0
    specification.
 
@@ -106,6 +127,7 @@ parse-html reference
 parse-html                                  [Generic function]
 
 Arguments:   input-source &key callbacks callback-only
+			       collect-rogue-tags no-body-tags
 
 Returns LHTML output, as described above.
 
@@ -122,13 +144,26 @@ output. Instead, LHTML lists will only be generated when necessary as arguments 
 specified in the callbacks association list. This results in faster parser execution. The default
 callback-only argument value is nil.
 
+The collect-rogue-tags argument, if non-nil, directs parse-html to return an additional value, 
+a list containing any unrecognized tags closed by the end of input.
+
+The no-body-tags argument, if non-nil, should be a list containing unknown tags that, if
+encountered, will be treated as a tag with no body or content, and thus, no associated end
+tag. Typically, the argument is a list or modified list resulting from an earlier parse-html
+execution with the :collect-rogue-tags argument specified as non-nil.
+
+
+
 parse-html Methods
 
 parse-html (p stream) &key callbacks callback-only
+			   collect-rogue-tags no-body-tags
 
 parse-html (str string) &key callbacks callback-only
+			     collect-rogue-tags no-body-tags
 
 parse-html (file t) &key callbacks callback-only
+			 collect-rogue-tags no-body-tags
 
 The t method assumes the argument is a pathname suitable
 for use with the with-open-file macro.
@@ -137,10 +172,9 @@ for use with the with-open-file macro.
 phtml-internal          [Function]
 
 Arguments: stream read-sequence-func callback-only callbacks
+           collect-rogue-tags no-body-tags
 
-Package: net.html.parser
-
-This internal function may be used when more control is needed for supplying
+This function may be used when more control is needed for supplying
 the HTML input. The read-sequence-func argument, if non-nil, should be a function
 object or a symbol naming a function. When phtml-internal requires another buffer
 of HTML input, it will invoke the read-sequence-func function with two arguments -

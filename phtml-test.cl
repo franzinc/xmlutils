@@ -1,4 +1,4 @@
-;; $Id: phtml-test.cl,v 1.12 2000/07/24 17:29:04 sdj Exp $
+;; $Id: phtml-test.cl,v 1.13 2000/08/10 22:16:26 sdj Exp $
 
 (eval-when (compile load eval)
   (require :tester))
@@ -8,8 +8,10 @@
 
 (defvar *test-string*)
 (defvar *test-string2*)
+(defvar *test-string3*)
 (defvar *expected-result*)
 (defvar *expected-result2*)
+(defvar *expected-result3*)
 
 
 ;; it uses a fake pp tag to test nesting for callbacks...
@@ -127,8 +129,9 @@
 	))))
 
 (setf *test-string2*
-  "<i><b>text</i> more text</b>
+  "<i><b id=1>text</i> more text</b>
    <!doctype this is some text>
+   <![if xxx]>
    <i><b>text</i></b> more text
    <b>text<p>more text</b> yet more text</p>
    <ul><li><b>text<li>more text</ul></b>
@@ -142,8 +145,9 @@
   )
 
 (setf *expected-result2*
-  '((:i (:b "text")) (:b " more text")
+  '((:i ((:b :id "1") "text")) ((:b :id "1") " more text")
     (:!doctype "this is some text")
+    (:! "[if xxx]")
     (:i (:b "text")) (:b) " more text"
     (:b "text") (:p (:b "more text") " yet more text")
     (:ul (:li (:b "text")) (:li (:b "more text"))) (:b)
@@ -156,35 +160,61 @@
     (:frameset ((:frame :foo "foo")) ((:frame :bar "bar")))
     ))
 
+(setf *test-string3*
+  "<ICMETA URL='nytimes.html'>
+<NYT_HEADER version='1.0' type='homepage'>
+<body bgcolor='#ffffff' background='back5.gif' 
+vlink='4' link='6'>
+<NYT_BANNER version='1.0' type='homepage'>
+<table border=0 cellspacing=0 cellpadding=0>
+<tr>
+<td bgcolor=0 rowspan=4 width=126 align=left valign=center>
+<NYT_AD version='1.0' location=''>
+<A HREF='ads.gif' target='top'>
+<IMG SRC='http://ads2.gif' BORDER=0  WIDTH=120 HEIGHT=90 ALT='E-Mail Updates from NYTimes.com' ></A>
+</NYT_AD>")
+
+(setf *expected-result3*
+  '(((:icmeta :url "nytimes.html")) ((:nyt_header :version "1.0" :type "homepage"))
+    ((:body :bgcolor "#ffffff" :background "back5.gif" :vlink "4" :link "6")
+     ((:nyt_banner :version "1.0" :type "homepage"))
+     ((:table :border "0" :cellspacing "0" :cellpadding "0")
+      (:tr
+       ((:td :bgcolor "0" :rowspan "4" :width "126" :align "left" :valign "center")
+	((:nyt_ad :version "1.0" :location "")
+	 ((:a :href "ads.gif" :target "top")
+	  ((:img :src "http://ads2.gif" :border "0" :width "120" :height "90" :alt
+		 "E-Mail Updates from NYTimes.com"))))))))))
+
+
 (defmethod lhtml-equal ((a t) (b t))
   (equal a b))
 
 (defmethod lhtml-equal ((a list) (b list))
   (let ((i 0) (j 0))
     (loop
-      (when (and (= i (length a)) (= j (length b))) (return t))
-      (when (white-space-p (nth i a))
-	(incf i)
-	(continue))
-      (when (white-space-p (nth j b))
-	(incf j)
-	(continue))
-      (when (and (= i (length a)) (/= j (length b)))
-	(return
-	  (loop
-	    (when (= j (length b)) (return t))
-	    (when (not (white-space-p (nth j b))) (return nil))
-	    (incf j))))
-      (when (and (/= i (length a)) (= j (length b)))
-	(return
-	  (loop
-	    (when (= i (length a)) (return t))
-	    (when (not (white-space-p (nth i a))) (return nil))
-	    (incf i))))
-      (when (not (lhtml-equal (nth i a) (nth j b)))
-	(return nil))
-      (incf i)
-      (incf j))))
+      (if* (and (= i (length a)) (= j (length b))) then (return t)
+       elseif (and (< i (length a)) (white-space-p (nth i a))) then
+	      (incf i)
+       elseif (white-space-p (nth j b)) then
+	      (incf j)
+       elseif (and (= i (length a)) (/= j (length b))) then
+	      (return
+		(loop
+		  (when (= j (length b)) (return t))
+		  (when (not (white-space-p (nth j b))) (return nil))
+		  (incf j)))
+       elseif (and (/= i (length a)) (= j (length b))) then
+	      (return
+		(loop
+		  (when (= i (length a)) (return t))
+		  (when (not (white-space-p (nth i a))) (return nil))
+		  (incf i)))
+       elseif (not (lhtml-equal (nth i a) (nth j b))) then
+	      (return nil)
+	 else
+	      (incf i)
+	      (incf j)))))
 
 (defmethod lhtml-equal ((a string) (b string))
   (let ((i 0) (j 0))
@@ -342,6 +372,12 @@
 		:callbacks (acons :pp 'nested-callback nil))
     (test 3 *callback-called*)
     (test-error (parse-html "b<a"))
+    (test t (lhtml-equal
+	     (multiple-value-bind (res rogues)
+		 (parse-html *test-string3* :collect-rogue-tags t)
+	       (declare (ignorable res))
+	       (parse-html *test-string3* :no-body-tags rogues))
+	     *expected-result3*))
     (format t "End test: ~s,   ~d errors, ~d successes~%"
 	    "parse-html" util.test:*test-errors* util.test:*test-successes*)
     ))

@@ -1,0 +1,268 @@
+Description
+
+The parse-xml function processes XML input, returning a list of XML tags,
+attributes, and test. Here is a simple example:
+
+(parse-xml "<item1><item2 att1='one'/>this is some text</item1>")
+
+-->
+
+((item1 ((item2 att1 "one")) "this is some text"))
+
+The output format is known as LXML format.
+
+Here is a description of LXML:
+
+LXML is a list representation of XML tags and content.
+
+Each list member may be:
+
+a. a string containing text content, such as "Here is some text with a "
+
+b. a list representing a XML tag with associated attributes and/or content,
+   such as ('item1 "text") or (('item1 :att1 "help.html") "link"). If the XML tag
+   does not have associated attributes, then the first list member will be a
+   symbol in the current package representing the XML tag, and the other elements will 
+   represent the content, which can be a string (text content), a current package symbol (XML
+   tag with no attributes or content), or list (nested XML tag with
+   associated attributes and/or content). If there are associated attributes,
+   then the first list member will be a list containing a current package symbol
+   followed by two list members for each associated attribute; the first member is a current
+   package symbol representing the attribute, and the next member is a string corresponding
+   to the attribute value.
+
+c. XML comments and or processing instructions - see the more detailed example below for
+   further information.
+
+Parse-xml is a non-validating XML parser. It will detect non-well-formed XML input. When
+processing valid XML input, parse-xml will optionally produce the same output as a validating 
+parser would, including the processing of an external DTD subset and external entity declarations.
+
+By default, parse-xml outputs a DTD parse along with the parsed XML contents. The DTD  parse may
+be optionally suppressed. The following example shows DTD parsed output components:
+
+(defun example-callback (var-name token &optional public)
+  (declare (ignorable token public))
+  (setf var-name (uri-path var-name))
+  (if* (equal var-name "null") then nil
+     else
+	  (let ((string (eval (intern var-name (find-package :user)))))
+	    (make-string-input-stream string))))
+
+(defvar *xml-example-string*
+    "<?xml version='1.0' encoding='utf-8'?>
+<!-- the following XML input is well-formed but its validity has not been checked ... -->
+<?piexample this is an example processing instruction tag ?>
+<!DOCTYPE example SYSTEM '*xml-example-external-url*' [
+   <!ELEMENT item1 (item2* | (item3+ , item4))>
+   <!ELEMENT item2 ANY>
+   <!ELEMENT item3 (#PCDATA)>
+   <!ELEMENT item4 (#PCDATA)>
+   <!ATTLIST item1
+        att1 CDATA #FIXED 'att1-default'
+        att2 ID #REQUIRED
+        att3 ( one | two | three ) 'one'
+        att4 NOTATION ( four | five ) 'four' >
+   <!ENTITY % param1 'text'>
+   <!ENTITY nentity SYSTEM 'null' NDATA somedata>
+   <!NOTATION notation SYSTEM 'notation-processor'>
+]>
+<item1 att2='1'><item3>&ext1;</item3></item1>")
+
+(pprint (parse-xml *xml-example-string* :external-callback 'example-callback))
+
+-->
+
+((:xml :version "1.0" :encoding "utf-8")
+ (:comment " the following XML input is well-formed but may or may not be valid ")
+ (:pi :piexample "this is an example processing instruction tag ")
+ (:DOCTYPE :example
+  (:[ (:ELEMENT :item1 (:choice (:* :item2) (:seq (:+ :item3) :item4))) 
+   (:ELEMENT :item2 :ANY)
+   (:ELEMENT :item3 :PCDATA) (:ELEMENT :item4 :PCDATA)
+   (:ATTLIST item1 (att1 :CDATA :FIXED "att1-default") (att2 :ID :REQUIRED)
+    (att3 (:enumeration :one :two :three) "one") 
+    (att4 (:NOTATION :four :five) "four"))
+   (:ENTITY :param1 :param "text") 
+   (:ENTITY :nentity :SYSTEM "null" :NDATA :somedata)
+   (:NOTATION :notation :SYSTEM "notation-processor"))
+  (:external (:ENTITY :ext1 "this is some external entity text")))
+ ((item1 att1 "att1-default" att2 "1" att3 "one" att4 "four") 
+  (item3 "this is some external entity text")))
+
+
+Usage Notes:
+
+1. The parse-xml function has been compiled and tested only in a
+   modern ACL. Its successful operation depends on both the mixed
+   case support and wide character support found in modern ACL.
+
+2. The parser uses the keyword package for DTD tokens and other
+   special XML tokens. Since element and attribute tokens are interned
+   in the current package, it is not recommended to execute parse-xml
+   when the current package is the keyword package.
+
+3. Special XML namespace support is envisioned but has not yet been
+   implemented. Currently, element tags using XML namespace protocol will
+   be parsed in the same manner as any other tag; for example, the tag
+   <bib:book> will result in an interned symbol in the current package bearing
+   a "bib:book" symbol name. In the future, a parse-xml optional argument
+   will allow the caller to associate an XML namespace indicator (such as "bib:")
+   with a package other than the current package.
+
+4. The ACL 6.0 beta does not contain a little-endian Unicode external format. To 
+   process XML input containing Unicode characters correctly:
+
+   a. Place the following in a file called ef-fat-little.cl in the ACL code
+      directory:
+
+(provide :ef-fat-little)
+
+(in-package :excl)
+
+(def-external-format :fat-little-base
+		     :size 2)
+
+(def-char-to-octets-macro :fat-little-base (char
+					    state
+					    &key put-next-octet external-format)
+  (declare (ignore external-format state))
+  `(let ((code (char-code ,char)))
+     (,put-next-octet (ldb (byte 8 0) code))
+     (,put-next-octet (ldb (byte 8 8) code))))
+
+(def-octets-to-char-macro :fat-little-base (state-loc
+					    &key get-next-octet external-format
+					    octets-count-loc unget-octets)
+  (declare (ignore external-format state-loc unget-octets))
+  `(let ((lo ,get-next-octet)
+	 (hi (progn (incf ,octets-count-loc)
+		    ,get-next-octet)))
+     (code-char (+ (ash hi 8) lo))))
+
+(create-newline-ef :name :fat-little :base-name :fat-little-base
+		   :nicknames '(:unicode-little))
+
+   
+      b. Compile the file using a modern ACL.
+
+5. The parse-xml function has been tested using the OASIS conformance test suite (see
+   details below). The test suite has wide coverage across possible XML and DTD syntax,
+   but there may be some syntax paths that have not yet been tested or completely
+   supported. Here is a list of currently known syntax parsing issues:
+
+   a. ACL does not support 4 byte Unicode scalar values, so input containing such data
+      will not be processed correctly. (Note, however, that parse-xml does correctly detect
+      and process wide Unicode input.)
+
+   b. The OASIS tests that contain wide Unicode all use a little-endian encoded Unicode.
+      Changes to the unicode-check function are required to also support big-endian encoded
+      Unicode. (Note also that this issue may be resolved by an ACL 6.0 final release change.)
+
+   c. An initial <?xml declaration in external entity files is skipped without a check
+      being made to see if the <?xml declaration is itself incorrect.
+
+6. When investigating possible parser errors or examining more closely where the parser
+   determined that the input was non-well-formed, the net.xml.parser internal symbols 
+   *debug-xml* and *debug-dtd* are useful. When not bound to nil, these variables cause
+   lexical analysis and intermediate parsing results to be output to *standard-output*.
+
+XML Conformance Test Suite
+
+Using the OASIS test suite (http://www.oasis-open.org/committees/xmltest/testsuite.htm),
+here are the current parse-xml results:
+
+xmltest/invalid:	Not tested, since parse-xml is a non-validating parser
+
+  not-wf/
+
+	ext.sa: 3 tests; all pass
+	not-sa: 8 tests; all pass
+	sa: 186 tests; the following fail:
+
+		170.xml: fails because ACL does not support 4 byte Unicode scalar values
+
+  valid/
+
+	ext-sa: 14 tests; all pass
+	not-sa: 31 tests; all pass
+	sa: 119 tests: the following fail:
+
+		052.xml, 064.xml, 089.xml: fails because ACL does not support 4 byte 
+					   Unicode scalar values
+
+Compiling and Loading
+
+Load build.cl into a modern ACL session will result in a pxml.fasl file that can subsequently be
+loaded in a modern ACL to provide XML parsing functionality.
+
+-------------------------------------------------------------------------------------------
+
+parse-xml reference
+
+parse-xml			[Generic function]
+
+Arguments: input-source &key external-callback content-only 
+			    general-entities parameter-entities
+
+Returns LXML and parsed DTD output, as described above.
+
+The external-callback argument, if specified, is a function object or symbol
+that parse-xml will execute when encountering an external DTD subset
+or external entity DTD declaration. Here is an example which shows that
+arguments the function should expect, and the value it should return:
+
+(defun file-callback (uri-object token &optional public)
+  ;; the uri-object is an ACL URI object created from
+  ;; the XML input. In this example, this function
+  ;; assumes that all uri's will be file specifications.
+  ;;
+  ;; the token argument identifies what token is associated
+  ;; with the external parse (for example :DOCTYPE for external
+  ;; DTD subset
+  ;;
+  ;; the public argument contains the associated PUBLIC string,
+  ;; when present
+  ;;
+  (declare (ignorable token public))
+  ;; an open stream is returned on success
+  ;; a nil return value indicates that the external
+  ;; parse should not occur
+  ;; Note that parse-xml will close the open stream before
+  ;; exiting
+  (ignore-errors (open (uri-path uri-object))))
+
+The general-entities argument is an association list containing general entity symbol 
+and replacement text pairs. The entity symbols should be in the keyword package.
+Note that this option may be useful in generating desirable parse results in 
+situations where you do not wish to parse external entities or the external DTD subset.
+
+The parameter-entities argument is an association list containing parameter entity symbol 
+and replacement text pairs. The entity symbols should be in the keyword package.
+Note that this option may be useful in generating desirable parse results in 
+situations where you do not wish to parse external entities or the external DTD subset.
+
+parse-xml Methods
+
+(parse-xml (p stream) &key external-callback content-only 
+			    general-entities parameter-entities)
+
+(parse-xml (str string) &key external-callback content-only 
+			    general-entities parameter-entities)
+
+An easy way to parse a file containing XML input:
+
+(with-open-file (p "example.xml")
+   (parse-xml p :content-only p))
+
+net.xml.parser unexported special variables:
+
+*debug-xml*
+
+When not bound to nil, generates XML lexical state and intermediary
+parse result debugging output.
+
+*debug-dtd*
+
+When not bound to nil, generates DTD lexical state and intermediary
+parse result debugging output.

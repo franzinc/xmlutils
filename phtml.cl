@@ -1,4 +1,4 @@
-;; $Id: phtml.cl,v 1.16 2000/07/24 17:29:04 sdj Exp $
+;; $Id: phtml.cl,v 1.17 2000/08/10 22:16:26 sdj Exp $
 
 ;; phtml.cl  - parse html
 
@@ -150,6 +150,9 @@
 	
 	;; let colon be legal tag character
 	(addit (char-code #\:) char-tagcharacter)
+	
+	;; NY times special tags have _
+	(addit (char-code #\_) char-tagcharacter)
 	
 	; now the unusual cases
 	(addit (char-code #\-) char-attribundelimattribvalue)
@@ -372,11 +375,14 @@
 		   (clear-coll coll)
 		   (if* (eq ch #\>)
 		      then (return)	; we're done
-		    elseif xml-bailout then (return)
+		    elseif xml-bailout then 
+			   (un-next-char stream ch)
+			   (return)
 		      else (if* (eq tag-to-return :!--)
 			      then ; a comment
 				   (setq state state-readcomment)
-			      else (setq state state-findattribname)))))
+			      else (un-next-char stream ch)
+				   (setq state state-findattribname)))))
 	
 	  (#.state-findattribname
 	   ;; search until we find the start of an attribute name
@@ -622,6 +628,18 @@
 (defvar *ch-format* '(:i :b :tt :big :small :strike :s :u
 		      :em :strong :font))
 
+(defvar *known-tags* '(:!doctype :a :acronym :address :applet :area :b :base :basefont
+		       :bdo :bgsound :big :blink :blockquote :body :br :button :caption
+		       :center :cite :code :col :colgroup :comment :dd :del :dfn :dir
+		       :div :dl :dt :em :embed :fieldset :font :form :frame :frameset
+		       :h1 :h2 :h3 :h4 :h5 :h6 :head :hr :html :i :iframe :img :input
+		       :ins :isindex :kbd :label :layer :legend :li :link :listing :map
+		       :marquee :menu :meta :multicol :nobr :noframes :noscript :object
+		       :ol :option :p :param :plaintext :pre :q :samp :script :select
+		       :small :spacer :span :s :strike :strong :style :sub :sup :table
+		       :tbody :td :textarea :tfoot :th :thead :title :tr :tt :u :ul :var
+		       :wbr :xmp))
+
 ; the elements whose start tag can end a previous tag
 
 (setf (tag-auto-close :tr) '(:tr :td :th :colgroup))
@@ -685,14 +703,17 @@
 (setf (tag-no-pcdata :tr) t)
 
 
-(defmethod parse-html ((p stream) &key callback-only callbacks)
+(defmethod parse-html ((p stream) &key callback-only callbacks collect-rogue-tags
+				       no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
-  (phtml-internal p nil callback-only callbacks))
+  (phtml-internal p nil callback-only callbacks collect-rogue-tags
+		  no-body-tags))
 
 (defmacro tag-callback (tag)
   `(rest (assoc ,tag callbacks)))
 
-(defun phtml-internal (p read-sequence-func callback-only callbacks)
+(defun phtml-internal (p read-sequence-func callback-only callbacks collect-rogue-tags
+		       no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
   (let ((first-pass nil)
 	(raw-mode-delimiter nil)
@@ -705,13 +726,18 @@
 	(new-opens nil)
 	(tokenbuf (get-tokenbuf))
 	(guts)
+	(rogue-tags)
 	)
-    (labels ((close-off-tags (name stop-at)
+    (labels ((close-off-tags (name stop-at collect-rogues)
 	       ;; close off an open 'name' tag, but search no further
 	       ;; than a 'stop-at' tag.
 	       (if* (member (tag-name current-tag) name :test #'eq)
 		  then ;; close current tag(s)
 		       (loop
+			 (when (and collect-rogues
+				    (not (member (tag-name current-tag)
+						 *known-tags*)))
+			   (push (tag-name current-tag) rogue-tags))
 			 (close-current-tag)
 			 (when (or (member (tag-name current-tag)
 					   *ch-format*)
@@ -725,6 +751,10 @@
 			 (if* (member (tag-name (car ent)) name :test #'eq)
 			    then ; found one to close
 				 (loop
+				   (when (and collect-rogues
+					      (not (member (tag-name current-tag)
+							   *known-tags*)))
+				     (push (tag-name current-tag) rogue-tags))
 				   (close-current-tag)
 				   (if* (member (tag-name current-tag) name
 						:test #'eq)
@@ -739,7 +769,8 @@
 	     (close-current-tag ()
 	       ;; close off the current tag and open the pending tag
 	       (when (member (tag-name current-tag) *ch-format* :test #'eq)
-		 (push (tag-name current-tag) closed-pending-ch-format))
+		 (push current-tag closed-pending-ch-format)
+		 )
 	       (let (element)
 		 (if* (tag-no-pcdata (tag-name current-tag))
 		    then (setq element `(,current-tag
@@ -792,7 +823,7 @@
 		     (if* (eq kind :start-tag) then (push val new-opens)
 		      elseif (member val new-opens :test #'eq) then
 			     (setf new-opens (remove val new-opens :count 1))
-			else (close-off-tags (list val) nil)
+			else (close-off-tags (list val) nil nil)
 			     )))))
 		 
 	     (get-next-token (force)
@@ -827,7 +858,7 @@
 	     (when (and (= (length raw-mode-delimiter) 1) ;; xml tag...
 			(or (and callback-only current-callback-tags)
 			    (not callback-only)))
-	       (close-off-tags (list last-tag) nil))
+	       (close-off-tags (list last-tag) nil nil))
 	     (setf raw-mode-delimiter nil)
 	     )
 	    
@@ -862,14 +893,14 @@
 	     (let* ((name (tag-name val))
 		    (auto-close (tag-auto-close name))
 		    (auto-close-stop nil)
-		    (no-end (tag-no-end name)))
+		    (no-end (or (tag-no-end name) (member name no-body-tags))))
 	       (when (and callback-only (tag-callback name))
 		 (push name current-callback-tags))
 	       (when (or (and callback-only current-callback-tags)
 			 (not callback-only))
 		 (if* auto-close
 		    then (setq auto-close-stop (tag-auto-close-stop name))
-			 (close-off-tags auto-close auto-close-stop))
+			 (close-off-tags auto-close auto-close-stop nil))
 		 (when (and pending-ch-format (not no-end))
 		   (if* (member name *ch-format* :test #'eq) then nil
 		    elseif (member name *in-line* :test #'eq) then
@@ -877,7 +908,7 @@
 			   (check-in-line name)
 		      else ;; close ALL pending char tags and then reopen 
 			   (dolist (this-tag (reverse pending-ch-format))
-			     (close-off-tags (list this-tag) nil))
+			     (close-off-tags (list (if (listp this-tag) (first this-tag) this-tag)) nil nil))
 			   ))
 		 (if* no-end
 		    then		; this is a singleton tag
@@ -889,8 +920,7 @@
 			 (setq current-tag val)
 			 (setq guts nil))
 		 (if* (member name *ch-format* :test #'eq)
-		    then (push (if* (listp val) then (first val) else val)
-			       pending-ch-format)
+		    then (push val pending-ch-format)
 		    else (dolist (tmp (reverse closed-pending-ch-format))
 			   (save-state)
 			   (setf current-tag tmp)
@@ -903,11 +933,15 @@
 	     (setf raw-mode-delimiter nil)
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
-	       (close-off-tags (list val) nil)
+	       (close-off-tags (list val) nil nil)
 	       (when (member val *ch-format* :test #'eq)
-		 (setf pending-ch-format (remove val pending-ch-format :count 1))
+		 (setf pending-ch-format 
+		   (remove val pending-ch-format :count 1
+			   :test #'(lambda (x y) (eq x (if (listp y) (first y) y)))))
 		 (setf closed-pending-ch-format 
-		   (remove val closed-pending-ch-format :count 1)))
+		   (remove val closed-pending-ch-format :count 1
+			   :test #'(lambda (x y) (eq x (if (listp y) (first y) y)))))
+		 )
 	       (dolist (tmp (reverse closed-pending-ch-format))
 		 (save-state)
 		 (setf current-tag tmp)
@@ -926,22 +960,30 @@
 	     ;; close off all tags
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
-	       (close-off-tags '(:start-parse) nil))
+	       (close-off-tags '(:start-parse) nil collect-rogue-tags))
 	     (put-back-tokenbuf tokenbuf)
-	     (return (cdar guts)))))))))
+	     (if collect-rogue-tags
+		 (return (values (cdar guts) rogue-tags))
+	       (return (cdar guts))))))))))
 
 	      
 
-(defmethod parse-html (file &key callback-only callbacks)
+(defmethod parse-html (file &key callback-only callbacks collect-rogue-tags
+				 no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
   (with-open-file (p file :direction :input)
-    (parse-html p :callback-only callback-only :callbacks callbacks)))	     
+    (parse-html p :callback-only callback-only :callbacks callbacks
+		:collect-rogue-tags collect-rogue-tags
+		:no-body-tags no-body-tags)))	     
 	     
 
-(defmethod parse-html ((str string) &key callback-only callbacks)
+(defmethod parse-html ((str string) &key callback-only callbacks collect-rogue-tags
+					 no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
   (parse-html (make-string-input-stream str) 
-	      :callback-only callback-only :callbacks callbacks))
+	      :callback-only callback-only :callbacks callbacks
+	      :collect-rogue-tags collect-rogue-tags
+	      :no-body-tags no-body-tags))
 
 		 
 	      
