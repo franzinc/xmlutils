@@ -1,5 +1,6 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA  - All rights reserved.
+;; copyright (c) 2000-2004 Franz Inc, Oakland, CA - All rights reserved.
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
@@ -25,7 +26,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.12 2003/11/21 21:59:07 mm Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.13 2004/01/16 19:31:38 layer Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
