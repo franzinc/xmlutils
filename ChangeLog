@@ -1,3 +1,8 @@
+2002-04-26  John Foderaro  <jkf@tiger.franz.com>
+
+	*  pxml1.cl - if the xml tag specifies an encoding then
+	   set lisp's external format to that encoding.
+
 *******************************************************************************
 merge from trunk to acl6 branch (for 6.2.beta)
 command: ../../join.sh trunk trunk_to_acl6_merge3 trunk_to_acl6_merge4 xmlutils
