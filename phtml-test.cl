@@ -19,7 +19,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml-test.cl,v 1.15 2000/10/16 16:58:59 sdj Exp $
+;; $Id: phtml-test.cl,v 1.16 2003/05/27 19:33:22 mm Exp $
 
 (eval-when (compile load eval)
   (require :tester))

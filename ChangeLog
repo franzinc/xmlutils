@@ -1,3 +1,26 @@
+
+2003-05-27  Martin Mikelsons  <mm@ketchtoo>
+
+	* pxml-test.cl (test-all): More comprehensive OASIS test suite driver
+	                     (n1): simple namesapce tests
+	* pxml1.cl (check-xmldecl): enforce ordering of pars in XMLDecl
+	* pxml1.cl (tag-from-string): new function
+	* pxml1.cl (compute-tag): pass tokenbuff instead of ns-to-package slot
+	* pxml2.cl (next-token): add internals apply-namespaces and exit-namespaces
+	* pxml2.cl: update calls to compute-tag
+	    (next-token): abstract out token-error and friends
+	* pxml2.cl (pxml-internal): return a top-level DTD entry as (:dtd ...)
+	* pxml3.cl (next-dtd-token): allow unparsable URI strings
+	* pxml3.cl (next-dtd-token): add token-error and friends
+	* pxml3.cl (next-dtd-token): add internal function verify-choice
+	        fix bug that allowed switch between choice and sequence 
+	            after one of these had already been determined
+		(next-dtd-token): from spr26980
+		    Fix handling of ? + and * at 
+		    first state-dtd-!-element-type-paren-name
+	* pxml0.cl: replace character predicates with inline macros and hash table
+
+	
 2003-04-17  Martin Mikelsons  <mm@gemini>
 
 	* pxml2.cl (next-token): when creating a namespace package set use=nil

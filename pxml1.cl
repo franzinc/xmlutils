@@ -25,7 +25,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.9 2002/04/29 19:32:28 jkf Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.10 2003/05/27 19:33:22 mm Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
@@ -107,57 +107,95 @@
   data  ; string vector
   )
 
-(defun compute-tag (coll &optional (package *keyword-package*) ns-to-package)
+(defun compute-tag (coll &optional (package *keyword-package*) ns-tokenbuf
+			 &aux (ns-to-package 
+			       (when ns-tokenbuf (iostruct-ns-to-package ns-tokenbuf))))
   (declare (optimize (speed 3) (safety 1)))
   ;; compute the symbol named by what's in the collector
   (if* (not ns-to-package)
-     then (excl::intern* (collector-data coll) (collector-next coll) package)
-     else
-	  (let (new-package (data (collector-data coll)))
-	    (if* (and (eq (schar data 0) #\x)
-		      (eq (schar data 1) #\m)
-		      (eq (schar data 2) #\l)
-		      (eq (schar data 3) #\n)
-		      (eq (schar data 4) #\s)
-		      (or (eq (schar data 5) #\:)
-			  (= (collector-next coll) 5)))
-	       then ;; putting xmlns: in :none namespace
-		    (setf new-package (assoc :none ns-to-package))
-		    (when new-package (setf package (rest new-package)))
-		    (excl::intern* (collector-data coll) (collector-next coll) package)
-	       else
-		    (let ((colon-index -1)
-			  (data (collector-data coll)))
-		      (dotimes (i (collector-next coll))
-			(when (eq (schar data i) #\:)
-			  (setf colon-index i)
-			  (return)))
-		      (if* (> colon-index -1) then
-			      (let ((string1 (make-string colon-index))
-				    new-package string2)
-				(dotimes (i colon-index)
-				  (setf (schar string1 i) (schar data i)))
-				(setf new-package (assoc string1 ns-to-package :test 'string=))
-				(if* new-package
-				   then
-					(setf string2 (make-string (- (collector-next coll)
-								      (+ 1 colon-index))))
-					(dotimes (i (- (collector-next coll)
-						       (+ 1 colon-index)))
-					  (setf (schar string2 i)
-					    (schar data (+ colon-index 1 i))))
-					(excl::intern string2 (rest new-package))
-				   else
-					(excl::intern* (collector-data coll)
-						       (collector-next coll) package)))
-			 else
-			      (let ((new-package (assoc :none ns-to-package)))
-				(when new-package
-				  (setf package (rest new-package))))
-			      (excl::intern* (collector-data coll)
-					     (collector-next coll) package)))
-		    ))
-	  ))
+       then (excl::intern* (collector-data coll) (collector-next coll) package)
+       else
+       (let (new-package (data (collector-data coll)))
+	 (if* (and (eq (schar data 0) #\x)
+		   (eq (schar data 1) #\m)
+		   (eq (schar data 2) #\l)
+		   (eq (schar data 3) #\n)
+		   (eq (schar data 4) #\s)
+		   (or (eq (schar data 5) #\:)
+		       (= (collector-next coll) 5)))
+	      then   ;;; putting xmlns: in :none namespace
+	      (setf new-package (assoc :none ns-to-package))
+	      (when new-package (setf package (rest new-package)))
+	      (excl::intern* (collector-data coll) (collector-next coll) package)
+	      else
+	      (let ((colon-index -1)
+		    (data (collector-data coll)))
+		(dotimes (i (collector-next coll))
+		  (when (eq (schar data i) #\:)
+		    (setf colon-index i)
+		    (return)))
+		(if* (> colon-index -1)
+		     then
+		     (let ((string1 (make-string colon-index))
+			   new-package string2)
+		       (dotimes (i colon-index)
+			 (setf (schar string1 i) (schar data i)))
+		       (setf new-package (assoc string1 ns-to-package :test 'string=))
+		       (if* new-package
+			    then
+			    (setf string2 (make-string (- (collector-next coll)
+							  (+ 1 colon-index))))
+			    (dotimes (i (- (collector-next coll)
+					   (+ 1 colon-index)))
+			      (setf (schar string2 i)
+				    (schar data (+ colon-index 1 i))))
+			    (excl::intern string2 (rest new-package))
+			    else
+			    (excl::intern* (collector-data coll)
+					   (collector-next coll) package)))
+		     else
+		     (let ((new-package (assoc :none ns-to-package)))
+		       (when new-package
+			 (setf package (rest new-package))))
+		     (excl::intern* (collector-data coll)
+				    (collector-next coll) package)))
+	      ))
+       ))
+
+(defun tag-from-string (name ns-to-p)
+  (let* ((len (length name))
+	 (pos (position #\: name))
+	 prefix suffix entry)
+    (if* pos
+	 then
+	 ;; this may be a qualified name
+	 (if* (eql pos (1- len))
+	      then
+	      ;; foo: is not a well-formed qualified name
+	      (setf suffix name)
+	      else
+	      ;; we have foo:bar
+	      (setf prefix (subseq name 0 pos))
+	      (if (setf entry (assoc prefix ns-to-p :test #'equal))
+		  ;; and we know about namespace foo
+		  (setf suffix (subseq name (1+ pos)))
+		;; but we do not know about namespace foo
+		;;  so treat the name as unqualified
+		(setf suffix name))
+	      )
+	 elseif (setf entry (assoc :none ns-to-p :test #'equal))
+	 then
+	 ;; this is an unqualified name and there is a default namespace
+	 (setf suffix name)
+	 else
+	 (setf suffix name))
+    (if* entry
+	 then
+	 (intern suffix (cdr entry))
+	 else
+	 (intern name))))
+
+
 
 (defun compute-coll-string (coll)
   (declare (optimize (speed 3) (safety 1)))
@@ -323,11 +361,8 @@
 	      (let ((this-one (first pairs)))
 		(setf pairs (rest (rest pairs)))
 		(when (member this-one pairs)
-		  (xml-error (concatenate 'string "Entity: "
-					  (string (first val))
-					  " has multiple "
-					  (string this-one)
-					  " attribute values"))))))
+		  (xml-error "Entity: " (first val) " has multiple "
+			     this-one " attribute values")))))
 	  (let ((tag-defaults (assoc (first val) attlist-data)) defaults)
 	    (dolist (def (rest tag-defaults))
 	      (let ((old (member (first def) (rest val))))
@@ -398,48 +433,109 @@
 	 else (incf count)
 	      (setf last-ch cch)))))
 
-(defun check-xmldecl (val tokenbuf)
+(defun check-xmldecl (val tokenbuf &aux ver sa enc (tail (cdr val)))
   (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))
-  (when (not (and (symbolp (second val)) (string= "version" (symbol-name (second val)))))
-    (xml-error "XML declaration tag does not include correct 'version' attribute"))
-  (when (and (fourth val)
-	     (or (not (symbolp (fourth val)))
-		 (and (not (string= "standalone" (symbol-name (fourth val))))
-		      (not (string= "encoding" (symbol-name (fourth val)))))))
-    (xml-error "XML declaration tag does not include correct 'encoding' or 'standalone' attribute"))
-  (when (and (fourth val) (string= "standalone" (symbol-name (fourth val))))
-    (if* (equal (fifth val) "yes") then
-	    (setf (iostruct-standalonep tokenbuf) t)
-     elseif (not (equal (fifth val) "no")) then
-	    (xml-error "XML declaration tag does not include correct 'standalone' attribute value")))
-  (dotimes (i (length (third val)))
-    (let ((c (schar (third val) i)))
+  (if (and (symbolp (first tail)) (string= "version" (symbol-name (first tail))))
+      (setf ver (second tail) tail (cddr tail))
+    (xml-error "XML declaration tag does not include 'version' attribute"))
+  (when (and (symbolp (first tail)) (string= "encoding" (symbol-name (first tail))))
+    (setf enc (second tail))
+    (setf tail (cddr tail)))
+  (when (and (symbolp (first tail)) (string= "standalone" (symbol-name (first tail))))
+    (setf sa (second tail))
+    (setf tail (cddr tail)))
+  (when tail
+    (xml-error 
+     (format nil "XMLDecl contains unexpected or out-of-order components: '~{~A ~}'."
+	     tail)))
+  (when sa
+    (if* (equal sa "yes")
+	 then
+	 (setf (iostruct-standalonep tokenbuf) t)
+	 elseif (not (equal sa "no"))
+	 then
+	 (xml-error 
+	  "XMLDecl does not include correct 'standalone' attribute value")))
+  (dotimes (i (length ver))
+    (let ((c (schar ver i)))
       (when (and (not (alpha-char-p c))
 		 (not (digit-char-p c))
 		 (not (member c '(#\. #\_ #\- #\:)))
 		 )
-	(xml-error "XML declaration tag does not include correct 'version' attribute value"))))
-  (if* (and (fourth val) (eql :encoding (fourth val)))
-     then (dotimes (i (length (fifth val)))
-	    (let ((c (schar (fifth val) i)))
-	      (when (and (not (alpha-char-p c))
-			 (if* (> i 0) then
-				 (and (not (digit-char-p c))
-				      (not (member c '(#\. #\_ #\-))))
-			    else t))
-		(xml-error "XML declaration tag does not include correct 'encoding' attribute value"))))
-	  ;; jkf 3/26/02 
-	  ;; if we have a stream we're reading from set its external-format
-	  ;; to the encoding
-	  ;; note - tokenbuf is really an iostruct, not a tokenbuf
-	  (if* (tokenbuf-stream (iostruct-tokenbuf tokenbuf))
-	     then (setf (stream-external-format 
-			 (tokenbuf-stream (iostruct-tokenbuf tokenbuf)))
-		    (find-external-format (fifth val))))
+	(xml-error
+	 "XMLDecl does not include correct 'version' attribute value"))))
+  (when enc
+    (dotimes (i (length enc))
+      (let ((c (schar enc i)))
+	(when (and (not (alpha-char-p c))
+		   (if* (> i 0) then
+			(and (not (digit-char-p c))
+			     (not (member c '(#\. #\_ #\-))))
+			else t))
+	  (xml-error
+	   "XMLDecl does not include correct 'encoding' attribute value"))))
+    ;; jkf 3/26/02 
+    ;; if we have a stream we're reading from set its external-format
+    ;; to the encoding
+    ;; note - tokenbuf is really an iostruct, not a tokenbuf
+    (if* (tokenbuf-stream (iostruct-tokenbuf tokenbuf))
+	 then (setf (stream-external-format 
+		     (tokenbuf-stream (iostruct-tokenbuf tokenbuf)))
+		    (find-external-format enc)))
 			 
     
-	  ))
+    ))
 
-(defun xml-error (text)
-  (declare (optimize (speed 3) (safety 1)))
-  (funcall 'error "~a" (concatenate 'string "XML not well-formed - " text)))
+(defun xml-error (&rest parts &aux text)
+  (if (and (stringp (first parts)) (null (cdr parts)))
+      (setf text (first parts))
+    (setf text (format nil "~{~A~}" parts)))
+  (error "XML not well-formed - ~A" text))
+
+
+(defmacro with-coll-macros (&rest body)
+  `(macrolet ((add-to-entity-buf
+	       (entity-symbol p-value)
+	       `(progn
+		  (push (make-tokenbuf :cur 0 :max (length ,p-value) :data ,p-value)
+			(iostruct-entity-bufs tokenbuf))))
+	      (clear-coll (coll) `(setf (collector-next ,coll) 0))
+	      (un-next-char (ch) `(push ,ch (iostruct-unget-char tokenbuf)))
+	      (add-to-coll
+	       (coll ch)
+	       `(let ((.next. (collector-next ,coll)))
+		  (if* (>= .next. (collector-max ,coll))
+		       then (grow-and-add ,coll ,ch)
+		       else (setf (schar (collector-data ,coll) .next.)
+				  ,ch)
+		       (setf (collector-next ,coll) (1+ .next.)))))
+
+	      (token-error2  (&rest errargs)
+			    `(token-error-fn t   ch coll tokenbuf ,@errargs))
+	      (token-error0 (&rest errargs)
+			    `(token-error-fn nil ch coll tokenbuf ,@errargs))
+	      (token-error1
+	       (&rest errargs)
+	       `(token-error-fn nil ch coll tokenbuf ,@errargs :coll-string "'"))
+	      (token-error3
+	       (&rest errargs)
+	       `(token-error-fn t   ch coll tokenbuf ,@errargs :coll-string "'"))
+
+	      )
+     ,@body))
+
+(defun token-error-fn (clear ch coll tokenbuf &rest errargs)
+  (with-coll-macros
+   (when clear (clear-coll coll))
+   (dotimes (i 15)
+     (add-to-coll coll ch)
+     (setq ch (get-next-char tokenbuf))
+     (if* (null ch)
+	  then (return)))
+   (apply 'xml-error  
+	  (mapcar #'(lambda (e)
+		      (case e
+			(:coll-string (compute-coll-string coll))
+			(otherwise e)))
+		  errargs))))
+
