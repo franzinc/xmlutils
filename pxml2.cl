@@ -20,7 +20,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml2.cl,v 1.7 2000/12/05 21:26:50 sdj Exp $
+;; $Id: pxml2.cl,v 1.8 2000/12/20 23:01:51 sdj Exp $
 
 ;; Change Log 
 ;;
@@ -734,6 +734,9 @@
 								 (string "<?xml "))
 							     (if* (dotimes (i (length string) t)
 								    (setf cch (get-next-char tokenbuf))
+								    (when (and (= i 5)
+									       (xml-space-p cch))
+								      (setf cch #\space))
 								    (when (not (eq cch
 										   (schar string count)))
 								      (return nil))
@@ -1480,6 +1483,9 @@
 								 (string "<?xml "))
 							     (if* (dotimes (i (length string) t)
 								    (setf cch (get-next-char tokenbuf))
+								    (when (and (= i 5)
+									       (xml-space-p cch))
+								      (setf cch #\space))
 								    (when (not (eq cch
 										   (schar string count)))
 								      (return nil))

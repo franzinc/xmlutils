@@ -20,7 +20,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml3.cl,v 1.5 2000/12/05 21:26:50 sdj Exp $
+;; $Id: pxml3.cl,v 1.6 2000/12/20 23:01:51 sdj Exp $
 
 (in-package :net.xml.parser)
 
@@ -1342,7 +1342,10 @@
 										 (eq cch #\>)) then
 									       (setf count 6)
 									  else (setf last-ch cch))
-								  elseif (< count 6) then
+								elseif (< count 6) then
+								       (when (and (= count 5)
+									       (xml-space-p cch))
+									 (setf cch #\space))
 								       (if* (not (eq cch
 										    (schar string count)
 										    )) then
@@ -2444,6 +2447,9 @@
 					    (string "<?xml "))
 					(if* (dotimes (i (length string) t)
 					       (setf cch (get-next-char tokenbuf))
+					       (when (and (= i 5)
+							  (xml-space-p cch))
+						 (setf cch #\space))
 					       (when (not (eq cch
 							      (schar string count)))
 						 (return nil))

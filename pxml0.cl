@@ -20,13 +20,15 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml0.cl,v 1.5 2000/12/05 21:26:50 sdj Exp $
+;; $Id: pxml0.cl,v 1.6 2000/12/20 23:01:51 sdj Exp $
 
 ;; pxml.cl - parse xml
 ;;
 ;; Change Log
 ;;
 ;; 12/05/00 changes to allow using in ANSI mode lisp
+;; 12/20/00 namespace example fix; correct whitespace bug when
+;;          looking for xml? tag in external entity files
 ;;
 
 (defpackage net.xml.parser

@@ -1,3 +1,10 @@
+2000-12-20 Steve Jacobson <sdj>
+
+	pxml-test.cl: NameSpace example change to reflect URI module fix
+	pxml.htm: NameSpace example change
+	pxml2.cl: bug10165 fix
+	pxml3.cl: bug10165 fix
+
 2000-12-05 Steve Jacobson <sdj>
 
 	phtml.cl: add user visible change comment; fix comment spelling error

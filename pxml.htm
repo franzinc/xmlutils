@@ -15,7 +15,6 @@
 <a href="#modern">case and international character support issues</a><br>
 <a href="#keyword">parse-xml and packages</a><br>
 <a href="#namespace">parse-xml, the XML Namespace specification, and packages</a><br>
-<a href="#60beta">special note for Unicode support with ACL 6.0 beta</a><br>
 <a href="#unicode-scalar">ACL does not support Unicode 4 byte scalar values</a><br>
 <a href="#big-endian">only little-endian Unicode tested in ACL 6.0 beta</a><br>
 <a href="#debug">debugging aids</a><br>
@@ -160,130 +159,76 @@ is an URI string. The parser then associates XML Namespace prefixes with a<br>
 Lisp package provided via the parse-xml :uri-to-package option or, if <br>
 necessary, a package created on the fly. The following example demonstrates<br>
 this behavior:<br>
-<br>
-(setf *xml-example-string4*<br>
+</p>
+
+<p>(setf *xml-example-string4*<br>
 &nbsp;&nbsp; &quot;&lt;bibliography<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-xmlns:bib='http://www.bibliography.org/XML/bib.ns'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:book owner='Smith'&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:title&gt;A Tale of Two
-Cities&lt;/bib:title&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:bibliography<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-xmlns:bib='http://www.franz.com/XML/bib.ns'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:library
-branch='Main'&gt;UK Library&lt;/bib:library&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date
-calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&lt;/bib:bibliography&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date
-calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:book&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;/bibliography&gt;&quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.bibliography.org/XML/bib.ns'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:com:books-r-us'&gt;<br>
+&nbsp;&nbsp; &lt;bib:book owner='Smith'&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:title&gt;A Tale of Two Cities&lt;/bib:title&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:bibliography<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.franz.com/XML/bib.ns'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:com:books-r-us'&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:library branch='Main'&gt;UK
+Library&lt;/bib:library&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:bibliography&gt;<br>
+&nbsp;&nbsp; &lt;bib:date calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
+&nbsp;&nbsp; &lt;/bib:book&gt;<br>
+&lt;/bibliography&gt;&quot;)<br>
 <br>
 (setf *uri-to-package* nil)<br>
 (setf *uri-to-package*<br>
-&nbsp;&nbsp;&nbsp; (acons (parse-uri &quot;http://www.bibliography.org/XML/bib.ns&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;bib&quot;)
-*uri-to-package*))<br>
+&nbsp;&nbsp; (acons (parse-uri <a href="http://www.bibliography.org/XML/bib.ns">&quot;http://www.bibliography.org/XML/bib.ns&quot;</a>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;bib&quot;) *uri-to-package*))<br>
 (setf *uri-to-package*<br>
-&nbsp;&nbsp;&nbsp; (acons (parse-uri
-&quot;urn:royal-mail.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;royal&quot;)
-*uri-to-package*))<br>
+&nbsp;&nbsp; (acons (parse-uri <a href="http://www.bibliography.org/XML/bib.ns">&quot;</a>urn:com:books-r-us<a
+href="http://www.bibliography.org/XML/bib.ns">&quot;</a>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;royal&quot;) *uri-to-package*))<br>
 (setf *uri-to-package*<br>
-&nbsp;&nbsp;&nbsp; (acons (parse-uri &quot;http://www.franz.com/XML/bib.ns&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;franz-ns&quot;)
-*uri-to-package*))<br>
-(pprint (multiple-value-list <br>
-(parse-xml *xml-example-string4*<br>
-&nbsp;&nbsp; :uri-to-package *uri-to-package*)))<br>
+&nbsp;&nbsp; (acons (parse-uri <a href="http://www.bibliography.org/XML/bib.ns">&quot;</a>http://www.franz.com/XML/bib.ns<a
+href="http://www.bibliography.org/XML/bib.ns">&quot;</a>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;franz-ns&quot;) *uri-to-package*))<br>
+(pprint (multiple-value-list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (parse-xml
+*xml-example-string4*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :uri-to-package
+*uri-to-package*)))<br>
 <br>
 --&gt;<br>
-<br>
-((((bibliography |xmlns:bib| &quot;http://www.bibliography.org/XML/bib.ns&quot; xmlns<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;urn:royal-mail.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp; ((bib::book royal::owner &quot;Smith&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; (bib::title &quot;A Tale of Two Cities&quot;)
-&quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ((bib::bibliography royal::|xmlns:bib|
-&quot;http://www.franz.com/XML/bib.ns&quot; royal::xmlns<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&quot;urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::library
-net.xml.namespace.0::branch &quot;Main&quot;) &quot;UK Library&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::date
-net.xml.namespace.0::calendar &quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((bib::date royal::calendar
-&quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
+((((bibliography |xmlns:bib| <a href="http://www.bibliography.org/XML/bib.ns">&quot;http://www.bibliography.org/XML/bib.ns&quot;</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; xmlns &quot;urn:com:books-r-us&quot;)<br>
 &nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp; &quot;))<br>
-((#&lt;uri urn:royal-mail2.gov.ukXML/ns/postal.ns,1999&gt; . #&lt;The net.xml.namespace.0
-package&gt;)<br>
-(#&lt;uri http://www.franz.com/XML/bib.ns&gt; . #&lt;The franz-ns package&gt;)<br>
-(#&lt;uri urn:royal-mail.gov.ukXML/ns/postal.ns,1999&gt; . #&lt;The royal package&gt;)<br>
-(#&lt;uri http://www.bibliography.org/XML/bib.ns&gt; . #&lt;The bib package&gt;)))<br>
+&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp; ((bib::book royal::owner &quot;Smith&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; (bib::title &quot;A Tale of Two
+Cities&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp; ((bib::bibliography royal::|xmlns:bib|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;http://www.franz.com/XML/bib.ns&quot; royal::xmlns<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;urn:com:books-r-us&quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::library royal::branch
+&quot;Main&quot;) &quot;UK Library&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::date royal::calendar
+&quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((bib::date royal::calendar
+&quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;))<br>
+((#&lt;uri http://www.franz.com/XML/bib.ns&gt; . #&lt;The franz-ns package&gt;)<br>
+&nbsp; (#&lt;uri urn:com:books-r-us&gt; . #&lt;The royal package&gt;)<br>
+&nbsp; (#&lt;uri http://www.bibliography.org/XML/bib.ns&gt; . #&lt;The bib package&gt;)))<br>
 <br>
 In the absence of XML Namespace attributes, element and attribute symbols are interned<br>
 in the current package. Note that this implies that attributes and elements referenced<br>
 in DTD content will be interned in the current package.<br>
 <br>
-<a name="60beta"></a>4. The ACL 6.0 beta does not contain a little-endian Unicode external
-format. To <br>
-process XML input containing Unicode characters correctly:<br>
-<br>
-a. Place the following in a file called ef-fat-little.cl in the ACL code<br>
-directory:<br>
-<br>
-(provide :ef-fat-little)<br>
-<br>
-(in-package :excl)<br>
-<br>
-(def-external-format :fat-little-base<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :size 2)<br>
-<br>
-(def-char-to-octets-macro :fat-little-base (char<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-state<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&amp;key put-next-octet external-format)<br>
-&nbsp;&nbsp; (declare (ignore external-format state))<br>
-&nbsp;&nbsp; `(let ((code (char-code ,char)))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (,put-next-octet (ldb (byte 8 0) code))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (,put-next-octet (ldb (byte 8 8) code))))<br>
-<br>
-(def-octets-to-char-macro :fat-little-base (state-loc<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&amp;key get-next-octet external-format<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-octets-count-loc unget-octets)<br>
-&nbsp;&nbsp; (declare (ignore external-format state-loc unget-octets))<br>
-&nbsp;&nbsp; `(let ((lo ,get-next-octet)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (hi (progn (incf
-,octets-count-loc)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-,get-next-octet)))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (code-char (+ (ash hi 8) lo))))<br>
-<br>
-(create-newline-ef :name :fat-little :base-name :fat-little-base<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :nicknames '(:unicode-little))<br>
-<br>
-<br>
-b. Compile the file using a modern ACL.<br>
-<br>
-5. The parse-xml function has been tested using the OASIS conformance test suite (see<br>
+6. The parse-xml function has been tested using the OASIS conformance test suite (see<br>
 details below). The test suite has wide coverage across possible XML and DTD syntax,<br>
 but there may be some syntax paths that have not yet been tested or completely<br>
 supported. Here is a list of currently known syntax parsing issues:<br>
@@ -301,7 +246,7 @@ Unicode. (Note also that this issue may be resolved by an ACL 6.0 final release 
 c. An initial &lt;?xml declaration in external entity files is skipped without a check<br>
 being made to see if the &lt;?xml declaration is itself incorrect.<br>
 <br>
-<a name="debug"></a>6. When investigating possible parser errors or examining more closely
+<a name="debug"></a>7. When investigating possible parser errors or examining more closely
 where the parser<br>
 determined that the input was non-well-formed, the net.xml.parser internal symbols <br>
 *debug-xml* and *debug-dtd* are useful. When not bound to nil, these variables cause<br>
