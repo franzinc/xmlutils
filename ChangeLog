@@ -1,0 +1,34 @@
+2000-03-28  Steve Jacobson <sdj>
+
+	* take out comments that are no longer relevant
+	* :object shouldn't have tag-no-end property
+	* :dd also closes :dt
+	* first *if clause in close-off-tags has to check that candidate
+	  tag may close off more than just the current tag
+
+	* New file: phtml-test.cl - test by:
+	  (lhtml-equal (phtml *test-string*) *expected-result*)
+
+2000-03-28  John Foderaro  <jkf@tiger.franz.com>
+
+	*  add stream when user supplied read-sequence function is called
+
+2000-03-23  Steve Jacobson <sdj>
+
+	* added state-rawdata lexer state, which can be triggered
+	  by calling parser to put lexer in mode where subsequent text
+	  is gobbled up into ocdata until the specified delimiter is seen
+
+	* added read-sequence-func arg to next token, so user can 
+	  optionally supply function to fetch next sequence of chars;
+	  turned phtml stream method into internal function so method args
+	  don't change - user who wishes to supply read-sequence-func can
+	  either invoke phtml-internal or add a method that calls 
+	  phtml-internal with custome read-sequence-func argument
+
+	* added knowledge to parser to reduce number of pcdata outputs that
+	  only contain whitespace
+
+	* added large number of tag-auto-close and some tag-auto-close-stop
+	  properties to html symbols so parser properly handles all tags
+	  with optional end tags
