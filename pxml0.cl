@@ -31,8 +31,9 @@
 (defpackage net.xml.parser
   (:use :lisp :clos :excl :net.uri)
   (:export
-   #:parse-xml)
-  )
+   #:parse-xml
+   #:pxml-version
+   ))
 
 (in-package :net.xml.parser)
 
@@ -47,7 +48,27 @@
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.10 2003/07/02 17:50:05 mm Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.11 2003/07/23 21:26:48 mm Exp $")
+
+(defparameter *pxml-version* (list 7 0 1))
+(defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))
+  (typecase v1
+    (integer (if (or (< (first *pxml-version*) v1)
+		     (and v2
+			  (or 
+			   (and (= (first *pxml-version*) v1)
+				(< (second *pxml-version*) v2))
+			   (and v3
+				(= (second *pxml-version*) v2)
+				(< (third *pxml-version*) v3)))))
+		 (if error-p
+		     (error "PXML Version ~A.~A.~A needed, but ~{~A.~A.~A~} is loaded."
+			    v1 (or v2 0) (or v3 0) *pxml-version*)
+		   nil)
+	       *pxml-version*))
+    (otherwise (format v1-or-s "PXML Version ~{~A.~A.~A~}" *pxml-version*))))
+    
+
 
 (eval-when (compile eval)
 

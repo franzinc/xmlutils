@@ -1,3 +1,9 @@
+2003-07-23    <mm@KETCHTOO>
+
+	* pxml0.cl (*pxml-version*): new variable = 7.0.1
+	             (pxml-version): new exported function
+
+
 2003-07-02    <mm@KETCHTOO>
 
 	* pxml0.cl (*xml-chars*): make sure that make-table is compiled
