@@ -145,6 +145,9 @@
 	       char-attribnamechar
 	       char-attribundelimattribvalue)))
 	
+	;; let colon be legal tag character
+	(addit (char-code #\:) char-tagcharacter)
+	
 	; now the unusual cases
 	(addit (char-code #\-) char-attribundelimattribvalue)
 	(addit (char-code #\.) char-attribundelimattribvalue)
@@ -313,7 +316,7 @@
 	  (name-length 0) ;; count only when it could be a comment
 	  
 	  (raw-length 0)
-	  
+          (xml-bailout)
 	  )
     
       (loop
@@ -347,7 +350,8 @@
 	      then ; end tag
 		   (setq end-tag t)
 	      else (if* (eq #\! ch) ; possible comment
-		      then (setq name-length 0))
+		      then (setf xml-bailout t)
+			   (setq name-length 0))
 		   (un-next-char stream ch))
 	   (setq state state-readtag))
 	
@@ -364,7 +368,8 @@
 	      else (setq tag-to-return (compute-tag coll))
 		   (clear-coll coll)
 		   (if* (eq ch #\>)
-		      then (return) ; we're done
+		      then (return)	; we're done
+		    elseif xml-bailout then (return)
 		      else (if* (eq tag-to-return :!--)
 			      then ; a comment
 				   (setq state state-readcomment)
@@ -495,14 +500,16 @@
 		   (incf raw-length)
 		   (when (= raw-length (length raw-mode-delimiter))
 		     ;; push the end tag back so it can then be lexed
-		     (dotimes (i (length raw-mode-delimiter))
-		       (un-next-char stream 
-				     ch
-				     #+ignore ;; un-next-char doesn't
-				     ;; use args, so save time by not doing the
-				     ;; char manipulation
-				     (elt raw-mode-delimiter
-					  (- raw-length (+ 1 i)))))
+		     ;; but don't do it for xml stuff
+		     (when (/= (length  raw-mode-delimiter) 1)
+		       (dotimes (i (length raw-mode-delimiter))
+			 (un-next-char stream 
+				       ch
+				       #+ignore ;; un-next-char doesn't
+				       ;; use args, so save time by not doing the
+				       ;; char manipulation
+				       (elt raw-mode-delimiter
+					    (- raw-length (+ 1 i))))))
 		     ;; set state to state-pcdata for next section
 		     (setf state state-pcdata) 
 		     (return))
@@ -538,7 +545,8 @@
 	 (values tag-to-return
 		 (if* end-tag
 		    then :end-tag
-		    else :start-tag)))
+		    else (if* xml-bailout then :xml else :start-tag))
+		 ))
 	
 	(#.state-findattribname
 	 ;; returning a tag with possible attributes
@@ -788,20 +796,6 @@
 		       (multiple-value-bind (val kind)
 			   (next-token p nil raw-mode-delimiter read-sequence-func
 				       tokenbuf)
-			(if* (eq kind :start-tag) then
-				(if* (eq val :style) then
-					(setf raw-mode-delimiter
-					  (if* (eq excl:*current-case-mode* 
-						   :CASE-INSENSITIVE-UPPER)
-					     then "</STYLE>"
-					     else "</style>"))
-				 elseif (eq val :script) then
-					(setf raw-mode-delimiter
-					  (if* (eq excl:*current-case-mode* 
-						   :CASE-INSENSITIVE-UPPER)
-					     then "</SCRIPT>"
-					     else "</script>"))
-				   else (setf raw-mode-delimiter nil)))
 			(values val kind))
 		  else
 		       (let ((val (first first-pass))
@@ -815,7 +809,6 @@
 	  ;;(format t "val: ~s kind: ~s~%" val kind)
 	  (case kind
 	    (:pcdata
-	     (setf raw-mode-delimiter nil)
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
 	       (if* (member last-tag *in-line*)
@@ -826,17 +819,36 @@
 			       (when (not (char-characteristic (elt val i) 
 							       char-spacechar))
 				 (return t)))
-			 (push val guts)))))
-	  
+			 (push val guts))))
+	     (when (and (= (length raw-mode-delimiter) 1) ;; xml tag...
+			(or (and callback-only current-callback-tags)
+			    (not callback-only)))
+	       (close-off-tags (list last-tag) nil))
+	     (setf raw-mode-delimiter nil)
+	     )
+	    
+	    (:xml
+	     (setf last-tag val)
+	     (setf raw-mode-delimiter ">")
+	     (let* ((name (tag-name val)))
+	       (when (and callback-only (tag-callback name))
+		 (push name current-callback-tags))
+	       (save-state)
+	       (setq current-tag val)
+	       (setq guts nil)
+	       ))
+	    
 	    (:start-tag
 	     (setf last-tag val)
-	     (if* (eq last-tag :style)
+	     (if* (or (eq last-tag :style)
+		      (and (listp last-tag) (eq (first last-tag) :style)))
 		then
 		     (setf raw-mode-delimiter
 		       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
 			  then "</STYLE>"
 			  else "</style>"))
-	      elseif (eq last-tag :script)
+	      elseif (or (eq last-tag :script)
+		      (and (listp last-tag) (eq (first last-tag) :script)))
 		then
 		     (setf raw-mode-delimiter
 		       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)

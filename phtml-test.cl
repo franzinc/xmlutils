@@ -126,17 +126,20 @@
 
 (setf *test-string2*
   "<i><b>text</i> more text</b>
+   <!doctype this is some text>
    <i><b>text</i></b> more text
    <b>text<p>more text</b> yet more text</p>
    <ul><li><b>text<li>more text</ul></b>
    prev<b><a href=foo>bar</a>baz</b>
    <b>foo<a>bar</a>baz</b>
    <b>foo<a>bar</b>baz</a>
-   <b>foo<i>bar</i>baz</b>"
+   <b>foo<i>bar</i>baz</b>
+   <script a=b> some text if (year < 1000) year += 1900; more text </script>"
   )
 
 (setf *expected-result2*
   '((:i (:b "text")) (:b " more text")
+    (:!doctype "this is some text")
     (:i (:b "text")) (:b) " more text"
     (:b "text") (:p (:b "more text") " yet more text")
     (:ul (:li (:b "text")) (:li (:b "more text"))) (:b)
@@ -144,6 +147,7 @@
     (:b "foo" (:a "bar") "baz")
     (:b "foo") (:a (:b "bar") "baz")
     (:b "foo" (:i "bar") "baz")
+    ((:script :a "b") " some text if (year < 1000) year += 1900; more text ")
     ))
 
 (defmethod lhtml-equal ((a t) (b t))

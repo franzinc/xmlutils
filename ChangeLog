@@ -1,3 +1,12 @@
+2000-06-26 Steve Jacobson <sdj>
+
+        * phtml.cl: let colon be permissable tag name character;
+	            parse <!...> xml type tags in raw mode with no contents;
+	            parse :script & :style correctly when there are attributes
+	               present
+	
+	* phtml-test.cl: add tests for above changes
+	
 2000-06-23 Steve Jacobson <sdj>
 
 	* phtml.cl: add autoclose property to :p tag
