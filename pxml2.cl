@@ -1,5 +1,6 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA  - All rights reserved.
+;; copyright (c) 2000-2004 Franz Inc, Oakland, CA - All rights reserved.
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
@@ -27,7 +28,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.2.2.3.22.2 2003/07/24 01:20:19 layer Exp $")
+(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.2.2.3.22.3 2004/03/03 16:06:48 layer Exp $")
 
 ;; state titles can be better chosen and explained
 
@@ -631,11 +632,17 @@
 		    (setf ns-token nil)
 		    )
 	       (when ns-token
-		 (let* ((urx (or (ignore-errors (parse-uri attrib-value))
-				 ;; If URI does not parse, use the string as
-				 ;;  the identifier - namespace uri is not
-				 ;;  required to be well-formed or to exist.
-				 attrib-value))
+		 (let* ((urx (if (and (eq ns-token :none)
+				      (equal attrib-value ""))
+				 ;; bug13668 - xmlns="" means that there is 
+				 ;;   no default namespace in this scope
+				 nil
+			       (or
+				(ignore-errors (parse-uri attrib-value))
+				;; If URI does not parse, use the string as
+				;;  the identifier - namespace uri is not
+				;;  required to be well-formed or to exist.
+				attrib-value)))
 			(same-uri #'(lambda (u v)
 				      (cond
 				       ;; If both are strings then compare with equal
@@ -647,11 +654,17 @@
 					(equal u v))
 				       ((and (typep u 'uri) (typep v 'uri))
 					(uri= u v)))))
-			(package (assoc urx
-					(iostruct-uri-to-package tokenbuf)
-					:test same-uri)))
+			(package (when urx
+				   (assoc urx
+					  (iostruct-uri-to-package tokenbuf)
+					  :test same-uri))))
 		   (if* package 
 			then (setf package (rest package))
+			elseif (null urx)
+			then 
+			;; bug13668 - xmlns="" in this scope
+			;;    mark the scope with (:none . nil)
+			nil
 			else
 			(setf package
 			      (let ((i 0) new-package)

@@ -1,5 +1,6 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA  - All rights reserved.
+;; copyright (c) 2000-2004 Franz Inc, Oakland, CA - All rights reserved.
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
@@ -22,7 +23,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.2.2.2.22.2 2003/07/24 01:20:19 layer Exp $")
+(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.2.2.2.22.3 2004/03/03 16:06:48 layer Exp $")
 
 (defvar *debug-dtd* nil)
 

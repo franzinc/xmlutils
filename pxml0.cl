@@ -1,10 +1,13 @@
-(sys:defpatch "pxml" 2
-  "v1: Version 7.0.1, needed by new SOAP interface;
-v2: use xml encoding to determine ACL external-format for parsing."
+(sys:defpatch "pxml" 3
+  "v1: version 7.0.1, needed by new SOAP interface;
+v2: use xml encoding to determine ACL external-format for parsing;
+v3: version 7.0.2."
   :type :system
   :post-loadable t)
 
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
+;;
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA  - All rights reserved.
+;; copyright (c) 2000-2004 Franz Inc, Oakland, CA - All rights reserved.
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
@@ -53,9 +56,9 @@ v2: use xml encoding to determine ACL external-format for parsing."
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.2.2.2.22.4 2003/11/04 01:02:19 layer Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.2.2.2.22.5 2004/03/03 16:06:48 layer Exp $")
 
-(defparameter *pxml-version* (list 7 0 1))
+(defparameter *pxml-version* (list 7 0 2))
 (defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))
   (typecase v1
     (integer (if (or (< (first *pxml-version*) v1)

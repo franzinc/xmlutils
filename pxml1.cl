@@ -1,5 +1,6 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA  - All rights reserved.
+;; copyright (c) 2000-2004 Franz Inc, Oakland, CA - All rights reserved.
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
@@ -25,7 +26,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.2.2.3.22.4 2003/11/03 23:22:33 cox Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.2.2.3.22.5 2004/03/03 16:06:48 layer Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
@@ -123,9 +124,12 @@
 		   (eq (schar data 4) #\s)
 		   (or (eq (schar data 5) #\:)
 		       (= (collector-next coll) 5)))
-	      then   ;;; putting xmlns: in :none namespace
-	      (setf new-package (assoc :none ns-to-package))
-	      (when new-package (setf package (rest new-package)))
+	      then
+	      ;; putting xmlns: in :none namespace
+	      (and (setf new-package (assoc :none ns-to-package))
+		   ;; bug13668 - look for xmlns="" in this scope
+		   (rest new-package)
+		   (setf package (rest new-package)))
 	      (excl::intern* (collector-data coll) (collector-next coll) package)
 	      else
 	      (let ((colon-index -1)
@@ -155,8 +159,10 @@
 					   (collector-next coll) package)))
 		     else
 		     (let ((new-package (assoc :none ns-to-package)))
-		       (when new-package
-			 (setf package (rest new-package))))
+		       (and new-package
+			    ;; bug13668 - look for xmlns="" in this scope
+			    (rest new-package)
+			    (setf package (rest new-package))))
 		     (excl::intern* (collector-data coll)
 				    (collector-next coll) package)))
 	      ))
@@ -185,6 +191,8 @@
 	      )
 	 elseif (setf entry (assoc :none ns-to-p :test #'equal))
 	 then
+	 ;; bug13668 - look for xmlns="" in this scope
+	 (when (null (cdr entry)) (setf entry nil))
 	 ;; this is an unqualified name and there is a default namespace
 	 (setf suffix name)
 	 else

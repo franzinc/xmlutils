@@ -1,3 +1,10 @@
+*******************************************************************************
+Wed Mar  3 08:03:28 PST 2004
+merge from trunk to acl62 branch
+command:
+join.sh trunk trunk_to_acl62_merge2 trunk_to_acl62_merge_030304 xmlutils
+*******************************************************************************
+
 2003-11-03  Charles A. Cox  <cox@fritter>
 
 	* pxml-test.cl: Fix latin1 nicknames.  Add tests for Japanese.
@@ -27,6 +34,21 @@ Mon Jun 17 11:29:36 PDT 2002
 merge from trunk to acl62 branch (for 6.2)
 command: ../../join.sh trunk acl62 trunk_to_acl62_merge1 xmlutils
 *******************************************************************************
+
+2003-11-21    <mm@KETCHTOO>
+
+	* pxml0.cl (*pxml-version*): 7.0.2
+	* pxml2.cl (next-token): bug13668 - note that xmlns="" in this scope
+	* pxml1.cl (compute-tag): bug13668 - look for xmlns="" in this scope
+	       (tag-from-string): bug13668 - look for xmlns="" in this scope
+
+	
+2003-11-03  Charles A. Cox  <cox@fritter>
+
+	* pxml-test.cl: Fix latin1 nicknames.  Add tests for Japanese.
+	* pxml1.cl: spr27942 fix: Check for encoding before filling parse
+	buffers.  Force unicode ef to be loaded at load time.
+	
 
 2003-07-23    <mm@KETCHTOO>
 
