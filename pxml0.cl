@@ -20,9 +20,14 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml0.cl,v 1.4 2000/08/16 16:50:33 sdj Exp $
+;; $Id: pxml0.cl,v 1.5 2000/12/05 21:26:50 sdj Exp $
 
 ;; pxml.cl - parse xml
+;;
+;; Change Log
+;;
+;; 12/05/00 changes to allow using in ANSI mode lisp
+;;
 
 (defpackage net.xml.parser
   (:use :lisp :clos :excl :net.uri)

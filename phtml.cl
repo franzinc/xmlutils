@@ -19,15 +19,17 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.20 2000/10/27 17:48:12 sdj Exp $
+;; $Id: phtml.cl,v 1.21 2000/12/05 21:26:50 sdj Exp $
 
 ;; phtml.cl  - parse html
 
 ;; Change Log
 ;;
+;; 10/27/00 :callbacks arg now processed correctly for tags with no body
+;;
 ;; 10/14/00 add first-pass member to tokenbuf structure; used to remove
 ;;             multiple un-next-char calls in raw mode
-;;          removed :script from *in-line* (incoreect and led to infinite loop
+;;          removed :script from *in-line* (incorect and led to infinite loop)
 ;;          char format reopen not done in :script and :style
 ;;          fixed :table/:th tag-auto-close-stop typo
 

@@ -20,7 +20,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml1.cl,v 1.6 2000/10/16 16:58:59 sdj Exp $
+;; $Id: pxml1.cl,v 1.7 2000/12/05 21:26:50 sdj Exp $
 
 ;; Change Log 
 ;;
@@ -401,11 +401,14 @@
 
 (defun check-xmldecl (val tokenbuf)
   (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))
-  (when (not (eql :version (second val)))
+  (when (not (and (symbolp (second val)) (string= "version" (symbol-name (second val)))))
     (xml-error "XML declaration tag does not include correct 'version' attribute"))
-  (when (and (fourth val) (not (eql :standalone (fourth val))) (not (eql :encoding (fourth val))))
+  (when (and (fourth val) 
+	     (or (not (symbolp (fourth val)))
+		 (and (not (string= "standalone" (symbol-name (fourth val)))) 
+		      (not (string= "encoding" (symbol-name (fourth val)))))))
     (xml-error "XML declaration tag does not include correct 'encoding' or 'standalone' attribute"))
-  (when (and (fourth val) (eql :standalone (fourth val)))
+  (when (and (fourth val) (string= "standalone" (symbol-name (fourth val))))
     (if* (equal (fifth val) "yes") then
 	   (setf (iostruct-standalonep tokenbuf) t) 
      elseif (not (equal (fifth val) "no")) then

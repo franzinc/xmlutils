@@ -12,8 +12,7 @@
 <p><a href="#intro">Introduction/Simple Example</a><br>
 <a href="#lxml">LXML parse output format</a><br>
 <a href="#props">parse-xml non-validating parser properties</a><br>
-<a href="#modern">parse-xml requires Modern Lisp's mixed case and international character
-support</a><br>
+<a href="#modern">case and international character support issues</a><br>
 <a href="#keyword">parse-xml and packages</a><br>
 <a href="#namespace">parse-xml, the XML Namespace specification, and packages</a><br>
 <a href="#60beta">special note for Unicode support with ACL 6.0 beta</a><br>
@@ -141,9 +140,11 @@ text&quot;)))<br>
 <br>
 <strong><big>Usage Notes</big></strong><br>
 <br>
-<a name="modern"></a>1. The parse-xml function has been compiled and tested only in a<br>
-modern ACL. Its successful operation depends on both the mixed<br>
-case support and wide character support found in modern ACL.<br>
+<a name="modern"></a>1. The parse-xml function has been primarily compiled and tested in a
+modern ACL. However, in an ANSI Lisp with wide character support, it DOES pass the valid
+component of the conformance suite in the same manner as it does in a Modern Lisp. The
+parser's successful operation in all potential situations depends on wide character
+support. .<br>
 <br>
 <a name="keyword"></a>2. The parser uses the keyword package for DTD tokens and other<br>
 special XML tokens. Since element and attribute token symbols are usually interned<br>
@@ -162,19 +163,24 @@ this behavior:<br>
 <br>
 (setf *xml-example-string4*<br>
 &nbsp;&nbsp; &quot;&lt;bibliography<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.bibliography.org/XML/bib.ns'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+xmlns:bib='http://www.bibliography.org/XML/bib.ns'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:book owner='Smith'&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:title&gt;A Tale of Two
 Cities&lt;/bib:title&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:bibliography<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.franz.com/XML/bib.ns'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+xmlns:bib='http://www.franz.com/XML/bib.ns'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:library
 branch='Main'&gt;UK Library&lt;/bib:library&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date
 calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:bibliography&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;/bib:bibliography&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date
 calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:book&gt;<br>
@@ -210,7 +216,8 @@ calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ((bib::bibliography royal::|xmlns:bib|
 &quot;http://www.franz.com/XML/bib.ns&quot; royal::xmlns<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&quot;urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::library
 net.xml.namespace.0::branch &quot;Main&quot;) &quot;UK Library&quot;) &quot;<br>
@@ -248,24 +255,26 @@ directory:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :size 2)<br>
 <br>
 (def-char-to-octets-macro :fat-little-base (char<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;key
-put-next-octet external-format)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&amp;key put-next-octet external-format)<br>
 &nbsp;&nbsp; (declare (ignore external-format state))<br>
 &nbsp;&nbsp; `(let ((code (char-code ,char)))<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (,put-next-octet (ldb (byte 8 0) code))<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (,put-next-octet (ldb (byte 8 8) code))))<br>
 <br>
 (def-octets-to-char-macro :fat-little-base (state-loc<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;key
-get-next-octet external-format<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; octets-count-loc
-unget-octets)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&amp;key get-next-octet external-format<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+octets-count-loc unget-octets)<br>
 &nbsp;&nbsp; (declare (ignore external-format state-loc unget-octets))<br>
 &nbsp;&nbsp; `(let ((lo ,get-next-octet)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (hi (progn (incf
 ,octets-count-loc)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ,get-next-octet)))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+,get-next-octet)))<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (code-char (+ (ash hi 8) lo))))<br>
 <br>
 (create-newline-ef :name :fat-little :base-name :fat-little-base<br>
@@ -322,8 +331,8 @@ valid/<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 052.xml, 064.xml, 089.xml: fails because ACL
 does not support 4 byte <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unicode
-scalar values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Unicode scalar values<br>
 <br>
 <a name="build"></a><big><strong>Compiling and Loading</strong></big><br>
 <br>

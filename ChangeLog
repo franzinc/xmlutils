@@ -1,7 +1,15 @@
+2000-12-05 Steve Jacobson <sdj>
+
+	phtml.cl: add user visible change comment; fix comment spelling error
+	pxml.htm: change ANSI notes to reflect code changes
+	pxml1.cl: use symbol-name where needed to support ANSI case usage
+	pxml2.cl: use symbol-name where needed to support ANSI case usage
+	pxml3.cl: add two declarations to prevent forward referencing compile warnings
+
 2000-10-27 Steve Jacobson <sdj>
 
 	phtml.cl: check callbacks arg when tag has no body
-	          REMEBER TO ADD TEST TO PHTML-TEST!!!
+	          REMEMBER TO ADD TEST TO PHTML-TEST!!!
 	
 2000-10-14 Steve Jacobson <sdj>
 

@@ -20,7 +20,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml3.cl,v 1.4 2000/08/16 16:50:33 sdj Exp $
+;; $Id: pxml3.cl,v 1.5 2000/12/05 21:26:50 sdj Exp $
 
 (in-package :net.xml.parser)
 
@@ -143,7 +143,7 @@
 
 (defun next-dtd-token (tokenbuf
 		       external include-count external-callback)
-  (declare (optimize (speed 3) (safety 1)))
+  (declare (:fbound parse-default-value) (optimize (speed 3) (safety 1)))
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn
 		  (push (make-tokenbuf :cur 0 :max (length ,p-value) :data ,p-value)
@@ -2376,7 +2376,7 @@
     ))
 
 (defun external-param-reference (tokenbuf old-coll external-callback)
-  (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))
+  (declare (:fbound next-token) (ignorable old-coll) (optimize (speed 3) (safety 1)))
   (setf (iostruct-seen-parameter-reference tokenbuf) t)
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn

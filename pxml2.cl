@@ -20,7 +20,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml2.cl,v 1.6 2000/10/16 16:58:59 sdj Exp $
+;; $Id: pxml2.cl,v 1.7 2000/12/05 21:26:50 sdj Exp $
 
 ;; Change Log 
 ;;
@@ -699,11 +699,11 @@
 				" reference cannot be constructed from entity reference/character data sequence"))
 			else
 			     (setf entity-source nil))
-		     (if* (eq entity-symbol :amp) then (add-to-coll coll #\&)
-		      elseif (eq entity-symbol :lt) then (add-to-coll coll #\<)
-		      elseif (eq entity-symbol :gt) then (add-to-coll coll #\>)
-		      elseif (eq entity-symbol :apos) then (add-to-coll coll #\')
-		      elseif (eq entity-symbol :quot) then (add-to-coll coll #\")
+		     (if* (string= (symbol-name entity-symbol) "amp") then (add-to-coll coll #\&)
+		      elseif (string= (symbol-name entity-symbol) "lt") then (add-to-coll coll #\<)
+		      elseif (string= (symbol-name entity-symbol) "gt") then (add-to-coll coll #\>)
+		      elseif (string= (symbol-name entity-symbol) "apos") then (add-to-coll coll #\')
+		      elseif (string= (symbol-name entity-symbol) "quot") then (add-to-coll coll #\")
 			else 
 			     (let (p-value)
 			       (if* (and (iostruct-do-entity tokenbuf)
@@ -1443,11 +1443,11 @@
 				" reference cannot be constructed from entity reference/character data sequence"))
 			else
 			     (setf entity-source nil))
-		     (if* (eq entity-symbol :amp) then (add-to-coll coll #\&)
-		      elseif (eq entity-symbol :lt) then (add-to-coll coll #\<)
-		      elseif (eq entity-symbol :gt) then (add-to-coll coll #\>)
-		      elseif (eq entity-symbol :apos) then (add-to-coll coll #\')
-		      elseif (eq entity-symbol :quot) then (add-to-coll coll #\")
+		     (if* (string= (symbol-name entity-symbol) "amp") then (add-to-coll coll #\&)
+		      elseif (string= (symbol-name entity-symbol) "lt") then (add-to-coll coll #\<)
+		      elseif (string= (symbol-name entity-symbol) "gt") then (add-to-coll coll #\>)
+		      elseif (string= (symbol-name entity-symbol) "apos") then (add-to-coll coll #\')
+		      elseif (string= (symbol-name entity-symbol) "quot") then (add-to-coll coll #\")
 			else (let (p-value)
 			       (if* (and (iostruct-do-entity tokenbuf)
 					 (setf p-value 
