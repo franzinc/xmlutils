@@ -19,15 +19,20 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.15.2.2 2000/10/17 14:19:05 layer Exp $
+;; $Id: phtml.cl,v 1.15.2.3 2001/06/11 20:26:31 layer Exp $
 
 ;; phtml.cl  - parse html
 
 ;; Change Log
 ;;
+;; 02/05/01 symbols mapped to preferred case at runtime (as opposed to
+;;            a compile time macro determining the case mapping)
+;;
+;; 10/27/00 :callbacks arg now processed correctly for tags with no body
+;;
 ;; 10/14/00 add first-pass member to tokenbuf structure; used to remove
 ;;             multiple un-next-char calls in raw mode
-;;          removed :script from *in-line* (incoreect and led to infinite loop
+;;          removed :script from *in-line* (incorect and led to infinite loop)
 ;;          char format reopen not done in :script and :style
 ;;          fixed :table/:th tag-auto-close-stop typo
 
@@ -163,29 +168,33 @@
 		 )
 	
 	(with-range (i #\A #\Z)
-	    (addit i (+ char-tagcharacter
-	       char-attribnamechar
-	       char-attribundelimattribvalue)))
+	  (addit i (+ char-tagcharacter
+		      char-attribnamechar
+		      char-attribundelimattribvalue)))
 	
 	(with-range (i #\a #\z)
-	    (addit i (+ char-tagcharacter
-	       char-attribnamechar
-	       char-attribundelimattribvalue)))
+	  (addit i (+ char-tagcharacter
+		      char-attribnamechar
+		      char-attribundelimattribvalue)))
 		      
 	(with-range (i #\0 #\9)
-	    (addit i (+ char-tagcharacter
-	       char-attribnamechar
-	       char-attribundelimattribvalue)))
+	  (addit i (+ char-tagcharacter
+		      char-attribnamechar
+		      char-attribundelimattribvalue)))
 	
 	;; let colon be legal tag character
-	(addit (char-code #\:) char-tagcharacter)
+	(addit (char-code #\:) (+ char-attribnamechar
+				  char-tagcharacter))
 	
 	;; NY times special tags have _
-	(addit (char-code #\_) char-tagcharacter)
+	(addit (char-code #\_) (+ char-attribnamechar
+				  char-tagcharacter))
 	
 	; now the unusual cases
-	(addit (char-code #\-) char-attribundelimattribvalue)
-	(addit (char-code #\.) char-attribundelimattribvalue)
+	(addit (char-code #\-) (+ char-attribnamechar
+				  char-attribundelimattribvalue))
+	(addit (char-code #\.) (+ char-attribnamechar
+				  char-attribundelimattribvalue))
 	
 	;; adding all typeable chars except for whitespace and >
 	(addit (char-code #\:) char-attribundelimattribvalue)
@@ -285,7 +294,10 @@
 	 then (setf (car bufs) buf)
 	      (return)))))
 
-
+(defun to-preferred-case (ch)
+  (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
+     then (char-upcase ch)
+     else (char-downcase ch)))
     
     
 (defun next-token (stream ignore-strings raw-mode-delimiter
@@ -326,12 +338,6 @@
 		     else (setf (schar (collector-data ,coll) .next.)
 			    ,ch)
 			  (setf (collector-next ,coll) (1+ .next.)))))
-	     
-	     (to-preferred-case (ch)
-	       ;; should check the case mode
-	       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
-		       then `(char-upcase ,ch)
-		       else `(char-downcase ,ch)))
 	       
 	     )
     
@@ -746,6 +752,7 @@
   `(rest (assoc ,tag callbacks)))
 
 (defun phtml-internal (p read-sequence-func callback-only callbacks collect-rogue-tags
+
 		       no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
   (let ((raw-mode-delimiter nil)
@@ -950,6 +957,13 @@
 			   ))
 		 (if* no-end
 		    then		; this is a singleton tag
+			 (let ((callback (tag-callback (tag-name (if* (atom val)
+								    then val
+								    else (first val))))))
+			   (when callback
+			     (funcall callback (if* (atom val)
+						  then val
+						  else (list val)))))
 			 (push (if* (atom val)
 				  then val
 				  else (list val))

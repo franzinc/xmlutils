@@ -1,4 +1,9 @@
 *******************************************************************************
+merge from trunk to acl6 branch (for 6.1.beta)
+command: ../../join.sh trunk trunk_to_acl6_merge2 trunk_to_acl6_merge3 xmlutils
+*******************************************************************************
+
+*******************************************************************************
 merge from trunk to acl6 branch
 command: ../../join.sh trunk trunk_to_acl6_merge1 trunk_to_acl6_merge2 xmlutils
 *******************************************************************************
@@ -8,6 +13,53 @@ merge from trunk to acl6 branch
 command: ../../join.sh trunk acl6 trunk_to_acl6_merge1 xmlutils
 *******************************************************************************
 
+2001-06-08  Steve Haflich  <smh@romeo>
+	
+	* pxml.htm: Added mention that it is necessary to load or require
+		the module.  Cleaned up a little html formatting.
+	
+2001-05-30  John Foderaro  <jkf@tiger.franz.com>
+
+	* phtml.cl - add :,_,- and . to valid attribute name characters.
+
+2001-03-23  Steve Haflich  <smh@romeo>
+
+	* pxml3.cl: state-dtd-!-element-type-paren-choice-name2 was
+	   missing code to handle decls such as
+	   <!ELEMENT item1 ((item2 | item3)+ , item4)>
+	   which was presumably overlooked in the merge of
+	   *-choice and *-seq into a single set of parser states
+	   It is quite clear that the dtd parsr does not return correct
+	   tree structure in all cases, but this fix may allow it at
+	   least to accept legal dtds without signalling error.
+	   Also made minor *debug-dtd* enhancements.
+	* pxml[0,1,2,3]: Added dribble-bug version number tracking.
+	
+2001-02-05 Steve Jacobson <sdj>
+
+	phtml.cl: symbols mapped to preferred case at runtime (as opposed to
+                    a compile time macro determining the case mapping)
+
+2000-12-20 Steve Jacobson <sdj>
+
+	pxml-test.cl: NameSpace example change to reflect URI module fix
+	pxml.htm: NameSpace example change
+	pxml2.cl: bug10165 fix
+	pxml3.cl: bug10165 fix
+
+2000-12-05 Steve Jacobson <sdj>
+
+	phtml.cl: add user visible change comment; fix comment spelling error
+	pxml.htm: change ANSI notes to reflect code changes
+	pxml1.cl: use symbol-name where needed to support ANSI case usage
+	pxml2.cl: use symbol-name where needed to support ANSI case usage
+	pxml3.cl: add two declarations to prevent forward referencing compile warnings
+
+2000-10-27 Steve Jacobson <sdj>
+
+	phtml.cl: check callbacks arg when tag has no body
+	          REMEMBER TO ADD TEST TO PHTML-TEST!!!
+	
 2000-10-14 Steve Jacobson <sdj>
 
 	phtml-test.cl: add test related to raw mode infinite loop

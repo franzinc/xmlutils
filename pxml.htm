@@ -12,11 +12,9 @@
 <p><a href="#intro">Introduction/Simple Example</a><br>
 <a href="#lxml">LXML parse output format</a><br>
 <a href="#props">parse-xml non-validating parser properties</a><br>
-<a href="#modern">parse-xml requires Modern Lisp's mixed case and international character
-support</a><br>
+<a href="#modern">case and international character support issues</a><br>
 <a href="#keyword">parse-xml and packages</a><br>
 <a href="#namespace">parse-xml, the XML Namespace specification, and packages</a><br>
-<a href="#60beta">special note for Unicode support with ACL 6.0 beta</a><br>
 <a href="#unicode-scalar">ACL does not support Unicode 4 byte scalar values</a><br>
 <a href="#big-endian">only little-endian Unicode tested in ACL 6.0 beta</a><br>
 <a href="#debug">debugging aids</a><br>
@@ -45,20 +43,20 @@ Each list member may be:<br>
 <br>
 a. a string containing text content, such as &quot;Here is some text with a &quot;<br>
 <br>
-b. a list representing a XML tag with associated attributes and/or content,<br>
+b. a list representing a XML tag with associated attributes and/or content,
 such as ('item1 &quot;text&quot;) or (('item1 :att1 &quot;help.html&quot;)
-&quot;link&quot;). If the XML tag<br>
-does not have associated attributes, then the first list member will be a<br>
-symbol representing the XML tag, and the other elements will <br>
-represent the content, which can be a string (text content), a symbol (XML<br>
-tag with no attributes or content), or list (nested XML tag with<br>
-associated attributes and/or content). If there are associated attributes,<br>
-then the first list member will be a list containing a symbol<br>
-followed by two list members for each associated attribute; the first member is a<br>
-symbol representing the attribute, and the next member is a string corresponding<br>
+&quot;link&quot;). If the XML tag
+does not have associated attributes, then the first list member will be a
+symbol representing the XML tag, and the other elements will
+represent the content, which can be a string (text content), a symbol (XML
+tag with no attributes or content), or list (nested XML tag with
+associated attributes and/or content). If there are associated attributes,
+then the first list member will be a list containing a symbol
+followed by two list members for each associated attribute; the first member is a
+symbol representing the attribute, and the next member is a string corresponding
 to the attribute value.<br>
 <br>
-c. XML comments and or processing instructions - see the more detailed example below for<br>
+c. XML comments and or processing instructions - see the more detailed example below for
 further information.</p>
 
 <p><a name="props"></a><strong>Non Validating Parser Properties</strong></p>
@@ -141,166 +139,129 @@ text&quot;)))<br>
 <br>
 <strong><big>Usage Notes</big></strong><br>
 <br>
-<a name="modern"></a>1. The parse-xml function has been compiled and tested only in a<br>
-modern ACL. Its successful operation depends on both the mixed<br>
-case support and wide character support found in modern ACL.<br>
-<br>
-<a name="keyword"></a>2. The parser uses the keyword package for DTD tokens and other<br>
-special XML tokens. Since element and attribute token symbols are usually interned<br>
-in the current package, it is not recommended to execute parse-xml<br>
-when the current package is the keyword package.<br>
-<br>
-<a name="namespace"></a>3. The XML parser supports the XML Namespaces specification. The
-parser<br>
-recognizes a &quot;xmlns&quot; attribute and attribute names starting with
-&quot;xmlns:&quot;.<br>
-As per the specification, the parser expects that the associated value<br>
-is an URI string. The parser then associates XML Namespace prefixes with a<br>
-Lisp package provided via the parse-xml :uri-to-package option or, if <br>
-necessary, a package created on the fly. The following example demonstrates<br>
+<ol>
+<li><a name="modern"></a>The parse-xml function has been primarily compiled and tested in a
+modern ACL. However, in an ANSI Lisp with wide character support, it DOES pass the valid
+component of the conformance suite in the same manner as it does in a Modern Lisp. The
+parser's successful operation in all potential situations depends on wide character support.
+<br><br>
+</li>
+<li><a name="keyword"></a>The parser uses the keyword package for DTD tokens and other
+special XML tokens. Since element and attribute token symbols are usually interned
+in the current package, it is not recommended to execute parse-xml
+when the current package is the keyword package.
+<br><br>
+</li>
+<li><a name="namespace"></a>The XML parser supports the XML Namespaces specification. The
+parser recognizes a &quot;xmlns&quot; attribute and attribute names starting with
+&quot;xmlns:&quot;.
+As per the specification, the parser expects that the associated value
+is an URI string. The parser then associates XML Namespace prefixes with a
+Lisp package provided via the parse-xml :uri-to-package option or, if
+necessary, a package created on the fly. The following example demonstrates
 this behavior:<br>
-<br>
-(setf *xml-example-string4*<br>
+
+<p>(setf *xml-example-string4*<br>
 &nbsp;&nbsp; &quot;&lt;bibliography<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.bibliography.org/XML/bib.ns'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:book owner='Smith'&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:title&gt;A Tale of Two
-Cities&lt;/bib:title&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:bibliography<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.franz.com/XML/bib.ns'<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:library
-branch='Main'&gt;UK Library&lt;/bib:library&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date
-calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:bibliography&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date
-calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:book&gt;<br>
-&nbsp;&nbsp;&nbsp; &lt;/bibliography&gt;&quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.bibliography.org/XML/bib.ns'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:com:books-r-us'&gt;<br>
+&nbsp;&nbsp; &lt;bib:book owner='Smith'&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:title&gt;A Tale of Two Cities&lt;/bib:title&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:bibliography<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns:bib='http://www.franz.com/XML/bib.ns'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; xmlns='urn:com:books-r-us'&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:library branch='Main'&gt;UK
+Library&lt;/bib:library&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;bib:date calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/bib:bibliography&gt;<br>
+&nbsp;&nbsp; &lt;bib:date calendar='Julian'&gt;1999&lt;/bib:date&gt;<br>
+&nbsp;&nbsp; &lt;/bib:book&gt;<br>
+&lt;/bibliography&gt;&quot;)<br>
 <br>
 (setf *uri-to-package* nil)<br>
 (setf *uri-to-package*<br>
-&nbsp;&nbsp;&nbsp; (acons (parse-uri &quot;http://www.bibliography.org/XML/bib.ns&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;bib&quot;)
-*uri-to-package*))<br>
+&nbsp;&nbsp; (acons (parse-uri <a href="http://www.bibliography.org/XML/bib.ns">&quot;http://www.bibliography.org/XML/bib.ns&quot;</a>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;bib&quot;) *uri-to-package*))<br>
 (setf *uri-to-package*<br>
-&nbsp;&nbsp;&nbsp; (acons (parse-uri
-&quot;urn:royal-mail.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;royal&quot;)
-*uri-to-package*))<br>
+&nbsp;&nbsp; (acons (parse-uri <a href="http://www.bibliography.org/XML/bib.ns">&quot;</a>urn:com:books-r-us<a
+href="http://www.bibliography.org/XML/bib.ns">&quot;</a>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;royal&quot;) *uri-to-package*))<br>
 (setf *uri-to-package*<br>
-&nbsp;&nbsp;&nbsp; (acons (parse-uri &quot;http://www.franz.com/XML/bib.ns&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;franz-ns&quot;)
-*uri-to-package*))<br>
-(pprint (multiple-value-list <br>
-(parse-xml *xml-example-string4*<br>
-&nbsp;&nbsp; :uri-to-package *uri-to-package*)))<br>
+&nbsp;&nbsp; (acons (parse-uri <a href="http://www.bibliography.org/XML/bib.ns">&quot;</a>http://www.franz.com/XML/bib.ns<a
+href="http://www.bibliography.org/XML/bib.ns">&quot;</a>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (make-package &quot;franz-ns&quot;) *uri-to-package*))<br>
+(pprint (multiple-value-list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (parse-xml
+*xml-example-string4*<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :uri-to-package
+*uri-to-package*)))<br>
 <br>
 --&gt;<br>
-<br>
-((((bibliography |xmlns:bib| &quot;http://www.bibliography.org/XML/bib.ns&quot; xmlns<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;urn:royal-mail.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp; ((bib::book royal::owner &quot;Smith&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; (bib::title &quot;A Tale of Two Cities&quot;)
-&quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ((bib::bibliography royal::|xmlns:bib|
-&quot;http://www.franz.com/XML/bib.ns&quot; royal::xmlns<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999&quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::library
-net.xml.namespace.0::branch &quot;Main&quot;) &quot;UK Library&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::date
-net.xml.namespace.0::calendar &quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((bib::date royal::calendar
-&quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
+((((bibliography |xmlns:bib| <a href="http://www.bibliography.org/XML/bib.ns">&quot;http://www.bibliography.org/XML/bib.ns&quot;</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; xmlns &quot;urn:com:books-r-us&quot;)<br>
 &nbsp;&nbsp;&nbsp; &quot;<br>
-&nbsp;&nbsp;&nbsp; &quot;))<br>
-((#&lt;uri urn:royal-mail2.gov.ukXML/ns/postal.ns,1999&gt; . #&lt;The net.xml.namespace.0
-package&gt;)<br>
-(#&lt;uri http://www.franz.com/XML/bib.ns&gt; . #&lt;The franz-ns package&gt;)<br>
-(#&lt;uri urn:royal-mail.gov.ukXML/ns/postal.ns,1999&gt; . #&lt;The royal package&gt;)<br>
-(#&lt;uri http://www.bibliography.org/XML/bib.ns&gt; . #&lt;The bib package&gt;)))<br>
+&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp; ((bib::book royal::owner &quot;Smith&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; (bib::title &quot;A Tale of Two
+Cities&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp; ((bib::bibliography royal::|xmlns:bib|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;http://www.franz.com/XML/bib.ns&quot; royal::xmlns<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;urn:com:books-r-us&quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::library royal::branch
+&quot;Main&quot;) &quot;UK Library&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((franz-ns::date royal::calendar
+&quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot; ((bib::date royal::calendar
+&quot;Julian&quot;) &quot;1999&quot;) &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &quot;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &quot;))<br>
+((#&lt;uri http://www.franz.com/XML/bib.ns&gt; . #&lt;The franz-ns package&gt;)<br>
+&nbsp; (#&lt;uri urn:com:books-r-us&gt; . #&lt;The royal package&gt;)<br>
+&nbsp; (#&lt;uri http://www.bibliography.org/XML/bib.ns&gt; . #&lt;The bib package&gt;)))<br>
 <br>
-In the absence of XML Namespace attributes, element and attribute symbols are interned<br>
-in the current package. Note that this implies that attributes and elements referenced<br>
-in DTD content will be interned in the current package.<br>
-<br>
-<a name="60beta"></a>4. The ACL 6.0 beta does not contain a little-endian Unicode external
-format. To <br>
-process XML input containing Unicode characters correctly:<br>
-<br>
-a. Place the following in a file called ef-fat-little.cl in the ACL code<br>
-directory:<br>
-<br>
-(provide :ef-fat-little)<br>
-<br>
-(in-package :excl)<br>
-<br>
-(def-external-format :fat-little-base<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :size 2)<br>
-<br>
-(def-char-to-octets-macro :fat-little-base (char<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; state<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;key
-put-next-octet external-format)<br>
-&nbsp;&nbsp; (declare (ignore external-format state))<br>
-&nbsp;&nbsp; `(let ((code (char-code ,char)))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (,put-next-octet (ldb (byte 8 0) code))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (,put-next-octet (ldb (byte 8 8) code))))<br>
-<br>
-(def-octets-to-char-macro :fat-little-base (state-loc<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &amp;key
-get-next-octet external-format<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; octets-count-loc
-unget-octets)<br>
-&nbsp;&nbsp; (declare (ignore external-format state-loc unget-octets))<br>
-&nbsp;&nbsp; `(let ((lo ,get-next-octet)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (hi (progn (incf
-,octets-count-loc)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ,get-next-octet)))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (code-char (+ (ash hi 8) lo))))<br>
-<br>
-(create-newline-ef :name :fat-little :base-name :fat-little-base<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :nicknames '(:unicode-little))<br>
-<br>
-<br>
-b. Compile the file using a modern ACL.<br>
-<br>
-5. The parse-xml function has been tested using the OASIS conformance test suite (see<br>
-details below). The test suite has wide coverage across possible XML and DTD syntax,<br>
-but there may be some syntax paths that have not yet been tested or completely<br>
-supported. Here is a list of currently known syntax parsing issues:<br>
-<br>
-<a name="unicode-scalar"></a>a. ACL does not support 4 byte Unicode scalar values, so
-input containing such data<br>
-will not be processed correctly. (Note, however, that parse-xml does correctly detect<br>
-and process wide Unicode input.)<br>
-<br>
-<a name="big-endian"></a>b. The OASIS tests that contain wide Unicode all use a
-little-endian encoded Unicode.<br>
-Changes to the unicode-check function are required to also support big-endian encoded<br>
-Unicode. (Note also that this issue may be resolved by an ACL 6.0 final release change.)<br>
-<br>
-c. An initial &lt;?xml declaration in external entity files is skipped without a check<br>
-being made to see if the &lt;?xml declaration is itself incorrect.<br>
-<br>
-<a name="debug"></a>6. When investigating possible parser errors or examining more closely
-where the parser<br>
-determined that the input was non-well-formed, the net.xml.parser internal symbols <br>
-*debug-xml* and *debug-dtd* are useful. When not bound to nil, these variables cause<br>
-lexical analysis and intermediate parsing results to be output to *standard-output*.<br>
-<br>
+</li>
+<li>In the absence of XML Namespace attributes, element and attribute symbols are interned
+in the current package. Note that this implies that attributes and elements referenced
+in DTD content will be interned in the current package.
+</li>
+<li>The parse-xml function has been tested using the OASIS conformance test suite (see
+details below). The test suite has wide coverage across possible XML and DTD syntax,
+but there may be some syntax paths that have not yet been tested or completely
+supported. Here is a list of currently known syntax parsing issues:
+<ul>
+<li><a name="unicode-scalar"></a>ACL does not support 4 byte Unicode scalar values, so
+input containing such data
+will not be processed correctly. (Note, however, that parse-xml does correctly detect
+and process wide Unicode input.)
+</li>
+<li><a name="big-endian"></a>The OASIS tests that contain wide Unicode all use a
+little-endian encoded Unicode.
+Changes to the unicode-check function are required to also support big-endian encoded
+Unicode. (Note also that this issue may be resolved by an ACL 6.0 final release change.)
+</li>
+<li>An initial &lt;?xml declaration in external entity files is skipped without a check
+being made to see if the &lt;?xml declaration is itself incorrect.
+</li>
+</ul>
+</li>
+<li><a name="debug"></a>When investigating possible parser errors or examining more closely
+where the parser
+determined that the input was non-well-formed, the net.xml.parser internal symbols
+*debug-xml* and *debug-dtd* are useful. When not bound to nil, these variables cause
+lexical analysis and intermediate parsing results to be output to *standard-output*.
+</li>
+<li><a name="loading"></a>It is necessary to load the <b>pxml</b> module before using it.
+Typically this can be done by evaluating <b>(require&nbsp;:pxml)</b>.
+</li>
+</ol>
 <a name="conformance"></a><strong>XML Conformance Test Suite</strong><br>
 <br>
-Using the OASIS test suite <a href="http://www.oasis-open.org">(http://www.oasis-open.org)</a>,<br>
+Using the OASIS test suite <a href="http://www.oasis-open.org">(http://www.oasis-open.org)</a>,
 here are the current parse-xml results:<br>
 <br>
 xmltest/invalid:&nbsp;&nbsp;&nbsp; Not tested, since parse-xml is a non-validating parser<br>
@@ -322,8 +283,8 @@ valid/<br>
 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 052.xml, 064.xml, 089.xml: fails because ACL
 does not support 4 byte <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Unicode
-scalar values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Unicode scalar values<br>
 <br>
 <a name="build"></a><big><strong>Compiling and Loading</strong></big><br>
 <br>
@@ -344,82 +305,83 @@ parameter-entities<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; uri-to-package<br>
 <br>
 Returns multiple values:<br>
-<br>
-1) LXML and parsed DTD output, as described above.<br>
-2) An association list containing the uri-to-package argument conses (if any)<br>
-and conses associated with any XML Namespace packages created during the<br>
-parse (see uri-to-package argument description, below).<br>
-<br>
-The external-callback argument, if specified, is a function object or symbol<br>
-that parse-xml will execute when encountering an external DTD subset<br>
-or external entity DTD declaration. Here is an example which shows that<br>
-arguments the function should expect, and the value it should return:<br>
-<br>
-(defun file-callback (uri-object token &amp;optional public)<br>
-;; the uri-object is an ACL URI object created from<br>
-;; the XML input. In this example, this function<br>
-;; assumes that all uri's will be file specifications.<br>
-;;<br>
-;; the token argument identifies what token is associated<br>
-;; with the external parse (for example :DOCTYPE for external<br>
-;; DTD subset<br>
-;;<br>
-;; the public argument contains the associated PUBLIC string,<br>
-;; when present<br>
-;;<br>
-(declare (ignorable token public))<br>
-;; an open stream is returned on success<br>
-;; a nil return value indicates that the external<br>
-;; parse should not occur<br>
-;; Note that parse-xml will close the open stream before<br>
-;; exiting<br>
-(ignore-errors (open (uri-path uri-object))))<br>
-<br>
-The general-entities argument is an association list containing general entity symbol <br>
-and replacement text pairs. The entity symbols should be in the keyword package.<br>
-Note that this option may be useful in generating desirable parse results in <br>
-situations where you do not wish to parse external entities or the external DTD subset.<br>
-<br>
-The parameter-entities argument is an association list containing parameter entity symbol <br>
-and replacement text pairs. The entity symbols should be in the keyword package.<br>
-Note that this option may be useful in generating desirable parse results in <br>
-situations where you do not wish to parse external entities or the external DTD subset.<br>
-<br>
-The uri-to-package argument is an association list containing uri objects and package<br>
-objects. Typically, the uri objects correspond to XML Namespace attribute values, and<br>
-the package objects correspond to the desired package for interning symbols associated<br>
-with the uri namespace. If the parser encounters an uri object not contained in this list,<br>
+<ol>
+<li>LXML and parsed DTD output, as described above.</li>
+<li>An association list containing the uri-to-package argument conses (if any)
+and conses associated with any XML Namespace packages created during the
+parse (see uri-to-package argument description, below).</li>
+</ol>
+The external-callback argument, if specified, is a function object or symbol
+that parse-xml will execute when encountering an external DTD subset
+or external entity DTD declaration. Here is an example which shows that
+arguments the function should expect, and the value it should return:
+<br><pre>
+(defun file-callback (uri-object token &amp;optional public)
+  ;; The uri-object is an ACL URI object created from
+  ;; the XML input. In this example, this function
+  ;; assumes that all uri's will be file specifications.
+  ;;
+  ;; The token argument identifies what token is associated
+  ;; with the external parse (for example :DOCTYPE for external
+  ;; DTD subset
+  ;;
+  ;; The public argument contains the associated PUBLIC string,
+  ;; when present
+  ;;
+  (declare (ignorable token public))
+  ;; An open stream is returned on success,
+  ;; a nil return value indicates that the external
+  ;; parse should not occur.
+  ;; Note that parse-xml will close the open stream before exiting.
+  (ignore-errors (open (uri-path uri-object))))
+</pre>
+<p>
+The general-entities argument is an association list containing general entity symbol
+and replacement text pairs. The entity symbols should be in the keyword package.
+Note that this option may be useful in generating desirable parse results in
+situations where you do not wish to parse external entities or the external DTD subset.
+<p>
+The parameter-entities argument is an association list containing parameter entity symbol
+and replacement text pairs. The entity symbols should be in the keyword package.
+Note that this option may be useful in generating desirable parse results in
+situations where you do not wish to parse external entities or the external DTD subset.
+<p>
+The uri-to-package argument is an association list containing uri objects and package
+objects. Typically, the uri objects correspond to XML Namespace attribute values, and
+the package objects correspond to the desired package for interning symbols associated
+with the uri namespace. If the parser encounters an uri object not contained in this list,
 it will generate a new package. The first generated package will be named
-net.xml.namespace.0,<br>
-the second will be named net.xml.namespace.1, and so on.<br>
-<br>
-parse-xml Methods<br>
-<br>
-(parse-xml (p stream) &amp;key external-callback content-only <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; general-entities
-parameter-entities<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; uri-to-package)<br>
-<br>
-(parse-xml (str string) &amp;key external-callback content-only <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; general-entities
-parameter-entities<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; uri-to-package)<br>
-<br>
-An easy way to parse a file containing XML input:<br>
-<br>
-(with-open-file (p &quot;example.xml&quot;)<br>
-(parse-xml p :content-only p))<br>
-<br>
-<strong>net.xml.parser unexported special variables:</strong><br>
-<br>
+net.xml.namespace.0,
+the second will be named net.xml.namespace.1, and so on.
+<h3>parse-xml methods</h3>
+<pre>
+(parse-xml (p stream) &amp;key
+                      external-callback content-only
+                      general-entities
+                      parameter-entities
+                      uri-to-package)
+
+(parse-xml (str string) &amp;key
+                        external-callback content-only
+                        general-entities
+                        parameter-entities
+                        uri-to-package)
+</pre>
+An easy way to parse a file containing XML input:
+<pre>
+(with-open-file (p &quot;example.xml&quot;)
+  (parse-xml p :content-only p))
+</pre>
+<h3>net.xml.parser unexported special variables:</h3>
+<p>
 *debug-xml*<br>
 <br>
-When not bound to nil, generates XML lexical state and intermediary<br>
-parse result debugging output.<br>
-<br>
+When true, parse-xml generates XML lexical state and intermediary
+parse result debugging output.
+<p>
 *debug-dtd*<br>
 <br>
-When not bound to nil, generates DTD lexical state and intermediary<br>
-parse result debugging output.</p>
+When true, parse-xml generates DTD lexical state and intermediary
+parse result debugging output.
 </body>
 </html>

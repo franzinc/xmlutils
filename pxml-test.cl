@@ -147,12 +147,12 @@
 (setf *xml-example-string4*
   "<bibliography
       xmlns:bib='http://www.bibliography.org/XML/bib.ns'
-      xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'>
+      xmlns='urn:com:books-r-us'>
     <bib:book owner='Smith'>
        <bib:title>A Tale of Two Cities</bib:title>
        <bib:bibliography
          xmlns:bib='http://www.franz.com/XML/bib.ns'
-         xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'>
+         xmlns='urn:com:books-r-us'>
         <bib:library branch='Main'>UK Library</bib:library>
         <bib:date calendar='Julian'>1999</bib:date>
         </bib:bibliography>

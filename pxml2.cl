@@ -1,9 +1,9 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA 
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
-;; the GNU Lesser General Public License as published by 
+;; the GNU Lesser General Public License as published by
 ;; the Free Software Foundation, as clarified by the AllegroServe
 ;; prequel found in license-allegroserve.txt.
 ;;
@@ -12,21 +12,22 @@
 ;; merchantability or fitness for a particular purpose.  See the GNU
 ;; Lesser General Public License for more details.
 ;;
-;; Version 2.1 of the GNU Lesser General Public License is in the file 
+;; Version 2.1 of the GNU Lesser General Public License is in the file
 ;; license-lgpl.txt that was distributed with this file.
 ;; If it is not present, you can access it from
 ;; http://www.gnu.org/copyleft/lesser.txt (until superseded by a newer
-;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
+;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-
-;; $Id: pxml2.cl,v 1.2.2.2 2000/10/17 14:19:07 layer Exp $
+;; $Id: pxml2.cl,v 1.2.2.3 2001/06/11 20:26:32 layer Exp $
 
 ;; Change Log 
 ;;
 ;; 10/14/00 add namespace support
 
 (in-package :net.xml.parser)
+
+(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.2.2.3 2001/06/11 20:26:32 layer Exp $")
 
 ;; state titles can be better chosen and explained
 
@@ -40,7 +41,7 @@
 	     :parameter-entities parameter-entities :content-only content-only
 	     :uri-to-package uri-to-package))
 
-(defmethod parse-xml ((p stream) &key external-callback general-entities 
+(defmethod parse-xml ((p stream) &key external-callback general-entities
 				      parameter-entities content-only uri-to-package)
   (declare (optimize (speed 3) (safety 1)))
   (pxml-internal0 p nil external-callback general-entities parameter-entities content-only
@@ -91,13 +92,12 @@
 	(system-string)
 	(entity-open-tags)
 	)
-    
+
     (loop
-      (multiple-value-bind (val kind kind2) 
+      (multiple-value-bind (val kind kind2)
 	  (next-token tokenbuf external-callback attlist-data)
 	(when *debug-xml*
-	  (format t "val: ~s kind: ~s kind2: ~s state: ~s~%" 
-		  val kind kind2 state))
+	  (format t "val: ~s kind: ~s kind2: ~s state: ~s~%" val kind kind2 state))
 	(case state
 	  (#.state-docstart
 	   (if* (and (listp val) (eq :xml (first val)) (eq kind :xml) (eq kind2 :end-tag))
@@ -132,21 +132,21 @@
 				 (let (ext-io (entity-buf (get-tokenbuf)))
 				   (setf (tokenbuf-stream entity-buf) ext-stream)
 				   (setf ext-io (make-iostruct :tokenbuf entity-buf
-							       :do-entity 
+							       :do-entity
 							       (iostruct-do-entity tokenbuf)
-							       :read-sequence-func 
+							       :read-sequence-func
 							       (iostruct-read-sequence-func tokenbuf)))
 				   (unicode-check ext-stream ext-io)
-				   (setf (iostruct-parameter-entities ext-io) 
+				   (setf (iostruct-parameter-entities ext-io)
 				     (iostruct-parameter-entities tokenbuf))
 				   (setf (iostruct-general-entities ext-io)
 				     (iostruct-general-entities tokenbuf))
 				   (unwind-protect
-				       (setf val (append val 
-							 (list (append 
+				       (setf val (append val
+							 (list (append
 								(list :external)
 								(parse-dtd
-								 ext-io	    
+								 ext-io
 								 t external-callback)))))
 				     (setf (iostruct-seen-any-dtd tokenbuf) t)
 				     (setf (iostruct-seen-external-dtd tokenbuf) t)
@@ -204,7 +204,7 @@
 						   (string kind) "'"
 						   (if* (null guts) then
 							   " at start of contents"
-						      else 
+						      else
 							   (concatenate 'string
 							     " following: '"
 							     (format nil "~s" (first guts))
@@ -250,7 +250,7 @@
 					(string kind) "'"
 					(if* (null guts) then
 						" at start of contents"
-					   else 
+					   else
 						(concatenate 'string
 						  " following: '"
 						  (format nil "~s" (first guts))
@@ -290,21 +290,21 @@
 				 (let (ext-io (entity-buf (get-tokenbuf)))
 				   (setf (tokenbuf-stream entity-buf) ext-stream)
 				   (setf ext-io (make-iostruct :tokenbuf entity-buf
-							       :do-entity 
+							       :do-entity
 							       (iostruct-do-entity tokenbuf)
-							       :read-sequence-func 
+							       :read-sequence-func
 							       (iostruct-read-sequence-func tokenbuf)))
 				   (unicode-check ext-stream ext-io)
-				   (setf (iostruct-parameter-entities ext-io) 
+				   (setf (iostruct-parameter-entities ext-io)
 				     (iostruct-parameter-entities tokenbuf))
 				   (setf (iostruct-general-entities ext-io)
 				     (iostruct-general-entities tokenbuf))
 				   (unwind-protect
-				       (setf val (append val 
-							 (list (append 
+				       (setf val (append val
+							 (list (append
 								(list :external)
 								(parse-dtd
-								 ext-io	    
+								 ext-io
 								 t external-callback)))))
 				     (setf (iostruct-seen-any-dtd tokenbuf) t)
 				     (setf (iostruct-seen-external-dtd tokenbuf) t)
@@ -362,14 +362,14 @@
 	  (#.state-element-contents
 	   (if* (or (symbolp val)
 		    (and (listp val) (symbolp (first val))))
-	      then 
+	      then
 		   (when (eq kind :start-tag)
 		     (setf val (add-default-values val attlist-data)))
 		   (if* (eq kind :end-tag)
 		      then (let ((candidate (first (first pending))))
 			     (when (listp candidate) (setf candidate (first candidate)))
 			     (if* (eq candidate val)
-				then 
+				then
 				     (if* (iostruct-entity-bufs tokenbuf) then
 					     (when (not (eq (first entity-open-tags) val))
 					       (xml-error
@@ -393,7 +393,7 @@
 					       (append (second pending) (list (first pending)))))
 				     (setf pending (rest pending))
 				     ;;(format t "pending: ~s guts: ~s <4>~%" pending guts)
-				else (xml-error (format nil 
+				else (xml-error (format nil
 							"encountered end tag: ~s expected: ~s"
 							val candidate))))
 		    elseif (and (eq kind :start-tag) (eq kind2 :end-tag))
@@ -402,7 +402,7 @@
 			     (append (first pending) (list (list val))))
 			   ;;(format t "pending: ~s guts: ~s <5>~%" pending guts)
 		    elseif (eq kind :start-tag)
-		      then 
+		      then
 			   (push (list val) pending)
 			   ;;(format t "pending: ~s guts: ~s <6>~%" pending guts)
 			   (when (iostruct-entity-bufs tokenbuf)
@@ -419,7 +419,7 @@
 				  else (push item new)))
 			     (setf (first pending) (reverse new)))
 		    elseif (eq kind :comment) then
-			  (when (not content-only) (push val guts)) 
+			  (when (not content-only) (push val guts))
 		    elseif (eq kind :pi)
 		      then
 			   (setf (first pending)
@@ -429,7 +429,7 @@
 			   (xml-error "unexpected end of file encountered")
 		      else (xml-error (format nil "unexpected token: ~s" val)))
 	    elseif (eq kind :pcdata)
-	      then 
+	      then
 		   (setf (first pending)
 		     (append (first pending) (list val)))
 		   (let ((old (first pending))
@@ -451,7 +451,7 @@
 			     (xml-error (concatenate 'string
 					  "unrecognized content '"
 					  (subseq val 0 (min (length val) 40)) "'"))))
-	    elseif (eq kind :eof) then 
+	    elseif (eq kind :eof) then
 		   (put-back-tokenbuf (iostruct-tokenbuf tokenbuf))
 		   (return (nreverse guts))
 	    elseif (eq kind :comment) then
@@ -467,7 +467,7 @@
 				  (format nil "~s" (first guts))
 				  "'")))
 		   ))
-	  (t 
+	  (t
 	   (error "need to support state:~s token:~s  kind:~s kind2:~s <parse>" state val kind kind2)))
 	))))
 
@@ -479,7 +479,7 @@
   (defconstant state-readtag-end 4) ;; found </ looking for tag name
   (defconstant state-readtag 5) ;; found < name start looking for more name, /, >
   (defconstant state-findattributename 6) ;; found <?xml space looking for ?,>,space,name start
-  (defconstant state-readpi 7) 
+  (defconstant state-readpi 7)
   (defconstant state-noattributename 8)
   (defconstant state-attribname 9) ;; found <?xml space name start looking for more name,=
   (defconstant state-attribstartvalue 10) ;; found <?xml space name= looking for ',"
@@ -537,7 +537,7 @@
 
 (defun next-token (tokenbuf external-callback attlist-data)
   (declare (optimize (speed 3) (safety 1)))
-  ;; return two values: 
+  ;; return two values:
   ;;    the next token from the stream.
   ;; 	the kind of token
   ;;
@@ -547,13 +547,13 @@
 	       `(progn
 		  (push (make-tokenbuf :cur 0 :max (length p-value) :data p-value)
 			(iostruct-entity-bufs tokenbuf))))
-	     
+
 	     (un-next-char (ch)
 	       `(push ,ch (iostruct-unget-char tokenbuf)))
-	     
+
 	     (clear-coll (coll)
 	       `(setf (collector-next ,coll) 0))
-		     
+
 	     (add-to-coll (coll ch)
 	       `(let ((.next. (collector-next ,coll)))
 		  (if* (>= .next. (collector-max ,coll))
@@ -561,13 +561,13 @@
 		     else (setf (schar (collector-data ,coll) .next.)
 			    ,ch)
 			  (setf (collector-next ,coll) (1+ .next.)))))
-	     
+
 	     (to-preferred-case (ch)
 	       ;; should check the case mode
 	       `(char-downcase ,ch))
-	       
+
 	     )
-    
+
     (let ((state state-pcdata)
 	  (coll  (get-collector))
 	  (entity  (get-collector))
@@ -588,17 +588,17 @@
 	  (entity-source)
 	  (ns-token)
 	  (ch))
-      
+
       (loop
 
 	(setq ch (get-next-char tokenbuf))
-	(when *debug-xml* (format t "ch: ~s code: ~x state:~s entity-names:~s~%" 
+	(when *debug-xml* (format t "ch: ~s code: ~x state:~s entity-names:~s~%"
 				  ch (char-code ch) state (iostruct-entity-names tokenbuf)))
 	(if* (null ch)
 	   then (return) ; eof -- exit loop
 		)
-      
-      
+
+
 	(case state
 	  (#.state-pcdata
 	  (if* (eq ch #\<)
@@ -625,12 +625,12 @@
 		  #+ignore
 		  (if* (not (eq ch #\return))
 		     then (add-to-coll coll ch))))
-	  
+
 	  (#.state-pcdata7
 	   (if* (eq #\] ch) then (setf state state-pcdata8)
 	      else (setf state state-pcdata)
 		   (add-to-coll coll #\]) (un-next-char ch)))
-	  
+
 	  (#.state-pcdata8
 	   (if* (eq #\> ch) then
 		   (add-to-coll coll #\])
@@ -649,7 +649,7 @@
 		   (add-to-coll coll #\])
 	      else (setf state state-pcdata)
 		   (add-to-coll coll #\]) (add-to-coll coll #\]) (un-next-char ch)))
-	  
+
 	  (#.state-pcdata2
 	   (if* (eq #\# ch)
 	      then (setf state state-pcdata3)
@@ -667,7 +667,7 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
-	  
+
 	  (#.state-pcdata3
 	   (if* (eq #\x ch)
 	      then (setf state state-pcdata5)
@@ -685,7 +685,7 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
-	  
+
 	  (#.state-pcdata4
 	   (if* (xml-name-char-p ch)
 	      then (add-to-coll entity ch)
@@ -699,16 +699,16 @@
 				" reference cannot be constructed from entity reference/character data sequence"))
 			else
 			     (setf entity-source nil))
-		     (if* (eq entity-symbol :amp) then (add-to-coll coll #\&)
-		      elseif (eq entity-symbol :lt) then (add-to-coll coll #\<)
-		      elseif (eq entity-symbol :gt) then (add-to-coll coll #\>)
-		      elseif (eq entity-symbol :apos) then (add-to-coll coll #\')
-		      elseif (eq entity-symbol :quot) then (add-to-coll coll #\")
-			else 
+		     (if* (string= (symbol-name entity-symbol) "amp") then (add-to-coll coll #\&)
+		      elseif (string= (symbol-name entity-symbol) "lt") then (add-to-coll coll #\<)
+		      elseif (string= (symbol-name entity-symbol) "gt") then (add-to-coll coll #\>)
+		      elseif (string= (symbol-name entity-symbol) "apos") then (add-to-coll coll #\')
+		      elseif (string= (symbol-name entity-symbol) "quot") then (add-to-coll coll #\")
+			else
 			     (let (p-value)
 			       (if* (and (iostruct-do-entity tokenbuf)
-					 (setf p-value 
-					   (assoc entity-symbol 
+					 (setf p-value
+					   (assoc entity-symbol
 						  (iostruct-general-entities tokenbuf)))) then
 				       (setf p-value (rest p-value))
 				       (when (member entity-symbol (iostruct-entity-names tokenbuf))
@@ -727,13 +727,16 @@
 							 (let ((entity-buf (get-tokenbuf)))
 							   (setf (tokenbuf-stream entity-buf) entity-stream)
 							   (unicode-check entity-stream tokenbuf)
-							   (push entity-buf 
+							   (push entity-buf
 								 (iostruct-entity-bufs tokenbuf))
 							   ;; check for possible external textdecl
 							   (let ((count 0) cch
 								 (string "<?xml "))
 							     (if* (dotimes (i (length string) t)
 								    (setf cch (get-next-char tokenbuf))
+								    (when (and (= i 5)
+									       (xml-space-p cch))
+								      (setf cch #\space))
 								    (when (not (eq cch
 										   (schar string count)))
 								      (return nil))
@@ -744,8 +747,8 @@
 								       (un-next-char (schar string count))
 								       (decf count))
 								     ;; swallow <?xml token
-								     (swallow-xml-token 
-								      tokenbuf 
+								     (swallow-xml-token
+								      tokenbuf
 								      external-callback)
 								else
 								     (un-next-char cch)
@@ -753,7 +756,7 @@
 								     (loop
 								       (when (< count 0) (return))
 								       (un-next-char (schar string count))
-								       (decf count)))) 
+								       (decf count))))
 							   )
 						    else
 							 (xml-error (concatenate 'string
@@ -786,7 +789,7 @@
 				  (compute-coll-string coll)
 				  "'")))
 		   ))
-	  
+
 	  (#.state-pcdata5
 	   (let ((code (char-code ch)))
 	     (if* (eq #\; ch)
@@ -824,7 +827,7 @@
 				  "', calculated char code: "
 				  (format nil "~s" char-code)))
 		     )))
-	  
+
 	  (#.state-pcdata6
 	   (let ((code (char-code ch)))
 	     (if* (eq #\; ch)
@@ -858,7 +861,7 @@
 				  "', calculated char code: "
 				  (format nil "~s" char-code)))
 		     )))
-	  
+
 	  (#.state-readtag-end
 	   (if* (xml-name-start-char-p ch)
 	      then (setf state state-readtag-end2)
@@ -874,11 +877,11 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
-	  
+
 	  (#.state-readtag-end2
 	   (if* (xml-name-char-p ch)
 	      then (add-to-coll coll ch)
-	    elseif (eq #\> ch) then 
+	    elseif (eq #\> ch) then
 		   (let ((tag-string (compute-coll-string coll)))
 		     (when (and (iostruct-ns-scope tokenbuf)
 				(string= tag-string
@@ -889,7 +892,7 @@
 				   (iostruct-ns-to-package tokenbuf))))
 		       (setf (iostruct-ns-scope tokenbuf)
 			 (rest (iostruct-ns-scope tokenbuf)))))
-		   (setq tag-to-return (compute-tag coll *package* 
+		   (setq tag-to-return (compute-tag coll *package*
 						    (iostruct-ns-to-package tokenbuf)))
 		   (return)
 	    elseif (xml-space-p ch) then (setf state state-readtag-end3)
@@ -914,7 +917,7 @@
 				  (compute-coll-string coll)
 				  "'")))
 		   ))
-	  
+
 	  (#.state-readtag-end3
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\> ch) then (return)
@@ -929,8 +932,8 @@
 				  "illegal end tag name, starting at: '"
 				  (compute-coll-string coll)
 				  "' end tag name: " tmp )))
-		   )) 
-		     
+		   ))
+
 	  (#.state-readtagfirst
 	   ; starting to read a tag name
 	   (if* (eq #\/ ch)
@@ -956,7 +959,7 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
-	  
+
 	  (#.state-readtag-!
 	   (if* (xml-name-start-char-p ch)
 	      then
@@ -980,7 +983,7 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
-	  
+
 	  (#.state-readtag-!-conditional
 	   (if* (eq #\C ch) then
 		   (setf state state-readtag-!-conditional4)
@@ -995,8 +998,8 @@
 				"illegal character following '<![', starting at '<!["
 				(compute-coll-string coll)
 				"'"))
-		   ))   
-	  
+		   ))
+
 	  (#.state-readtag-!-conditional4
 	   (if* (not (eq (elt "CDATA[" special-tag-count) ch))
 	      then (clear-coll coll)
@@ -1010,9 +1013,9 @@
 				(subseq "CDATA[" 0 special-tag-count)
 				(compute-coll-string coll)
 				"'"))
-	    elseif (eq #\[ ch) then (setf state state-readtag-!-conditional5)   
+	    elseif (eq #\[ ch) then (setf state state-readtag-!-conditional5)
 	      else (incf special-tag-count)))
-	  
+
 	  (#.state-readtag-!-conditional5
 	   (if* (eq #\] ch)
 	      then (setf state state-readtag-!-conditional6)
@@ -1022,17 +1025,17 @@
 			       (string ch)
 			       " detected in CDATA input"))
 	      else (add-to-coll coll ch)))
-	  
+
 	  (#.state-readtag-!-conditional6
 	   (if* (eq #\] ch)
 	      then (setf state state-readtag-!-conditional7)
 	      else (setf state state-readtag-!-conditional5)
 		   (add-to-coll coll #\])
 		   (add-to-coll coll ch)))
-	  
+
 	  (#.state-readtag-!-conditional7
 	   (if* (eq #\> ch)
-	      then 
+	      then
 		   (if* (not (eq entity-source (first (iostruct-entity-bufs tokenbuf)))) then
 			   (xml-error
 			    "CDATA cannot be constructed from entity reference/character data sequence")
@@ -1044,8 +1047,8 @@
 	      else (setf state state-readtag-!-conditional5)
 		   (add-to-coll coll #\])
 		   (add-to-coll coll #\])
-		   (add-to-coll coll ch)))	   
-		     
+		   (add-to-coll coll ch)))
+
 	  (#.state-readtag-!-comment
 	   (if* (eq #\- ch)
 	      then (setf state state-readtag-!-readcomment)
@@ -1071,13 +1074,13 @@
 				(string ch)
 				" detected in input"))
 	      else (add-to-coll coll ch)))
-	  
+
 	  (#.state-readtag-!-readcomment2
 	   (if* (eq #\- ch)
 	      then (setf state state-readtag-end-bracket)
 	      else (setf state state-readtag-!-readcomment)
 		   (add-to-coll coll #\-) (add-to-coll coll ch)))
-	  
+
 	  (#.state-readtag-end-bracket
 	   (if* (eq #\> ch)
 	      then (if* (not (eq entity-source (first (iostruct-entity-bufs tokenbuf)))) then
@@ -1099,7 +1102,7 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
-	  
+
 	  (#.state-readtag
 	   (if* (xml-name-char-p ch) ;; starting char already passed more restrictive test
 	      then
@@ -1107,19 +1110,19 @@
 	      else
 		   (if* (xml-space-p ch) then
 			   (setf tag-to-return-string (compute-coll-string coll))
-			   (setq tag-to-return 
+			   (setq tag-to-return
 			     (compute-tag coll *package*
 					  (iostruct-ns-to-package tokenbuf)))
 			   (clear-coll coll)
 			   (setf state state-readtag2)
-		    elseif (eq #\> ch) then 
-			   (setq tag-to-return 
+		    elseif (eq #\> ch) then
+			   (setq tag-to-return
 			     (compute-tag coll *package*
 					  (iostruct-ns-to-package tokenbuf)))
 			   (clear-coll coll)
 			   (return)
-		    elseif (eq #\/ ch) then 
-			   (setq tag-to-return 
+		    elseif (eq #\/ ch) then
+			   (setq tag-to-return
 			     (compute-tag coll *package*
 					  (iostruct-ns-to-package tokenbuf)))
 			   (clear-coll coll)
@@ -1129,18 +1132,18 @@
 			     (setq ch (get-next-char tokenbuf))
 			     (if* (null ch)
 				then (return)))
-			   (xml-error 
+			   (xml-error
 			    (concatenate 'string
 			      "illegal token name, starting at '"
 			      (compute-coll-string coll)
 			      "'"))
 			   )))
-	  
+
 	  (#.state-readtag2
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\> ch) then (return)
 	    elseif (eq #\/ ch) then (setf state state-readtag3)
-	    elseif (xml-name-start-char-p ch) then 
+	    elseif (xml-name-start-char-p ch) then
 		   (un-next-char ch)
 		   (setf state state-readtag4)
 	      else (clear-coll coll)
@@ -1149,13 +1152,13 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "illegal token, starting at '"
 		      (compute-coll-string coll)
 		      "' following element token start: " (string tag-to-return)))
 		   ))
-	  
+
 	  (#.state-readtag4
 	   (if* (xml-name-char-p ch) ;; starting char already passed more restrictive test
 	      then
@@ -1194,13 +1197,13 @@
 		       (setq ch (get-next-char tokenbuf))
 		       (if* (null ch)
 			  then (return)))
-		     (xml-error 
+		     (xml-error
 		      (concatenate 'string
 			"looking for attribute '=', found: '"
 		      (compute-coll-string coll)
 		      "' following attribute name: " tmp)))
 		   ))
-	  
+
 	  (#.state-readtag12
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\= ch) then (setf state state-readtag5)
@@ -1210,12 +1213,12 @@
 		   (setq ch (get-next-char tokenbuf))
 		   (if* (null ch)
 		      then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "looking for attribute '=', found: '"
 		      (compute-coll-string coll)
 		      "' following attribute name: " (string attrib-name)))))
-	  
+
 	  (#.state-readtag5
 	   ;; begin to collect attribute value
 	   (if* (or (eq ch #\")
@@ -1234,16 +1237,16 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "attribute value not delimited by ' or \" : '"
 		      (compute-coll-string coll)
 		      "' following attribute: " (string attrib-name)))
 		   ))
-	  
+
 	  (#.state-readtag6
 	   (let ((from-entity (and attrib-value-tokenbuf
-				   (eq attrib-value-tokenbuf 
+				   (eq attrib-value-tokenbuf
 				       (first (iostruct-entity-bufs tokenbuf))))))
 	     (when (not from-entity) (setf attrib-value-tokenbuf nil))
 	     (if* from-entity then
@@ -1276,7 +1279,7 @@
 					    else (setf new-package (make-package candidate))
 						 (setf (iostruct-uri-to-package tokenbuf)
 						   (acons (parse-uri attrib-value) new-package
-							  (iostruct-uri-to-package tokenbuf)))  
+							  (iostruct-uri-to-package tokenbuf)))
 						 (return new-package)))))))
 			 (setf (iostruct-ns-to-package tokenbuf)
 			   (acons ns-token package (iostruct-ns-to-package tokenbuf)))
@@ -1300,20 +1303,20 @@
 		      (setf entity-source (first (iostruct-entity-bufs tokenbuf)))
 	      elseif (and (xml-char-p ch) (not (eq #\< ch)))
 		then (add-to-coll coll ch)
-		else 
+		else
 		     (dotimes (i 15)
 		       (add-to-coll coll ch)
 		       (setq ch (get-next-char tokenbuf))
 		       (if* (null ch)
 			  then (return)))
-		     (xml-error 
+		     (xml-error
 		      (concatenate 'string
 			"attribute value cannot contain '<': '"
 			(compute-coll-string coll)
 			"' following attribute: " (string attrib-name)))
 		     )
 	     (setf last-ch ch)))
-	  
+
 	  (#.state-readtag6a
 	   (if* (xml-space-p ch) then (setf state state-readtag2)
 	    elseif (eq #\> ch) then (setf state state-readtag2)
@@ -1325,13 +1328,13 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "illegal token, starting at '"
 		      (compute-coll-string coll)
 		      "' following element token start: " (string tag-to-return)))
 		   ))
-	  
+
 	  (#.state-readtag7
 	   (if* (eq #\# ch)
 	      then (setf state state-readtag8)
@@ -1344,13 +1347,13 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "attribute value contains illegal reference name: '&"
 		      (compute-coll-string coll)
 		      "' in attribute value for: " (string attrib-name)))
 		   ))
-	  
+
 	  (#.state-readtag8
 	   (if* (eq #\x ch)
 	      then (setf state state-readtag10)
@@ -1363,13 +1366,13 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "attribute value contains illegal character reference code: '"
 		      (compute-coll-string coll)
 		      "' in attribute value for: " (string attrib-name)))
 		   ))
-	  
+
 	  (#.state-readtag10
 	   (let ((code (char-code ch)))
 	     (if* (eq #\; ch)
@@ -1395,13 +1398,13 @@
 		       (setq ch (get-next-char tokenbuf))
 		       (if* (null ch)
 			  then (return)))
-		     (xml-error 
+		     (xml-error
 		      (concatenate 'string
 			"attribute value contains illegal hexidecimal character reference code: '"
 			(compute-coll-string coll)
 			"' in attribute value for: " (string attrib-name)))
 		     )))
-	  
+
 	  (#.state-readtag11
 	   (let ((code (char-code ch)))
 	     (if* (eq #\; ch)
@@ -1423,13 +1426,13 @@
 		       (setq ch (get-next-char tokenbuf))
 		       (if* (null ch)
 			  then (return)))
-		     (xml-error 
+		     (xml-error
 		      (concatenate 'string
 			"attribute value contains illegal decimal character reference code: '"
 			(compute-coll-string coll)
 			"' in attribute value for: " (string attrib-name)))
 		     )))
-	  
+
 	  (#.state-readtag9
 	   (if* (xml-name-char-p ch)
 	      then (add-to-coll entity ch)
@@ -1443,15 +1446,15 @@
 				" reference cannot be constructed from entity reference/character data sequence"))
 			else
 			     (setf entity-source nil))
-		     (if* (eq entity-symbol :amp) then (add-to-coll coll #\&)
-		      elseif (eq entity-symbol :lt) then (add-to-coll coll #\<)
-		      elseif (eq entity-symbol :gt) then (add-to-coll coll #\>)
-		      elseif (eq entity-symbol :apos) then (add-to-coll coll #\')
-		      elseif (eq entity-symbol :quot) then (add-to-coll coll #\")
+		     (if* (string= (symbol-name entity-symbol) "amp") then (add-to-coll coll #\&)
+		      elseif (string= (symbol-name entity-symbol) "lt") then (add-to-coll coll #\<)
+		      elseif (string= (symbol-name entity-symbol) "gt") then (add-to-coll coll #\>)
+		      elseif (string= (symbol-name entity-symbol) "apos") then (add-to-coll coll #\')
+		      elseif (string= (symbol-name entity-symbol) "quot") then (add-to-coll coll #\")
 			else (let (p-value)
 			       (if* (and (iostruct-do-entity tokenbuf)
-					 (setf p-value 
-					   (assoc entity-symbol 
+					 (setf p-value
+					   (assoc entity-symbol
 						  (iostruct-general-entities tokenbuf)))) then
 				       (setf p-value (rest p-value))
 				       (when (member entity-symbol (iostruct-entity-names tokenbuf))
@@ -1473,13 +1476,16 @@
 							 (let ((entity-buf (get-tokenbuf)))
 							   (setf (tokenbuf-stream entity-buf) entity-stream)
 							   (unicode-check entity-stream tokenbuf)
-							   (push entity-buf 
+							   (push entity-buf
 								 (iostruct-entity-bufs tokenbuf))
 							   ;; check for possible external textdecl
 							   (let ((count 0) cch
 								 (string "<?xml "))
 							     (if* (dotimes (i (length string) t)
 								    (setf cch (get-next-char tokenbuf))
+								    (when (and (= i 5)
+									       (xml-space-p cch))
+								      (setf cch #\space))
 								    (when (not (eq cch
 										   (schar string count)))
 								      (return nil))
@@ -1490,8 +1496,8 @@
 								       (un-next-char (schar string count))
 								       (decf count))
 								     ;; swallow <?xml token
-								     (swallow-xml-token 
-								      tokenbuf 
+								     (swallow-xml-token
+								      tokenbuf
 								      external-callback)
 								else
 								     (un-next-char cch)
@@ -1499,7 +1505,7 @@
 								     (loop
 								       (when (< count 0) (return))
 								       (un-next-char (schar string count))
-								       (decf count)))) 
+								       (decf count))))
 							   )
 						    else
 							 (xml-error (concatenate 'string
@@ -1523,13 +1529,13 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "attribute value contains illegal reference name: '&"
 		      (compute-coll-string coll)
 		      "' in attribute value for: " (string attrib-name)))
 		   ))
-	  
+
 	  (#.state-readtag3
 	   (if* (eq #\> ch) then (return)
 	      else (clear-coll coll)
@@ -1538,34 +1544,34 @@
 		     (setq ch (get-next-char tokenbuf))
 		     (if* (null ch)
 			then (return)))
-		   (xml-error 
+		   (xml-error
 		    (concatenate 'string
 		      "expected '>' found '"
 		      (compute-coll-string coll)
 		      "' in element: " (string tag-to-return)))
 		   ))
-	  
+
 	  (#.state-readtag-!-name
 	   (if* (xml-name-char-p ch) ;; starting char already passed more restrictive test
 	      then
 		   (add-to-coll coll ch)
 	      else
 		   (when (not (xml-space-p ch))
-		     (xml-error (concatenate 'string 
+		     (xml-error (concatenate 'string
 				  "expecting whitespace following: '<!"
 				  (compute-coll-string coll)
 				  "' ; got: '" (string ch) "'")))
 		   (setq tag-to-return (compute-tag coll))
 		   (clear-coll coll)
 		   (setf state state-pre-!-contents)))
-	  
+
 	  (#.state-readtag-?
 	   (if* (xml-name-char-p ch)
 	      then
 		   (add-to-coll coll ch)
 	      else
 		   (when (and (not (xml-space-p ch)) (not (eq #\? ch)))
-		     (xml-error (concatenate 'string 
+		     (xml-error (concatenate 'string
 				  "expecting name following: '<?"
 				  (compute-coll-string coll)
 				  "' ; got: '" (string ch) "'"))
@@ -1595,7 +1601,7 @@
 			   (when (eq #\? ch) (un-next-char ch))
 			   (setf state state-prereadpi))
 		   (clear-coll coll)))
-	  
+
 	  (#.state-pre-!-contents
 	   (if* (xml-space-p ch)
 	      then nil
@@ -1608,7 +1614,7 @@
 	      then (return)
 	      else (un-next-char ch)
 		   (setf state state-!-contents)))
-	  
+
 	  (#.state-begin-dtd
 	   (un-next-char ch)
 	   (let ((val (parse-dtd tokenbuf nil external-callback)))
@@ -1616,7 +1622,7 @@
 	     (push (append (list :[) val)
 		   contents-to-return))
 	     (setf state state-!-doctype-ext3))
-	  
+
 	  (#.state-!-contents
 	   (if* (xml-name-char-p ch)
 	      then (add-to-coll coll ch)
@@ -1633,13 +1639,13 @@
 	      then (push (compute-tag coll) contents-to-return)
 		   (clear-coll coll)
 		   (setf state state-!-doctype)
-	      else (xml-error 
+	      else (xml-error
 		    (concatenate 'string
 		      "illegal name: '"
 		      (string tag-to-return)
 		      "' in <! tag: "))
 		   ))
-	  
+
 	  (#.state-!-doctype-ext
 	   (if* (xml-name-char-p ch) ;; starting char already passed more restrictive test
 	      then
@@ -1651,12 +1657,12 @@
 		       (setq ch (get-next-char tokenbuf))
 		       (if* (null ch)
 			  then (return)))
-		     (xml-error 
+		     (xml-error
 		      (concatenate 'string
 			"illegal character in '"
 			(compute-coll-string coll)
-			"' in <! tag: " (string tag-to-return) " " 
-			(string (first contents-to-return))   
+			"' in <! tag: " (string tag-to-return) " "
+			(string (first contents-to-return))
 		      ))
 		     )
 		   (let ((token (compute-tag coll)))
@@ -1664,7 +1670,7 @@
 		     (clear-coll coll)
 		     (if* (eq :SYSTEM token) then (setf state state-!-doctype-system)
 		      elseif (eq :PUBLIC token) then (setf state state-!-doctype-public)
-			else (xml-error 
+			else (xml-error
 			      (concatenate 'string
 				"expected 'SYSTEM' or 'PUBLIC' got '"
 				(string (first contents-to-return))
@@ -1672,12 +1678,12 @@
 				(string (second contents-to-return))))
 			     )
 		     )))
-	  
+
 	  (#.state-!-doctype-public
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\" ch) then (setf state state-!-doctype-public2)
 	    elseif (eq #\' ch) then (setf state state-!-doctype-public3)
-	      else (xml-error 
+	      else (xml-error
 		    (concatenate 'string
 		      "expected quote or double-quote got: '"
 		      (string ch)
@@ -1686,12 +1692,12 @@
 		      (string (first contents-to-return))
 		      ))
 		   ))
-	  
+
 	  (#.state-!-doctype-system
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\" ch) then (setf state state-!-doctype-system2)
 	    elseif (eq #\' ch) then (setf state state-!-doctype-system3)
-	      else (xml-error 
+	      else (xml-error
 		    (concatenate 'string
 		      "expected quote or double-quote got: '"
 		      (string ch)
@@ -1700,9 +1706,9 @@
 		      (string (first contents-to-return))
 		      ))
 		   ))
-	  
+
 	  (#.state-!-doctype-public2
-	   (if* (eq #\" ch) then (push (compute-coll-string coll) 
+	   (if* (eq #\" ch) then (push (compute-coll-string coll)
 				       contents-to-return)
 		   (clear-coll coll)
 		   (setf state state-!-doctype-system)
@@ -1717,7 +1723,7 @@
 		      "illegal character in DOCTYPE PUBLIC string: '"
 		      (compute-coll-string coll) "'"))
 		   ))
-	  
+
 	  (#.state-!-doctype-public3
 	   (if* (eq #\' ch) then (push (compute-coll-string coll)
 				       contents-to-return)
@@ -1734,16 +1740,16 @@
 		      "illegal character in DOCTYPE PUBLIC string: '"
 		      (compute-coll-string coll) "'"))
 		   ))
-	  
+
 	  (#.state-!-doctype-system2
 	   (when (not (xml-char-p ch))
 	     (xml-error "XML is not well formed")) ;; not tested
-	   (if* (eq #\" ch) then (push (compute-coll-string coll) 
+	   (if* (eq #\" ch) then (push (compute-coll-string coll)
 				       contents-to-return)
 		   (clear-coll coll)
 		   (setf state state-!-doctype-ext2)
 	      else (add-to-coll coll ch)))
-	  
+
 	  (#.state-!-doctype-system3
 	   (when (not (xml-char-p ch))
 	     (xml-error "XML is not well formed")) ;; not tested
@@ -1752,7 +1758,7 @@
 		   (clear-coll coll)
 		   (setf state state-!-doctype-ext2)
 	      else (add-to-coll coll ch)))
-	  
+
 	  (#.state-!-doctype-ext2
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\> ch) then (return)
@@ -1769,7 +1775,7 @@
 		      "illegal char in DOCTYPE token: '"
 		      (compute-coll-string coll) "'"))
 		   ))
-	  
+
 	  (#.state-!-doctype-ext3
 	   (if* (xml-space-p ch) then nil
 	    elseif (eq #\> ch) then (return)
@@ -1784,7 +1790,7 @@
 		      "illegal char in DOCTYPE token following dtd: '"
 		      (compute-coll-string coll) "'"))
 		   ))
-			   	  
+
 	  (#.state-!-doctype
 	   ;; skip whitespace; possible exits: >, SYSTEM, PUBLIC, [
 	   (if* (xml-space-p ch) then nil
@@ -1795,14 +1801,14 @@
 	    elseif (eq #\> ch) then (return)
 	    elseif (eq #\[ ch)
 	      then (setf state state-begin-dtd)
-	      else (xml-error 
+	      else (xml-error
 		    (concatenate 'string
 		      "illegal character: '"
 		      (string ch)
-		      "' in <! tag: " (string tag-to-return) " " 
+		      "' in <! tag: " (string tag-to-return) " "
 		      (string (first contents-to-return))))
 		   ))
-	  
+
 	  (#.state-prereadpi
 	   (if* (xml-space-p ch)
 	      then nil
@@ -1810,14 +1816,14 @@
 	      then (xml-error "XML is not well formed") ;; no test
 	      else (un-next-char ch)
 		   (setf state state-readpi)))
-	  
+
 	  (#.state-readpi
 	   (if* (eq #\? ch)
 	      then (setf state state-readpi2)
 	    elseif (not (xml-char-p ch))
 	      then (xml-error "XML is not well formed") ;; no test
 	      else (add-to-coll coll ch)))
-	  
+
 	  (#.state-readpi2
 	   (if* (eq #\> ch)
 	      then (return)
@@ -1826,12 +1832,12 @@
 	      else (setf state state-readpi)
 		   (add-to-coll coll #\?)
 		   (add-to-coll coll ch)))
-	  
+
 	  (#.state-findattributename0
 	   (if* (xml-space-p ch) then (setf state state-findattributename)
 	    elseif (eq ch empty-delim)
 	      then (setf state state-noattributename)
-	      else 
+	      else
 		   (dotimes (i 15)
 		     (add-to-coll coll ch)
 		     (setq ch (get-next-char tokenbuf))
@@ -1863,7 +1869,7 @@
 		      "illegal char in <?xml token: '"
 		      (compute-coll-string coll) "'"))
 		   ))
-	  
+
 	  (#.state-attribname
 	   ;; collect attribute name
 	   (if* (xml-name-char-p ch) ;; starting char already passed more restrictive test
@@ -1888,7 +1894,7 @@
 		   (setq attrib-name (compute-tag coll))
 		   (clear-coll coll)
 		   (setq state state-attribstartvalue)))
-	  
+
 	  (#.state-attribname2
 	   (if* (eq #\= ch) then (setq state state-attribstartvalue)
 	    elseif (xml-space-p ch) then nil
@@ -1921,7 +1927,7 @@
 			"expected ' or \" before  <?xml attribute token value: '"
 			(compute-coll-string coll) "'"))
 		   ))
-	  
+
 	   (#.state-attribvaluedelim
 	    (if* (eq ch value-delim)
 	       then (setq attrib-value (compute-coll-string coll))
@@ -1931,7 +1937,7 @@
 		    (setq state state-findattributename0)
 	     elseif (and (xml-char-p ch) (not (eq #\< ch)))
 	       then (add-to-coll coll ch)
-	       else 
+	       else
 		    (dotimes (i 15)
 		       (add-to-coll coll ch)
 		       (setq ch (get-next-char tokenbuf))
@@ -1942,7 +1948,7 @@
 			"illegal character in attribute token value: '"
 			(compute-coll-string coll) "'"))
 		    ))
-	   
+
 	   (#.state-noattributename
 	    (if* (eq #\> ch)
 	       then
@@ -1952,7 +1958,7 @@
 		     (concatenate 'string
 		       "expected '>' found: '" (string ch) "' in <?xml token"))
 		    ))
-		   
+
 	  (t
 	   (error "need to support state:~s" state))
 	  ))
@@ -1961,7 +1967,7 @@
 	(#.state-noattributename ;; it's a bug if this state occurs with a non-empty element
 	 (put-back-collector coll)
 	 (if* attribs-to-return
-		 then (values (cons tag-to-return 
+		 then (values (cons tag-to-return
 				    (nreverse attribs-to-return))
 			      (if (eq tag-to-return :xml) :xml :start-tag) :end-tag)
 	    else
@@ -1984,26 +1990,26 @@
 	   (values (append (list :pi tag-to-return) (list ret)) :pi nil)))
 	((#.state-readtag-!-conditional)
 	 (put-back-collector coll)
-	 (values (append (list tag-to-return) contents-to-return) :start-tag 
+	 (values (append (list tag-to-return) contents-to-return) :start-tag
 		 :end-tag))
-	((#.state-!-contents 
+	((#.state-!-contents
 	  #.state-!-doctype
 	  #.state-!-doctype-ext2
 	  #.state-!-doctype-ext3)
 	 (put-back-collector coll)
-	 (values (append (list tag-to-return) (nreverse contents-to-return)) :start-tag 
+	 (values (append (list tag-to-return) (nreverse contents-to-return)) :start-tag
 		 :end-tag))
 	(#.state-readtag3
 	 (put-back-collector coll)
 	 (values (if* attribs-to-return
-		    then (cons tag-to-return 
+		    then (cons tag-to-return
 			       (nreverse attribs-to-return))
 		    else tag-to-return) :start-tag :end-tag))
 	((#.state-readtag2
 	  #.state-readtag)
 	 (put-back-collector coll)
 	 (values (if* attribs-to-return
-		    then (cons tag-to-return 
+		    then (cons tag-to-return
 			       (nreverse attribs-to-return))
 		    else tag-to-return) :start-tag nil))
 	((#.state-readtag-end2
@@ -2022,7 +2028,7 @@
 	 (print (list tag-to-return attribs-to-return))
 	 (let ((ret (compute-coll-string coll)))
 	   (put-back-collector coll)
-	   (error "need to support state <post>:~s  ~s ~s ~s" state 
+	   (error "need to support state <post>:~s  ~s ~s ~s" state
 		  tag-to-return
 		  contents-to-return
 		  ret))))

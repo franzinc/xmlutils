@@ -1,9 +1,9 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA 
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
-;; the GNU Lesser General Public License as published by 
+;; the GNU Lesser General Public License as published by
 ;; the Free Software Foundation, as clarified by the AllegroServe
 ;; prequel found in license-allegroserve.txt.
 ;;
@@ -12,17 +12,18 @@
 ;; merchantability or fitness for a particular purpose.  See the GNU
 ;; Lesser General Public License for more details.
 ;;
-;; Version 2.1 of the GNU Lesser General Public License is in the file 
+;; Version 2.1 of the GNU Lesser General Public License is in the file
 ;; license-lgpl.txt that was distributed with this file.
 ;; If it is not present, you can access it from
 ;; http://www.gnu.org/copyleft/lesser.txt (until superseded by a newer
-;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
+;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-
-;; $Id: pxml3.cl,v 1.2.2.1 2000/10/13 23:49:02 layer Exp $
+;; $Id: pxml3.cl,v 1.2.2.2 2001/06/11 20:26:32 layer Exp $
 
 (in-package :net.xml.parser)
+
+(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.2.2.2 2001/06/11 20:26:32 layer Exp $")
 
 (defvar *debug-dtd* nil)
 
@@ -35,7 +36,7 @@
       (multiple-value-bind (val kind)
 	  (next-dtd-token tokenbuf
 			  external include-count external-callback)
-	(if* (eq kind :end-dtd) then 
+	(if* (eq kind :end-dtd) then
 		(return (nreverse guts))
 	 elseif (eq kind :include) then
 		(incf include-count)
@@ -45,116 +46,120 @@
 		   else (xml-error "unexpected ']]>' token"))
 	   else (when (iostruct-do-entity tokenbuf) (push val guts)))))))
 
-(eval-when (compile load eval)
-  (defconstant state-dtdstart 0)
-  (defconstant state-tokenstart 1)
-  (defconstant state-dtd-? 2)
-  (defconstant state-dtd-! 3)
-  (defconstant state-dtd-comment 4)
-  (defconstant state-dtd-!-token 5)
-  (defconstant state-dtd-!-element 6)
-  (defconstant state-dtd-!-element-name 7)
-  (defconstant state-dtd-!-element-content 8)
-  (defconstant state-dtd-!-element-type 9)
-  (defconstant state-dtd-!-element-type-paren 10)
-  (defconstant state-dtd-!-element-type-token 11)
-  (defconstant state-dtd-!-element-type-end 12)
-  (defconstant state-dtd-!-element-type-paren-name 13)
-  (defconstant state-dtd-!-element-type-paren-pcd 14)
-  (defconstant state-dtd-!-element-type-paren-pcd2 15)
-  (defconstant state-dtd-!-element-type-paren-pcd3 16)
-  (defconstant state-dtd-!-element-type-paren-pcd4 17)
-  (defconstant state-dtd-!-element-type-paren-pcd5 18)
-  (defconstant state-dtd-!-element-type-paren-pcd6 19)
-  (defconstant state-dtd-!-element-type-paren-pcd7 20)
-  (defconstant state-dtd-!-element-type-paren-pcd8 21)
-  (defconstant state-dtd-!-element-type-paren-pcd9 22)
-  (defconstant state-dtd-!-element-type-paren-name2 23)
-  ;;(defconstant state-dtd-!-element-type-paren-seq 24) folded into choice
-  (defconstant state-dtd-!-element-type-paren-choice 25)
-  (defconstant state-dtd-!-element-type-paren2 26)
-  (defconstant state-dtd-!-element-type-paren-choice-name 27)
-  (defconstant state-dtd-!-element-type-paren-choice-paren 28)
-  (defconstant state-dtd-!-element-type-paren-choice-name2 29)
-  (defconstant state-dtd-!-element-type-paren3 30)
-  (defconstant state-dtd-!-element-type-paren-choice-name3 31)
-  (defconstant state-dtd-!-attlist 32)
-  (defconstant state-dtd-!-attlist-name 33)
-  (defconstant state-dtd-!-attdef 34)
-  (defconstant state-dtd-!-attdef-name 35)
-  (defconstant state-dtd-!-attdef-type 36)
-  ;;(defconstant state-dtd-!-attdef-enumeration 37)
-  (defconstant state-dtd-!-attdef-decl 38)
-  (defconstant state-dtd-!-attdef-decl-type 39)
-  (defconstant state-dtd-!-attdef-decl-value 40)
-  (defconstant state-dtd-!-attdef-decl-value2 41)
-  (defconstant state-dtd-!-attdef-decl-value3 42)
-  (defconstant state-dtd-!-attdef-decl-value4 43)
-  (defconstant state-dtd-!-attdef-decl-value5 44)
-  (defconstant state-dtd-!-attdef-decl-value6 45)
-  (defconstant state-dtd-!-attdef-decl-value7 46)
-  (defconstant state-dtd-!-attdef-notation 47)
-  (defconstant state-dtd-!-attdef-notation2 48)
-  (defconstant state-dtd-!-attdef-notation3 49)
-  (defconstant state-dtd-!-attdef-notation4 50)
-  (defconstant state-dtd-!-attdef-type2 51)
-  (defconstant state-dtd-!-entity 52)
-  (defconstant state-dtd-!-entity2 53)
-  (defconstant state-dtd-!-entity3 54)
-  (defconstant state-dtd-!-entity4 55)
-  (defconstant state-dtd-!-entity-value 56)
-  (defconstant state-dtd-!-entity5 57)
-  (defconstant state-dtd-!-entity6 58)
-  (defconstant state-!-dtd-system 59)
-  (defconstant state-!-dtd-public 60)
-  (defconstant state-!-dtd-system2 61)
-  (defconstant state-!-dtd-system3 62)
-  (defconstant state-!-dtd-system4 63)
-  (defconstant state-!-dtd-system5 64)
-  (defconstant state-!-dtd-system6 65)
-  (defconstant state-!-dtd-system7 66)
-  (defconstant state-!-dtd-public2 67)
-  (defconstant state-dtd-!-notation 68)
-  (defconstant state-dtd-!-notation2 69)
-  (defconstant state-dtd-!-notation3 70)
-  (defconstant state-dtd-?-2 71)
-  (defconstant state-dtd-?-3 72)
-  (defconstant state-dtd-?-4 73)
-  (defconstant state-dtd-comment2 74)
-  (defconstant state-dtd-comment3 75)
-  (defconstant state-dtd-comment4 76)
-  (defconstant state-dtd-!-entity7 77)
-  (defconstant state-dtd-!-attdef-notation5 78)
-  (defconstant state-!-dtd-public3 79)
-  (defconstant state-dtd-!-cond 80)
-  (defconstant state-dtd-!-cond2 81)
-  (defconstant state-dtd-!-include 82)
-  (defconstant state-dtd-!-ignore 83)
-  (defconstant state-dtd-!-include2 84)
-  (defconstant state-dtd-!-include3 85)
-  (defconstant state-dtd-!-include4 86)
-  (defconstant state-dtd-!-ignore2 87)
-  (defconstant state-dtd-!-ignore3 88)
-  (defconstant state-dtd-!-ignore4 89)
-  (defconstant state-dtd-!-ignore5 90)
-  (defconstant state-dtd-!-ignore6 91)
-  (defconstant state-dtd-!-ignore7 92)
+(defparameter dtd-parser-states ())
+
+(macrolet ((def-dtd-parser-state (var val)
+	       `(progn (eval-when (compile load eval) (defconstant ,var ,val))
+		       (pushnew '(,val . ,var) dtd-parser-states :key #'car))))
+  (def-dtd-parser-state state-dtdstart 0)
+  (def-dtd-parser-state state-tokenstart 1)
+  (def-dtd-parser-state state-dtd-? 2)
+  (def-dtd-parser-state state-dtd-! 3)
+  (def-dtd-parser-state state-dtd-comment 4)
+  (def-dtd-parser-state state-dtd-!-token 5)
+  (def-dtd-parser-state state-dtd-!-element 6)
+  (def-dtd-parser-state state-dtd-!-element-name 7)
+  (def-dtd-parser-state state-dtd-!-element-content 8)
+  (def-dtd-parser-state state-dtd-!-element-type 9)
+  (def-dtd-parser-state state-dtd-!-element-type-paren 10)
+  (def-dtd-parser-state state-dtd-!-element-type-token 11)
+  (def-dtd-parser-state state-dtd-!-element-type-end 12)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-name 13)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd 14)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd2 15)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd3 16)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd4 17)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd5 18)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd6 19)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd7 20)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd8 21)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-pcd9 22)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-name2 23)
+  ;;(def-dtd-parser-state state-dtd-!-element-type-paren-seq 24) folded into choice
+  (def-dtd-parser-state state-dtd-!-element-type-paren-choice 25)
+  (def-dtd-parser-state state-dtd-!-element-type-paren2 26)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-choice-name 27)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-choice-paren 28)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-choice-name2 29)
+  (def-dtd-parser-state state-dtd-!-element-type-paren3 30)
+  (def-dtd-parser-state state-dtd-!-element-type-paren-choice-name3 31)
+  (def-dtd-parser-state state-dtd-!-attlist 32)
+  (def-dtd-parser-state state-dtd-!-attlist-name 33)
+  (def-dtd-parser-state state-dtd-!-attdef 34)
+  (def-dtd-parser-state state-dtd-!-attdef-name 35)
+  (def-dtd-parser-state state-dtd-!-attdef-type 36)
+  ;;(def-dtd-parser-state state-dtd-!-attdef-enumeration 37)
+  (def-dtd-parser-state state-dtd-!-attdef-decl 38)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-type 39)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value 40)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value2 41)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value3 42)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value4 43)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value5 44)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value6 45)
+  (def-dtd-parser-state state-dtd-!-attdef-decl-value7 46)
+  (def-dtd-parser-state state-dtd-!-attdef-notation 47)
+  (def-dtd-parser-state state-dtd-!-attdef-notation2 48)
+  (def-dtd-parser-state state-dtd-!-attdef-notation3 49)
+  (def-dtd-parser-state state-dtd-!-attdef-notation4 50)
+  (def-dtd-parser-state state-dtd-!-attdef-type2 51)
+  (def-dtd-parser-state state-dtd-!-entity 52)
+  (def-dtd-parser-state state-dtd-!-entity2 53)
+  (def-dtd-parser-state state-dtd-!-entity3 54)
+  (def-dtd-parser-state state-dtd-!-entity4 55)
+  (def-dtd-parser-state state-dtd-!-entity-value 56)
+  (def-dtd-parser-state state-dtd-!-entity5 57)
+  (def-dtd-parser-state state-dtd-!-entity6 58)
+  (def-dtd-parser-state state-!-dtd-system 59)
+  (def-dtd-parser-state state-!-dtd-public 60)
+  (def-dtd-parser-state state-!-dtd-system2 61)
+  (def-dtd-parser-state state-!-dtd-system3 62)
+  (def-dtd-parser-state state-!-dtd-system4 63)
+  (def-dtd-parser-state state-!-dtd-system5 64)
+  (def-dtd-parser-state state-!-dtd-system6 65)
+  (def-dtd-parser-state state-!-dtd-system7 66)
+  (def-dtd-parser-state state-!-dtd-public2 67)
+  (def-dtd-parser-state state-dtd-!-notation 68)
+  (def-dtd-parser-state state-dtd-!-notation2 69)
+  (def-dtd-parser-state state-dtd-!-notation3 70)
+  (def-dtd-parser-state state-dtd-?-2 71)
+  (def-dtd-parser-state state-dtd-?-3 72)
+  (def-dtd-parser-state state-dtd-?-4 73)
+  (def-dtd-parser-state state-dtd-comment2 74)
+  (def-dtd-parser-state state-dtd-comment3 75)
+  (def-dtd-parser-state state-dtd-comment4 76)
+  (def-dtd-parser-state state-dtd-!-entity7 77)
+  (def-dtd-parser-state state-dtd-!-attdef-notation5 78)
+  (def-dtd-parser-state state-!-dtd-public3 79)
+  (def-dtd-parser-state state-dtd-!-cond 80)
+  (def-dtd-parser-state state-dtd-!-cond2 81)
+  (def-dtd-parser-state state-dtd-!-include 82)
+  (def-dtd-parser-state state-dtd-!-ignore 83)
+  (def-dtd-parser-state state-dtd-!-include2 84)
+  (def-dtd-parser-state state-dtd-!-include3 85)
+  (def-dtd-parser-state state-dtd-!-include4 86)
+  (def-dtd-parser-state state-dtd-!-ignore2 87)
+  (def-dtd-parser-state state-dtd-!-ignore3 88)
+  (def-dtd-parser-state state-dtd-!-ignore4 89)
+  (def-dtd-parser-state state-dtd-!-ignore5 90)
+  (def-dtd-parser-state state-dtd-!-ignore6 91)
+  (def-dtd-parser-state state-dtd-!-ignore7 92)
   )
 
 (defun next-dtd-token (tokenbuf
 		       external include-count external-callback)
-  (declare (optimize (speed 3) (safety 1)))
+  (declare (:fbound parse-default-value) (optimize (speed 3) (safety 1)))
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn
 		  (push (make-tokenbuf :cur 0 :max (length ,p-value) :data ,p-value)
 			(iostruct-entity-bufs tokenbuf))))
-	     
+
 	     (un-next-char (ch)
 	       `(push ,ch (iostruct-unget-char tokenbuf)))
-	     
+
 	     (clear-coll (coll)
 	       `(setf (collector-next ,coll) 0))
-		     
+
 	     (add-to-coll (coll ch)
 	       `(let ((.next. (collector-next ,coll)))
 		  (if* (>= .next. (collector-max ,coll))
@@ -162,11 +167,11 @@
 		     else (setf (schar (collector-data ,coll) .next.)
 			    ,ch)
 			  (setf (collector-next ,coll) (1+ .next.)))))
-	     
+
 	     (to-preferred-case (ch)
 	       ;; should check the case mode
 	       `(char-downcase ,ch))
-	       
+
 	     )
     (let ((state state-dtdstart)
 	  (coll  (get-collector))
@@ -188,18 +193,20 @@
 	  (ch))
       (loop
 	(setq ch (get-next-char tokenbuf))
-	(when *debug-dtd* (format t "dtd char: ~s state: ~s contents: ~s pending: ~s pending-type: ~s~% entity-names ~s~%" 
-				  ch state contents-to-return pending pending-type
-				  (iostruct-entity-names tokenbuf)))
+	(when *debug-dtd*
+	  (format t "~@<dtd ~:Ichar: ~s ~:_state: ~s ~:_contents: ~s ~:_pending: ~s ~:_pending-type: ~s ~:_entity-names ~s~:>~%"
+		  ch (or (cdr (assoc state dtd-parser-states)) state)
+		  contents-to-return pending pending-type
+		  (iostruct-entity-names tokenbuf)))
 	(if* (null ch)
 	   then (setf prev-state state)
 		(setf state :eof)
 		(return)		;; eof -- exit loop
 		)
-	
+
 	(case state
 	  (#.state-dtdstart
-	   (if* (and (eq #\] ch) 
+	   (if* (and (eq #\] ch)
 		     external (> include-count 0)) then
 		   (setf state state-dtd-!-include3)
 	    elseif (and (eq #\] ch) (not external)) then (return)
@@ -239,7 +246,7 @@
 		   (xml-error (concatenate 'string
 				"illegal DTD token, starting at: ']]"
 				(compute-coll-string coll)
-				"'"))))  
+				"'"))))
 	  #+ignore
 	  (#.state-dtd-pref
 	   (if* (xml-name-start-char-p ch) then
@@ -276,7 +283,7 @@
 		   (external-param-reference tokenbuf coll external-callback)
 	      else
 		   (when (not (xml-space-p ch))
-		     (xml-error (concatenate 'string 
+		     (xml-error (concatenate 'string
 				  "expecting name following: '<?"
 				  (compute-coll-string coll)
 				  "' ; got: '" (string ch) "'"))
@@ -284,11 +291,11 @@
 		   (when (= (collector-next coll) 0)
 		     (xml-error "null <? token"))
 		   (if* (and (= (collector-next coll) 3)
-			     (or (eq (elt (collector-data coll) 0) #\X) 
+			     (or (eq (elt (collector-data coll) 0) #\X)
 				 (eq (elt (collector-data coll) 0) #\x))
-			     (or (eq (elt (collector-data coll) 1) #\M) 
+			     (or (eq (elt (collector-data coll) 1) #\M)
 				 (eq (elt (collector-data coll) 1) #\m))
-			     (or (eq (elt (collector-data coll) 2) #\L) 
+			     (or (eq (elt (collector-data coll) 2) #\L)
 				 (eq (elt (collector-data coll) 2) #\l)))
 		      then
 			   (xml-error "<?xml not allowed in dtd")
@@ -313,7 +320,7 @@
 	      else (add-to-coll coll ch)))
 	  (#.state-dtd-?-4
 	   (if* (eq #\> ch)
-	      then 
+	      then
 		   (push (compute-coll-string coll) contents-to-return)
 		   (clear-coll coll)
 		   (return)
@@ -394,7 +401,7 @@
 		   ))
 	  (#.state-dtd-!-include2
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\[ ch) then (return)
 	      else (xml-error "'[' missing after '<![INCLUDE'")))
@@ -440,18 +447,18 @@
 		   ))
 	  (#.state-dtd-!-token
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (setf tag-to-return (compute-tag coll))
 		   (clear-coll coll)
 		   (if* (eq tag-to-return :ELEMENT) then (setf state state-dtd-!-element)
-		    elseif (eq tag-to-return :ATTLIST) then 
+		    elseif (eq tag-to-return :ATTLIST) then
 			   (setf state state-dtd-!-attlist)
-		    elseif (eq tag-to-return :ENTITY) then 
+		    elseif (eq tag-to-return :ENTITY) then
 			   (setf entityp t)
 			   (setf state state-dtd-!-entity)
-		    elseif (eq tag-to-return :NOTATION) then 
+		    elseif (eq tag-to-return :NOTATION) then
 			   (setf state state-dtd-!-notation)
 		      else
 			   (xml-error (concatenate 'string
@@ -470,8 +477,8 @@
 		   ))
 	  (#.state-dtd-!-notation
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
-		   (external-param-reference tokenbuf coll external-callback) 
+	    elseif (and external (eq #\% ch)) then
+		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (add-to-coll coll ch)
 		   (setf state state-dtd-!-notation2)
@@ -487,8 +494,8 @@
 		   ))
 	  (#.state-dtd-!-notation2
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
-		   (external-param-reference tokenbuf coll external-callback) 
+	    elseif (and external (eq #\% ch)) then
+		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (push (compute-tag coll) contents-to-return)
 		   (clear-coll coll)
@@ -505,7 +512,7 @@
 		   ))
 	  (#.state-dtd-!-notation3
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-char-p ch) then
 		   (add-to-coll coll ch)
@@ -531,7 +538,7 @@
 		   (setf pending nil)
 		   (setf state state-dtd-!-entity3)
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else (dotimes (i 15)
 		     (add-to-coll coll ch)
@@ -545,7 +552,7 @@
 		   ))
 	  (#.state-dtd-!-entity2
 	   (if* (xml-space-p ch) then (setf state state-dtd-!-entity7)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else (dotimes (i 15)
 		     (add-to-coll coll ch)
@@ -561,9 +568,9 @@
 		   ))
 	  (#.state-dtd-!-entity3
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
-	    elseif (xml-space-p ch) then 
+	    elseif (xml-space-p ch) then
 		   (push (compute-tag coll) contents-to-return)
 		   (setf contents-to-return
 		     (nreverse contents-to-return))
@@ -581,7 +588,7 @@
 		   ))
 	  (#.state-dtd-!-entity4
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (or (eq #\' ch) (eq #\" ch)) then
 		   (setf value-delim ch)
@@ -603,7 +610,7 @@
 	   (if* (xml-name-char-p ch) ;; starting char already passed more restrictive test
 	      then
 		   (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else
 		   (when (not (xml-space-p ch))
@@ -612,12 +619,12 @@
 		       (setq ch (get-next-char tokenbuf))
 		       (if* (null ch)
 			  then (return)))
-		     (xml-error 
+		     (xml-error
 		      (concatenate 'string
 			"illegal character in '"
 			(compute-coll-string coll)
-			"' in <! tag: " (string tag-to-return) " " 
-			(string (first contents-to-return))   
+			"' in <! tag: " (string tag-to-return) " "
+			(string (first contents-to-return))
 		      ))
 		     )
 		   (let ((token (compute-tag coll)))
@@ -625,7 +632,7 @@
 		     (clear-coll coll)
 		     (if* (eq :SYSTEM token) then (setf state state-!-dtd-system)
 		      elseif (eq :PUBLIC token) then (setf state state-!-dtd-public)
-			else (xml-error 
+			else (xml-error
 			      (concatenate 'string
 				"expected 'SYSTEM' or 'PUBLIC' got '"
 				(string (first contents-to-return))
@@ -635,7 +642,7 @@
 		     )))
 	  (#.state-dtd-!-entity7
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (add-to-coll coll ch)
@@ -652,12 +659,12 @@
 		   ))
 	  (#.state-!-dtd-public
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
-	    elseif (or (eq #\" ch) (eq #\' ch)) then 
+	    elseif (or (eq #\" ch) (eq #\' ch)) then
 		   (setf state state-!-dtd-public2)
 		   (setf value-delim ch)
-	      else (xml-error 
+	      else (xml-error
 		    (concatenate 'string
 		      "expected quote or double-quote got: '"
 		      (string ch)
@@ -666,8 +673,8 @@
 		      (string (first contents-to-return))
 		      ))))
 	  (#.state-!-dtd-public2
-	   (if* (eq value-delim ch) then 
-		   (push (setf public-string 
+	   (if* (eq value-delim ch) then
+		   (push (setf public-string
 			   (normalize-public-value
 			    (compute-coll-string coll))) contents-to-return)
 		   (clear-coll coll)
@@ -685,10 +692,10 @@
 		   ))
 	  (#.state-!-dtd-public3
 	   (if* (xml-space-p ch) then (setf state state-!-dtd-system)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (and (not entityp)
-			(eq #\> ch)) then 
+			(eq #\> ch)) then
 		   (setf state state-!-dtd-system)
 		   (return)
 	      else
@@ -704,14 +711,14 @@
 		   ))
 	  (#.state-!-dtd-system
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
-	    elseif (or (eq #\" ch) (eq #\' ch)) then 
+	    elseif (or (eq #\" ch) (eq #\' ch)) then
 		   (setf state state-!-dtd-system2)
 		   (setf value-delim ch)
 	    elseif (and (not entityp)
 			(eq #\> ch)) then (return)
-	      else (xml-error 
+	      else (xml-error
 		    (concatenate 'string
 		      "expected quote or double-quote got: '"
 		      (string ch)
@@ -749,14 +756,14 @@
 							    )
 					(iostruct-general-entities tokenbuf))))
 			       )
-			     ) 
+			     )
 		     (push system-string contents-to-return))
 		   (clear-coll coll)
 		   (setf state state-!-dtd-system3)
 	      else (add-to-coll coll ch)))
 	  (#.state-!-dtd-system3
 	   (if* (xml-space-p ch) then (setf state state-!-dtd-system4)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\> ch) then (return)
 	      else
@@ -774,7 +781,7 @@
 		   ))
 	  (#.state-!-dtd-system4
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (and (not pentityp) (xml-name-start-char-p ch)) then
 		   (add-to-coll coll ch)
@@ -795,7 +802,7 @@
 	  (#.state-!-dtd-system5
 	   (if* (xml-name-char-p ch) then
 		   (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (let ((token (compute-tag coll)))
@@ -829,7 +836,7 @@
 		   ))
 	  (#.state-!-dtd-system6
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (add-to-coll coll ch)
@@ -849,7 +856,7 @@
 	  (#.state-!-dtd-system7
 	   (if* (xml-name-char-p ch) then
 		   (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (push (compute-tag coll) contents-to-return)
@@ -920,7 +927,7 @@
 		   ))
 	  (#.state-dtd-!-entity5
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\> ch) then (return)
 	      else (clear-coll coll)
@@ -940,7 +947,7 @@
 	   (if* (xml-name-start-char-p ch) then (setf state state-dtd-!-attlist-name)
 		   (un-next-char ch)
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else (dotimes (i 15)
 		     (add-to-coll coll ch)
@@ -953,19 +960,19 @@
 				"'"))))
 	  (#.state-dtd-!-attlist-name
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
-		   (push (compute-tag coll *package*) 
+		   (push (compute-tag coll *package*)
 			 contents-to-return)
 		   (clear-coll coll)
 		   (setf state state-dtd-!-attdef)
 	    elseif (eq #\> ch) then
-		   (push (compute-tag coll *package*) 
+		   (push (compute-tag coll *package*)
 			 contents-to-return)
 		   (clear-coll coll)
 		   (return)
-	      else (push (compute-tag coll) 
+	      else (push (compute-tag coll)
 			 contents-to-return)
 		   (clear-coll coll)
 		   (dotimes (i 15)
@@ -982,7 +989,7 @@
 		   ))
 	  (#.state-dtd-!-attdef
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (un-next-char ch)
@@ -1002,7 +1009,7 @@
 		   ))
 	  (#.state-dtd-!-attdef-name
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (setf (first pending) (compute-tag coll *package*))
@@ -1022,7 +1029,7 @@
 		   ))
 	  (#.state-dtd-!-attdef-type
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else (un-next-char ch)
 		   ;; let next state do all other checking
@@ -1033,7 +1040,7 @@
 	    elseif (and (eq #\( ch) (= 0 (length (compute-coll-string coll)))) then
 		   (push (list :enumeration) pending)
 		   (setf state state-dtd-!-attdef-notation2)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (let ((token (compute-tag coll)))
@@ -1079,7 +1086,7 @@
 		   ))
 	  (#.state-dtd-!-attdef-notation
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\( ch) then (setf state state-dtd-!-attdef-notation2)
 	      else (dotimes (i 15)
@@ -1096,7 +1103,7 @@
 		   ))
 	  (#.state-dtd-!-attdef-notation2
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (setf state state-dtd-!-attdef-notation3)
@@ -1119,9 +1126,9 @@
 		   ))
 	  (#.state-dtd-!-attdef-notation3
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (push (compute-tag coll) (first pending))
@@ -1151,7 +1158,7 @@
 		   ))
 	  (#.state-dtd-!-attdef-notation5
 	   (if* (xml-space-p ch) then (setf state state-dtd-!-attdef-decl)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else
 		   (dotimes (i 15)
@@ -1165,7 +1172,7 @@
 		      (compute-coll-string coll) "'"))))
 	  (#.state-dtd-!-attdef-notation4
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-char-p ch) then (add-to-coll coll ch)
 		   (setf state state-dtd-!-attdef-notation3)
@@ -1191,7 +1198,7 @@
 		   (setf value-delim ch)
 		   (setf state state-dtd-!-attdef-decl-value)
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else (dotimes (i 15)
 		     (add-to-coll coll ch)
@@ -1216,7 +1223,7 @@
 		   (setf contents-to-return
 		     (append contents-to-return
 			     (if* entityp then
-				    (nreverse pending) 
+				    (nreverse pending)
 				else (list (nreverse pending)))))
 		   (setf pending (list nil))
 		   (setf state state-dtd-!-attdef)
@@ -1276,7 +1283,7 @@
 	      then (add-to-coll entity ch)
 		   (when (not prefp) (add-to-coll coll ch))
 	    elseif (eq #\; ch)
-	      then 
+	      then
 		   (if* (not prefp) then (add-to-coll coll ch)
 		    elseif (not external) then
 			   (xml-error
@@ -1285,12 +1292,12 @@
 			      (compute-coll-string entity)))
 		      else
 			   (let* ((entity-symbol (compute-tag entity))
-				  (p-value 
+				  (p-value
 				   (assoc entity-symbol (iostruct-parameter-entities tokenbuf))))
 			     (clear-coll entity)
-			     (if* (and (iostruct-do-entity tokenbuf) 
-				       (setf p-value 
-					 (assoc entity-symbol 
+			     (if* (and (iostruct-do-entity tokenbuf)
+				       (setf p-value
+					 (assoc entity-symbol
 						(iostruct-parameter-entities tokenbuf)))) then
 				     (setf p-value (rest p-value))
 				     (when (member entity-symbol (iostruct-entity-names tokenbuf))
@@ -1309,7 +1316,7 @@
 						     (let ((count 0) (string "<?xml ") last-ch
 							   save-ch save-unget
 							   (tmp-count 0)
-							   (entity-stream 
+							   (entity-stream
 							    (apply external-callback p-value)))
 						       (when entity-stream
 							 (let ((tmp-buf (get-tokenbuf)))
@@ -1330,9 +1337,9 @@
 									      (setf save-ch nil)
 									      s2)
 								       else
-									    (next-char 
+									    (next-char
 									     tmp-buf
-									     (iostruct-read-sequence-func 
+									     (iostruct-read-sequence-func
 									      tokenbuf)))))
 							       (when (null cch) (return))
 							       (when *debug-dtd*
@@ -1342,12 +1349,15 @@
 										 (eq cch #\>)) then
 									       (setf count 6)
 									  else (setf last-ch cch))
-								  elseif (< count 6) then
+								elseif (< count 6) then
+								       (when (and (= count 5)
+									       (xml-space-p cch))
+									 (setf cch #\space))
 								       (if* (not (eq cch
 										    (schar string count)
 										    )) then
 									       (loop
-										 (when (= tmp-count count) 
+										 (when (= tmp-count count)
 										   (return))
 										 (add-to-coll coll
 											      (schar string
@@ -1429,7 +1439,7 @@
 		     )))
 	  (#.state-dtd-!-attdef-decl-type
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (or (xml-space-p ch) (eq #\> ch)) then
 		   (let ((token (compute-tag coll)))
@@ -1448,7 +1458,7 @@
 				    (compute-coll-string coll)
 				    "'")))
 		     (push token pending)
-		     (if* (eq :FIXED token) then 
+		     (if* (eq :FIXED token) then
 			     (when (eq #\> ch)
 			       (dotimes (i 15)
 				 (add-to-coll coll ch)
@@ -1462,11 +1472,11 @@
 					    (compute-coll-string coll)
 					    "'")))
 			     (setf state state-dtd-!-attdef-decl-value2)
-		      elseif (eq #\> ch) then 
-			     (setf contents-to-return 
+		      elseif (eq #\> ch) then
+			     (setf contents-to-return
 			       (append contents-to-return (list (nreverse pending))))
 			     (return)
-			else (setf contents-to-return 
+			else (setf contents-to-return
 			       (append contents-to-return (list (nreverse pending))))
 			     (setf pending (list nil))
 			     (setf state state-dtd-!-attdef)))
@@ -1485,7 +1495,7 @@
 		   ))
 	  (#. state-dtd-!-attdef-decl-value2
 	      (if* (xml-space-p ch) then nil
-	       elseif (and external (eq #\% ch)) then 
+	       elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	       elseif (or (eq #\' ch) (eq #\" ch)) then
 		      (setf value-delim ch)
@@ -1504,7 +1514,7 @@
 		      ))
 	  (#.state-dtd-!-element
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then (setf state state-dtd-!-element-name)
 		   (un-next-char ch)
@@ -1519,10 +1529,10 @@
 				"'"))))
 	  (#.state-dtd-!-element-name
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
-		   (push (compute-tag coll) 
+		   (push (compute-tag coll)
 			 contents-to-return)
 		   (clear-coll coll)
 		   (setf state state-dtd-!-element-type)
@@ -1539,7 +1549,7 @@
 	  (#.state-dtd-!-element-type
 	   (if* (eq #\( ch) then (setf state state-dtd-!-element-type-paren)
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (un-next-char ch)
@@ -1558,7 +1568,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (un-next-char ch)
@@ -1580,7 +1590,7 @@
 				(compute-coll-string coll)
 				"'"))))
 	  (#.state-dtd-!-element-type-paren2
-	   (if* (eq #\> ch) then 
+	   (if* (eq #\> ch) then
 		   ;; there only one name...
 		   (setf (first contents-to-return) (first (first contents-to-return)))
 		   (return)
@@ -1589,10 +1599,10 @@
 		   (setf (first contents-to-return) (nreverse (first contents-to-return)))
 		   (if* (> (length (first contents-to-return)) 1) then
 			   (setf (first contents-to-return)
-			     (list (append (list :choice) 
+			     (list (append (list :choice)
 					   (first contents-to-return))))
 		    elseif (listp (first (first contents-to-return))) then
-			   (setf (first contents-to-return) 
+			   (setf (first contents-to-return)
 			     (first (first contents-to-return))))
 		   (push :* (first contents-to-return))
 	    elseif (eq #\? ch) then
@@ -1600,10 +1610,10 @@
 		   (setf (first contents-to-return) (nreverse (first contents-to-return)))
 		   (if* (> (length (first contents-to-return)) 1) then
 			   (setf (first contents-to-return)
-			     (list (append (list :choice) 
+			     (list (append (list :choice)
 					   (first contents-to-return))))
 		    elseif (listp (first (first contents-to-return))) then
-			   (setf (first contents-to-return) 
+			   (setf (first contents-to-return)
 			     (first (first contents-to-return))))
 		   (push :? (first contents-to-return))
 	    elseif (eq #\+ ch) then
@@ -1611,20 +1621,20 @@
 		   (setf (first contents-to-return) (nreverse (first contents-to-return)))
 		   (if* (> (length (first contents-to-return)) 1) then
 			   (setf (first contents-to-return)
-			     (list (append (list :choice) 
+			     (list (append (list :choice)
 					   (first contents-to-return))))
 		    elseif (listp (first (first contents-to-return))) then
-			   (setf (first contents-to-return) 
+			   (setf (first contents-to-return)
 			     (first (first contents-to-return))))
 		   (push :+ (first contents-to-return))
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (setf state state-dtd-!-element-type-paren-pcd5)
 		   (setf (first contents-to-return) (nreverse (first contents-to-return)))
 		   (when (> (length (first contents-to-return)) 1)
 		     (setf (first contents-to-return)
-		       (list (append (list :\choice) 
+		       (list (append (list :\choice)
 				     (first contents-to-return)))))
 	      else (dotimes (i 15)
 		     (add-to-coll coll ch)
@@ -1640,7 +1650,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-name
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (push (compute-tag coll) (first pending))
@@ -1723,7 +1733,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-name2
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\| ch) then
 		   (when (and (rest (first pending)) (not (eq :choice (first pending-type))))
@@ -1771,14 +1781,15 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
+
 	  (#.state-dtd-!-element-type-paren-choice
 	   (if* (xml-name-start-char-p ch) then
 		   (un-next-char ch)
 		   (setf state state-dtd-!-element-type-paren-choice-name)
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
-	    elseif (eq #\( ch) then 
+	    elseif (eq #\( ch) then
 		   (push nil pending)
 		   (setf state state-dtd-!-element-type-paren-choice-paren)
 	    elseif (eq #\) ch) then
@@ -1813,13 +1824,14 @@
 				(compute-coll-string coll)
 				"'"))
 		   ))
+
 	  (#.state-dtd-!-element-type-paren-choice-paren
 	   (if* (xml-name-start-char-p ch) then
 		   (setf state state-dtd-!-element-type-paren-name)
 		   (un-next-char ch)
 	    elseif (eq #\( ch) then (push nil pending)
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	      else (dotimes (i 15)
 		     (add-to-coll coll ch)
@@ -1835,7 +1847,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-choice-name
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (push (compute-tag coll) (first pending))
@@ -1869,7 +1881,10 @@
 			   (setf pending-type (rest pending-type))
 			   (if* (second pending) then
 				   (push (first pending) (second pending))
-			      else (setf (second pending) (list (first pending))))
+			      else (setf (second pending)
+				     ;; (list (first pending)) ;2001-03-22
+				     (first pending) ;2001-03-22
+				     ))
 			   (setf pending (rest pending))
 			   (setf state state-dtd-!-element-type-paren-choice-name3)
 			   )
@@ -1918,10 +1933,16 @@
 				"'"))
 		   ))
 	  (#.state-dtd-!-element-type-paren-choice-name2
-	   (if* (eq #\| ch) then 
-		   (setf state state-dtd-!-element-type-paren-choice)
+	   (if* (eq #\| ch)
+		   ;; begin changes 2001-03-22
+	      then (setf state state-dtd-!-element-type-paren-choice)
+		   (push :choice pending-type)
+	    elseif (eq #\, ch)
+	      then (setf state state-dtd-!-element-type-paren-choice)
+		   (push :seq pending-type)
+		   ;; end changes 2001-03-22
 	    elseif (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\) ch) then
 		   (if* (= (length pending) 1) then
@@ -1955,7 +1976,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-choice-name3
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\? ch) then
 		   (setf (first pending) (list :? (first pending)))
@@ -2040,7 +2061,7 @@
 		   (setf (first contents-to-return)
 		     (append (list :*) (list (first contents-to-return))))
 		   (setf state state-dtd-!-element-type-paren-pcd5)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (setf state state-dtd-!-element-type-paren-pcd5)
@@ -2059,9 +2080,9 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
-	    elseif (xml-space-p ch) then 
+	    elseif (xml-space-p ch) then
 		    (let ((token (compute-tag coll)))
 		     (when (not (eq token :PCDATA))
 		       (xml-error (concatenate 'string
@@ -2073,7 +2094,7 @@
 		     (clear-coll coll)
 		     (push token contents-to-return))
 		   (setf state state-dtd-!-element-type-paren-pcd2)
-	    elseif (eq #\| ch) then 
+	    elseif (eq #\| ch) then
 		   (let ((token (compute-tag coll)))
 		     (when (not (eq token :PCDATA))
 		       (xml-error (concatenate 'string
@@ -2085,7 +2106,7 @@
 		     (push token contents-to-return))
 		   (clear-coll coll)
 		   (setf state state-dtd-!-element-type-paren-pcd3)
-	    elseif (eq #\) ch) then 
+	    elseif (eq #\) ch) then
 		   (let ((token (compute-tag coll)))
 		     (when (not (eq token :PCDATA))
 		       (xml-error (concatenate 'string
@@ -2110,7 +2131,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd2
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\) ch) then
 		   (setf state state-dtd-!-element-type-paren-pcd4)
@@ -2129,7 +2150,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd3
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-name-start-char-p ch) then
 		   (un-next-char ch)
@@ -2147,9 +2168,9 @@
 				"'"))
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd4
-	   (if* (xml-space-p ch) then 
+	   (if* (xml-space-p ch) then
 		   (setf state state-dtd-!-element-type-paren-pcd6)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\* ch) then
 		   (setf (first contents-to-return) '(:* :PCDATA))
@@ -2170,7 +2191,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd5
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\> ch) then (return)
 	      else (clear-coll coll)
@@ -2188,7 +2209,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd6
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\> ch) then (return)
 	      else (clear-coll coll)
@@ -2206,7 +2227,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd7
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (setf state state-dtd-!-element-type-paren-pcd8)
@@ -2214,7 +2235,7 @@
 		     (clear-coll coll)
 		     (if* (listp (first contents-to-return)) then
 			     (push token (first contents-to-return))
-			else (setf (first contents-to-return) 
+			else (setf (first contents-to-return)
 			       (list token (first contents-to-return)))))
 	    elseif (eq #\) ch) then
 		   (setf state  state-dtd-!-element-type-paren-pcd9)
@@ -2222,7 +2243,7 @@
 		     (clear-coll coll)
 		     (if* (listp (first contents-to-return)) then
 			     (push token (first contents-to-return))
-			else (setf (first contents-to-return) 
+			else (setf (first contents-to-return)
 			       (list token (first contents-to-return)))))
 	      else (clear-coll coll)
 		   (dotimes (i 15)
@@ -2239,7 +2260,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-paren-pcd8
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\| ch) then (setf state state-dtd-!-element-type-paren-pcd3)
 	    elseif (eq #\) ch) then (setf state state-dtd-!-element-type-paren-pcd9)
@@ -2261,7 +2282,7 @@
 		   (setf (first contents-to-return) (nreverse (first contents-to-return)))
 		   (when (> (length (first contents-to-return)) 1)
 		     (setf (first contents-to-return)
-		       (list (append (list :choice) 
+		       (list (append (list :choice)
 				     (first contents-to-return)))))
 		   (push :* (first contents-to-return))
 	      else (clear-coll coll)
@@ -2279,7 +2300,7 @@
 		   ))
 	  (#.state-dtd-!-element-type-token
 	   (if* (xml-name-char-p ch) then (add-to-coll coll ch)
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (xml-space-p ch) then
 		   (let ((token (compute-tag coll)))
@@ -2314,7 +2335,7 @@
 	   )
 	  (#.state-dtd-!-element-type-end
 	   (if* (xml-space-p ch) then nil
-	    elseif (and external (eq #\% ch)) then 
+	    elseif (and external (eq #\% ch)) then
 		   (external-param-reference tokenbuf coll external-callback)
 	    elseif (eq #\> ch) then (return)
 	      else (xml-error (concatenate 'string
@@ -2365,7 +2386,7 @@
 	 (values nil :ignore))
 	(:eof
 	 (if* (not external) then
-		 (xml-error "unexpected end of input while processing DTD internal subset") 
+		 (xml-error "unexpected end of input while processing DTD internal subset")
 	  elseif (or (> include-count 0) (not (eq prev-state state-dtdstart))) then
 		 (xml-error "unexpected end of input while processing external DTD"))
 	 (values nil :end-dtd))
@@ -2376,7 +2397,7 @@
     ))
 
 (defun external-param-reference (tokenbuf old-coll external-callback)
-  (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))
+  (declare (:fbound next-token) (ignorable old-coll) (optimize (speed 3) (safety 1)))
   (setf (iostruct-seen-parameter-reference tokenbuf) t)
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn
@@ -2393,7 +2414,7 @@
 		     else (setf (schar (collector-data ,coll) .next.)
 			    ,ch)
 			  (setf (collector-next ,coll) (1+ .next.))))))
-    (let ((ch (get-next-char tokenbuf)) 
+    (let ((ch (get-next-char tokenbuf))
 	  (coll (get-collector))
 	  p-value entity-symbol)
       (add-to-coll coll ch)
@@ -2411,13 +2432,13 @@
 	(if* (eq #\; ch) then
 		(setf entity-symbol (compute-tag coll))
 		(clear-coll coll)
-		#+ignore(format t "entity symbol: ~s entities: ~s match: ~s~%"
-			entity-symbol (iostruct-parameter-entities tokenbuf)
-			(assoc entity-symbol 
-			       (iostruct-parameter-entities tokenbuf)))
+		#+ignore (format t "entity symbol: ~s entities: ~s match: ~s~%"
+				 entity-symbol (iostruct-parameter-entities tokenbuf)
+				 (assoc entity-symbol
+					(iostruct-parameter-entities tokenbuf)))
 		(if* (and (iostruct-do-entity tokenbuf)
-			  (setf p-value 
-			    (assoc entity-symbol 
+			  (setf p-value
+			    (assoc entity-symbol
 				   (iostruct-parameter-entities tokenbuf)))) then
 			(setf p-value (rest p-value))
 			(when (member entity-symbol (iostruct-entity-names tokenbuf))
@@ -2438,12 +2459,15 @@
 				      (setf (tokenbuf-stream entity-buf) entity-stream)
 				      (unicode-check entity-stream tokenbuf)
 				      (add-to-entity-buf entity-symbol " ")
-				      (push entity-buf 
+				      (push entity-buf
 					    (iostruct-entity-bufs tokenbuf))
 				      (let ((count 0) cch
 					    (string "<?xml "))
 					(if* (dotimes (i (length string) t)
 					       (setf cch (get-next-char tokenbuf))
+					       (when (and (= i 5)
+							  (xml-space-p cch))
+						 (setf cch #\space))
 					       (when (not (eq cch
 							      (schar string count)))
 						 (return nil))
@@ -2478,7 +2502,7 @@
 		  (add-to-coll coll ch)
 		  (setq ch (get-next-char tokenbuf))
 		  (if* (null ch)
-		     then (return))) 
+		     then (return)))
 		(xml-error (concatenate 'string
 			     "Illegal DTD parameter entity name stating at: "
 			     (compute-coll-string coll))))))))
