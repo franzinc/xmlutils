@@ -1,0 +1,156 @@
+Preliminary HTML Parser documentation
+
+Pending tasks:
+
+    . integrate with aserve components, such as htmlgen and LHTML description
+
+
+Description
+
+The parse-html function processes HTML input, returning a list of HTML tags,
+attributes, and text. Here is a simple example:
+
+(parse-html "<HTML>
+             <HEAD>
+             <TITLE>Example HTML input</TITLE>
+             <BODY>
+             <P>Here is some text with a <B>bold</B> word<br>and a <A HREF=\"help.html\">link</P>
+             </HTML>")
+
+-->
+
+((:html (:head (:title "Example HTML input"))
+  (:body (:p "Here is some text with a " (:b "bold") " word" :br "and a " 
+	((:a :href "help.html") "link")))))
+
+
+The output format is known as LHTML format; it is the same format that the
+aserve htmlgen macro accepts. 
+
+Here is a description of LHTML:
+
+LHTML is a list representation of HTML tags and content.
+
+Each list member may be:
+
+a. a string containing text content, such as "Here is some text with a "
+
+b. a keyword package symbol representing a HTML tag with no associated attributes 
+   or content, such as :br.
+
+c. a list representing an HTML tag with associated attributes and/or content,
+   such as (:b "bold") or ((:a :href "help.html") "link"). If the HTML tag
+   does not have associated attributes, then the first list member will be a
+   keyword package symbol representing the HTML tag, and the other elements will 
+   represent the content, which can be a string (text content), a keyword package symbol (HTML
+   tag with no attributes or content), or list (nested HTML tag with
+   associated attributes and/or content). If there are associated attributes,
+   then the first list member will be a list containing a keyword package symbol
+   followed by two list members for each associated attribute; the first member is a keyword
+   package symbol representing the attribute, and the next member is a string corresponding
+   to the attribute value.
+
+Here are some additional details about parse-html output:
+
+1. If excl:*current-case-mode* is :CASE-INSENSITIVE-UPPER, keyword package symbols will be
+   in upper case; otherwise, they will be in lower case.
+
+2. HTML comments are represented use a :comment symbol. For example,
+
+   (parse-html "<!-- this is a comment-->")
+
+--> ((:comment " this is a comment"))
+
+3. All <SCRIPT> and <STYLE> content is not parsed; it is returned as test content.
+
+   For example,
+
+   (parse-html "<SCRIPT>this <B>will not</B> be parsed</SCRIPT>")
+
+--> ((:script "this <B>will not</B> be parsed"))
+
+4. There is plenty of illegal and deprecated HTML on the web that popular browsers
+   nonetheless successfully display. The parse-html parser is generous - it will not
+   raise an error condition upon encountering most input. In particular, it does not
+   maintain a list of legal HTML tags and will successfully parse nonsense input.
+
+   For example,
+
+   (parse-html "<this> <is> <some> <nonsense> <input>")
+
+--> ((:this (:is (:some (:nonsense :input)))))
+
+5. As per the HTML 4.0 specification, attributes without specified values are given a lower case
+   string value that matches the attribute name.
+
+   For example,
+   
+   (parse-html "<P here ARE some attributes>")
+
+--> (((:p :here "here" :are "are" :some "some" :attributes "attributes")))
+
+6. Existing HTML pages often have character format tags that are interleaved among
+   other tags. Such interleaving is removed in a manner consistent with the HTML 4.0
+   specification.
+
+   For example,
+
+   (parse-html "<P>Here is <B>bold text<P>that spans</B>two paragraphs")
+
+--> ((:p "Here is " (:b "bold text")) (:p (:b "that spans") "two paragraphs"))
+
+-----------------------------------------------------
+
+parse-html reference
+
+parse-html                                  [Generic function]
+
+Arguments:   input-source &key callbacks callback-only
+
+Returns LHTML output, as described above.
+
+The callbacks argument, if non-nil, should be an association list. Each list member's
+car (first) element specifies a keyword package symbol, and each list member's cdr (rest)
+element specifies a function object or a symbol naming a function. The function should
+expect one argument. The function will be invoked once for each time the HTML tag
+corresponding to the specified keyword package symbol is encountered in the HTML input; the
+argument will be an LHTML list containing the tag, along with associated attributes and
+content. The default callbacks argument value is nil.
+
+The callback-only argument, if non-nil, directs parse-html to not generate a complete LHTML
+output. Instead, LHTML lists will only be generated when necessary as arguments for functions
+specified in the callbacks association list. This results in faster parser execution. The default
+callback-only argument value is nil.
+
+parse-html Methods
+
+parse-html (p stream) &key callbacks callback-only
+
+parse-html (str string) &key callbacks callback-only
+
+parse-html (file t) &key callbacks callback-only
+
+The t method assumes the argument is a pathname suitable
+for use with the with-open-file macro.
+
+
+phtml-internal          [Function]
+
+Arguments: stream read-sequence-func callback-only callbacks
+
+Package: net.html.parser (internal)
+
+This internal function may be used when more control is needed for supplying
+the HTML input. The read-sequence-func argument, if non-nil, should be a function
+object or a symbol naming a function. When phtml-internal requires another buffer
+of HTML input, it will invoke the read-sequence-func function with two arguments -
+the first argument is an internal buffer character array and the second argument is
+the phtml-internal stream argument. If read-sequence-fun is nil, phtml-internal
+will invoke read-sequence to fill the buffer.
+
+
+
+
+
+
+

@@ -9,6 +9,8 @@
 (defvar *expected-result*)
 (defvar *expected-result2*)
 
+
+;; it uses a fake pp tag to test nesting for callbacks...
 (setf *test-string*
     "<html>
        <!-- this should be <h1>one</h1> string -->
@@ -54,15 +56,15 @@
          <tr>
           <td> this cell is aligned right
           <td> this cell is centered </table>
-        <p>
+        <pp>
          <object>
-          <p>Navigate the site:
+          <pp>Navigate the site:
            <map name=\"mainmap\">
             <area shape=rect coords=\"0,100,100,200\">
-            <area shape=rect coords=\"100,100,100,200\"> </map> </object> </p>
+            <area shape=rect coords=\"100,100,100,200\"> </map> </object> </pp>
         <abbr>WWW</abbr> is an abbreviation
         <b>force</b>
-        <p>whitespace only")
+        <pp>whitespace only")
 
 (setf *expected-result*
     '((:html
@@ -110,16 +112,16 @@
 	  (:tr
 	   (:td "this cell is aligned right")
 	   (:td "this cell is centered"))))
-	(:p
+	(:pp
 	 (:object
-	  (:p "Navigate the site:"
+	  (:pp "Navigate the site:"
 	      ((:map :name "mainmap")
 	       ((:area :shape "rect" :coords "0,100,100,200"))
 	       ((:area :shape "rect" :coords "100,100,100,200"))))))
 	(:abbr "WWW")
 	"is an abbreviation"
 	(:b "force")
-	(:p "whitespace only")
+	(:pp "whitespace only")
 	))))
 
 (setf *test-string2*
@@ -268,7 +270,7 @@
        then
 	    (incf *pass*)
 	    (test t (lhtml-equal arg
-				 '(:p "Navigate the site:"
+				 '(:pp "Navigate the site:"
 				   ((:map :name "mainmap")
 				    ((:area :shape "rect" :coords "0,100,100,200"))
 				    ((:area :shape "rect" :coords "100,100,100,200"))))))
@@ -276,9 +278,9 @@
        then
 	    (incf *pass*)
 	    (test t (lhtml-equal arg
-				 '(:p
+				 '(:pp
 				   (:object
-				    (:p "Navigate the site:"
+				    (:pp "Navigate the site:"
 				     ((:map :name "mainmap")
 				      ((:area :shape "rect" :coords "0,100,100,200"))
 				      ((:area :shape "rect" 
@@ -286,7 +288,7 @@
        else
 	    (setf *pass* 0)
 	    (test t (lhtml-equal arg
-				 '(:p "whitespace only"))))))
+				 '(:pp "whitespace only"))))))
 
 (defun testit ()
   (let ((util.test:*test-errors* 0)
@@ -322,12 +324,12 @@
     (setf *callback-called* 0)
     ;;(setf (element-callback :p) 'nested-callback)
     (test t (lhtml-equal (parse-html *test-string*
-				     :callbacks (acons :p 'nested-callback nil))
+				     :callbacks (acons :pp 'nested-callback nil))
 			 *expected-result*))
     (test 3 *callback-called*)
     (setf *callback-called* 0)
     (parse-html *test-string* :callback-only t
-		:callbacks (acons :p 'nested-callback nil))
+		:callbacks (acons :pp 'nested-callback nil))
     (test 3 *callback-called*)
     (test-error (parse-html "b<a"))
     (format t "End test: ~s,   ~d errors, ~d successes~%"

@@ -653,6 +653,8 @@
 (setf (tag-auto-close :option) '(:option))
 (setf (tag-auto-close-stop :option) '(:select))
 
+(setf (tag-auto-close :p) '(:head :p))
+
 (setf (tag-auto-close :pre) '(:head :p))
 (setf (tag-auto-close :table) '(:head :p))
 

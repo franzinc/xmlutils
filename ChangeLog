@@ -1,3 +1,11 @@
+2000-06-23 Steve Jacobson <sdj>
+
+	* phtml.cl: add autoclose property to :p tag
+
+	* phtml-test.cl: adjust test to reflect that <P> tags can't nest
+
+	* phtml.txt: new file: preliminary documentation
+
 2000-06-20 Steve Jacobson <sdj>
 
 	* phtml.cl: identify end of input errors
