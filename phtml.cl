@@ -626,7 +626,7 @@
 	       :colgroup :embed :hr :img
 	       :input :isindex :keygen :link :meta 
 	       :object 
-	       :p  ;; legally isn't but this makes thing work better
+	       ;:p  ;; legally isn't but this makes thing work better
 	       :plaintext :spacer :wbr))
   (setf (tag-no-end opt) t))
 
