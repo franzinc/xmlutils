@@ -1,0 +1,20 @@
+
+
+
+* 2004-04-27 mm:
+
+	All changes since 6.2 have been released as patches.
+
+	- phtml
+		add :eliminate-blank-strings argument to parse-html
+		parse-html close tag closes consecutive identical open tags
+		add :parse-entities arg to parse-html
+
+	- pxml	
+		improved namespace handling
+		improved handling of character encodings
+		add pxml-version function
+		allow unparsable uri as namespace marker
+		improved performance
+		more correct parsing of DTDs
+			
