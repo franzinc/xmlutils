@@ -8,6 +8,14 @@
 
 (declaim (optimize (speed 3) (safety 1)))
 
+(defpackage net.html.parser
+  (:use :lisp :clos :excl)
+  (:export
+   #:element-callback
+   #:parse-html))
+
+(in-package :net.html.parser)
+
 
 (defparameter *entity-mapping*
     ;; hash table to map entity to number
@@ -135,6 +143,33 @@
 ; only subelements allowed in this element, no strings
 (defmacro tag-no-pcdata (tag) `(get ,tag 'tag-no-pcdata))
 
+;; user will end up setting this when a callback is desired
+(defmacro tag-callback (tag) `(get ,tag 'tag-callback))
+
+(defmethod element-callback ((arg t))
+  (error "~s not a symbol" arg))
+
+(defmethod element-callback ((symbol symbol))
+  (tag-callback symbol))
+
+(defmethod (setf element-callback) ((arg1 t) (arg2 t))
+  (when (and (not (symbolp arg1)) (not (functionp arg1)) arg1)
+    (error "value must be nil, function, or function symbol"))
+  ;; arg2 must be reason we got here
+  (error "~s not a symbol" arg2))
+
+(defmethod (setf element-callback) ((func-symbol symbol) (symbol symbol))
+  ;; let symbol-function generate error if there is no function
+  (when (symbol-function func-symbol)
+    (setf (tag-callback symbol) func-symbol)))
+
+(defmethod (setf element-callback) ((nil-arg null) (symbol symbol))
+  (setf (tag-callback symbol) nil-arg))
+
+(defmethod (setf element-callback) ((function function) (symbol symbol))
+  (setf (tag-callback symbol) function))
+  
+
 ;; given :foo or (:foo ...) return :foo
 (defmacro tag-name (expr)
   `(let ((.xx. ,expr))
@@ -260,6 +295,10 @@
 	; now the unusual cases
 	(addit (char-code #\-) char-attribundelimattribvalue)
 	(addit (char-code #\.) char-attribundelimattribvalue)
+	
+	;; adding some that we found out there...
+	(addit (char-code #\:) char-attribundelimattribvalue)
+	(addit (char-code #\@) char-attribundelimattribvalue)
 	
 	; i'm not sure what can be in a tag name but we know that
 	; ! and - must be there since it's used in comments
@@ -721,7 +760,7 @@
 (setf (tag-no-pcdata :tr) t)
 
 
-(defmethod phtml ((p stream))
+(defmethod parse-html ((p stream))
   (phtml-internal p nil))
 
 
@@ -768,6 +807,8 @@
 		    then (setq element `(,current-tag
 					 ,@(strip-rev-pcdata guts)))
 		    else (setq element `(,current-tag ,@(nreverse guts))))
+		 (let ((callback (tag-callback (tag-name current-tag))))
+		   (when callback (funcall callback element)))
 		 (let* ((prev (pop pending)))
 		   (setq current-tag (car prev)
 			 guts (cdr prev))
@@ -847,13 +888,13 @@
 
 	  
 	     
-(defmethod phtml (file)
+(defmethod parse-html (file)
   (with-open-file (p file :direction :input)
-    (phtml p)))	     
+    (parse-html p)))	     
 	     
 
-(defmethod phtml ((str string))
-  (phtml (make-string-input-stream str)))
+(defmethod parse-html ((str string))
+  (parse-html (make-string-input-stream str)))
 
 		 
 	      
@@ -875,12 +916,12 @@
 ;;;
 ;;;(defun pdoit (&optional (file "testa.html"))
 ;;;  (with-open-file (p file)
-;;;    (phtml p)))
+;;;    (parse-html p)))
 ;;;
 ;;;
 ;;;;; requires http client module to work
 ;;;(defun getparse (host path)
-;;;  (phtml (httpr-body 
+;;;  (parse-html (httpr-body 
 ;;;	  (parse-response
 ;;;	   (simple-get host path)))))
 
