@@ -1,5 +1,6 @@
-(sys:defpatch "pxml" 1
-  "Version 7.0.1, needed by new SOAP interface."
+(sys:defpatch "pxml" 2
+  "v1: Version 7.0.1, needed by new SOAP interface;
+v2: use xml encoding to determine ACL external-format for parsing."
   :type :system
   :post-loadable t)
 
@@ -52,7 +53,7 @@
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.2.2.2.22.3 2003/07/28 20:17:26 layer Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.2.2.2.22.4 2003/11/04 01:02:19 layer Exp $")
 
 (defparameter *pxml-version* (list 7 0 1))
 (defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))
