@@ -206,23 +206,51 @@
 	    (not (zerop (logand (svref *characteristics* code) bit))))))
 
 
-	
-      
+(defstruct tokenbuf
+  cur ;; next index to use to grab from tokenbuf
+  max ;; index one beyond last character
+  data ;; character array
+  )
 
+;; cache of tokenbuf structs
+(defparameter *tokenbufs* (list nil nil nil nil))
 
+(defun get-tokenbuf ()
+  (declare (optimize (speed 3) (safety 1)))
+  (let (buf)
+    (mp::without-scheduling
+      (do* ((bufs *tokenbufs* (cdr bufs))
+	    (this (car bufs) (car bufs)))
+	  ((null bufs))
+	(if* this
+	   then (setf (car bufs) nil)
+		(setq buf this)
+		(return))))
+    (if* buf
+       then (setf (tokenbuf-cur buf) 0)
+	    (setf (tokenbuf-max buf) 0)
+	    buf
+       else (make-tokenbuf
+	     :cur 0
+	     :max  0
+	     :data (make-array 1024 :element-type 'character)))))
 
-(defparameter *tokenbuf* (make-array 1024 :element-type 'character))
-(defparameter *max-tokenbuf* 0) ; index one beyond last character
-(defparameter *cur-tokenbuf* 0) ; next index to use to grab from tokenbuf
-(defun reset-tokenbuf ()
-  (setf *max-tokenbuf* 0
-	*cur-tokenbuf* 0))
+(defun put-back-tokenbuf (buf)
+  (declare (optimize (speed 3) (safety 1)))
+  (mp::without-scheduling 
+    (do ((bufs *tokenbufs* (cdr bufs)))
+	((null bufs)
+	 ; toss it away
+	 nil)
+      (if* (null (car bufs))
+	 then (setf (car bufs) buf)
+	      (return)))))
 
 
     
     
 (defun next-token (stream ignore-strings raw-mode-delimiter
-		   read-sequence-func)
+		   read-sequence-func tokenbuf)
   (declare (optimize (speed 3) (safety 1)))
   ;; return two values: 
   ;;    the next token from the stream.
@@ -231,11 +259,11 @@
   ;; if read-sequence-func is non-nil,
   ;; read-sequence-func is called to fetch the next character
   (macrolet ((next-char (stream)
-	       `(let ((cur *cur-tokenbuf*)
-		      (tb *tokenbuf*))
-		  (if* (>= cur *max-tokenbuf*)
+	       `(let ((cur (tokenbuf-cur tokenbuf))
+		      (tb (tokenbuf-data tokenbuf)))
+		  (if* (>= cur (tokenbuf-max tokenbuf))
 		     then ; fill buffer
-			  (if* (zerop (setq *max-tokenbuf*
+			  (if* (zerop (setf (tokenbuf-max tokenbuf)
 					(if* read-sequence-func
 					   then (funcall read-sequence-func tb stream)
 					   else (read-sequence tb stream))))
@@ -243,11 +271,11 @@
 			     else (setq cur 0)))
 		  (if* cur
 		     then (prog1 (schar tb cur)
-			    (setq *cur-tokenbuf* (1+ cur))))))
+			    (setf (tokenbuf-cur tokenbuf) (1+ cur))))))
 			  
 	     
 	     (un-next-char (stream ch)
-	       `(decf *cur-tokenbuf*))
+	       `(decf (tokenbuf-cur tokenbuf)))
 	     
 	     (clear-coll (coll)
 	       `(setf (collector-next coll) 0))
@@ -649,7 +677,6 @@
 
 (defun phtml-internal (p read-sequence-func callback-only callbacks)
   (declare (optimize (speed 3) (safety 1)))
-  (reset-tokenbuf)
   (let ((first-pass nil)
 	(raw-mode-delimiter nil)
 	(pending nil)
@@ -659,6 +686,7 @@
 	(pending-ch-format nil)
 	(closed-pending-ch-format nil)
 	(new-opens nil)
+	(tokenbuf (get-tokenbuf))
 	(guts)
 	)
     (labels ((close-off-tags (name stop-at)
@@ -753,7 +781,8 @@
 	     (get-next-token (force)
 	       (if* (or force (null first-pass)) then
 		       (multiple-value-bind (val kind)
-			   (next-token p nil raw-mode-delimiter read-sequence-func)
+			   (next-token p nil raw-mode-delimiter read-sequence-func
+				       tokenbuf)
 			(if* (eq kind :start-tag) then
 				(if* (eq val :style) then
 					(setf raw-mode-delimiter
@@ -877,6 +906,7 @@
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
 	       (close-off-tags '(:start-parse) nil))
+	     (put-back-tokenbuf tokenbuf)
 	     (return (cdar guts)))))))))
 
 	      

@@ -1,3 +1,7 @@
+2000-06-10 Steve Jacobson <sdj>
+
+	* phtml.cl: made input buffer usage thread-safe, without increasing 
+	            consing.
 
 Fri May 26 22:55:52 PST 2000  Duane Rettig  <duane@beta>
 
