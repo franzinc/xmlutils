@@ -1,3 +1,5 @@
+;; $Id: phtml-test.cl,v 1.11 2000/07/17 20:03:07 layer Exp $
+
 (eval-when (compile load eval)
   (require :tester))
 

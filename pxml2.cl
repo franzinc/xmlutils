@@ -1,3 +1,5 @@
+;; $Id: pxml2.cl,v 1.2 2000/07/17 20:03:07 layer Exp $
+
 (in-package :net.xml.parser)
 
 ;; todo - compute-tag currently puts symbols in keyword package

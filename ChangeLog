@@ -1,3 +1,7 @@
+2000-07-17  Kevin Layer  <layer@ultra>
+
+	* *.cl: add rcs id's
+
 2000-07-17 Steve Jacobson
 
 	* phtml.cl: more robust handling of illegal attribute value HTML:
