@@ -1,3 +1,8 @@
+2004-03-30  John Foderaro  <jkf@tiger.franz.com>
+
+	* phtml.cl: add :eliminate-blank-strings argument to parse-html
+	  (default t) so that one can choose to disable this feature.
+
 2003-11-21    <mm@KETCHTOO>
 
 	* pxml0.cl (*pxml-version*): 7.0.2
