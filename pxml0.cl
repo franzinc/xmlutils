@@ -1,9 +1,9 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA 
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
-;; the GNU Lesser General Public License as published by 
+;; the GNU Lesser General Public License as published by
 ;; the Free Software Foundation, as clarified by the AllegroServe
 ;; prequel found in license-allegroserve.txt.
 ;;
@@ -12,16 +12,13 @@
 ;; merchantability or fitness for a particular purpose.  See the GNU
 ;; Lesser General Public License for more details.
 ;;
-;; Version 2.1 of the GNU Lesser General Public License is in the file 
+;; Version 2.1 of the GNU Lesser General Public License is in the file
 ;; license-lgpl.txt that was distributed with this file.
 ;; If it is not present, you can access it from
 ;; http://www.gnu.org/copyleft/lesser.txt (until superseded by a newer
-;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
+;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-
-;; $Id: pxml0.cl,v 1.6 2000/12/20 23:01:51 sdj Exp $
-
 ;; pxml.cl - parse xml
 ;;
 ;; Change Log
@@ -38,6 +35,19 @@
   )
 
 (in-package :net.xml.parser)
+
+(unless (fboundp 'pxml-dribble-bug-hook)
+  (let ((pxml-version-strings nil))
+    (defun pxml-dribble-bug-hook (stream-or-string)
+      (if (stringp stream-or-string)
+	  (push stream-or-string pxml-version-strings)
+	(loop for string in (reverse pxml-version-strings)
+	    do (write-string string stream-or-string)
+	       (terpri stream-or-string))))
+
+    (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
+
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.7 2001/03/23 22:10:00 smh Exp $")
 
 (defun xml-char-p (char)
   (declare (optimize (speed 3) (safety 1)))
@@ -57,6 +67,7 @@
 	(eq code #xD)
 	(eq code #xA))))
 
+#+unused
 (defmacro xml-eql-char-p (char)
   `(eq ,char #\=))
 

@@ -1,9 +1,9 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA 
+;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
-;; the GNU Lesser General Public License as published by 
+;; the GNU Lesser General Public License as published by
 ;; the Free Software Foundation, as clarified by the AllegroServe
 ;; prequel found in license-allegroserve.txt.
 ;;
@@ -12,27 +12,26 @@
 ;; merchantability or fitness for a particular purpose.  See the GNU
 ;; Lesser General Public License for more details.
 ;;
-;; Version 2.1 of the GNU Lesser General Public License is in the file 
+;; Version 2.1 of the GNU Lesser General Public License is in the file
 ;; license-lgpl.txt that was distributed with this file.
 ;; If it is not present, you can access it from
 ;; http://www.gnu.org/copyleft/lesser.txt (until superseded by a newer
-;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
+;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-
-;; $Id: pxml1.cl,v 1.7 2000/12/05 21:26:50 sdj Exp $
-
-;; Change Log 
+;; Change Log
 ;;
 ;; 10/14/00 add namespace support; xml-error fix
 
 (in-package :net.xml.parser)
 
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.8 2001/03/23 22:10:00 smh Exp $")
+
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
 (defun put-back-collector (col)
   (declare (optimize (speed 3) (safety 1)))
-  (mp::without-scheduling 
+  (mp::without-scheduling
     (do ((cols *collectors* (cdr cols)))
 	((null cols)
 	 ; toss it away
@@ -102,7 +101,7 @@
 	     :max  0
 	     :data (make-array 1024 :element-type 'character)))))
 
-(defstruct collector 
+(defstruct collector
   next  ; next index to set
   max   ; 1+max index to set
   data  ; string vector
@@ -145,17 +144,17 @@
 								      (+ 1 colon-index))))
 					(dotimes (i (- (collector-next coll)
 						       (+ 1 colon-index)))
-					  (setf (schar string2 i) 
+					  (setf (schar string2 i)
 					    (schar data (+ colon-index 1 i))))
 					(excl::intern string2 (rest new-package))
 				   else
-					(excl::intern* (collector-data coll) 
+					(excl::intern* (collector-data coll)
 						       (collector-next coll) package)))
 			 else
 			      (let ((new-package (assoc :none ns-to-package)))
 				(when new-package
 				  (setf package (rest new-package))))
-			      (excl::intern* (collector-data coll) 
+			      (excl::intern* (collector-data coll)
 					     (collector-next coll) package)))
 		    ))
 	  ))
@@ -167,7 +166,7 @@
 	(from (collector-data coll)))
     (dotimes (i (collector-next coll))
       (setf (schar str i) (schar from i)))
-    
+
     str))
 
 (defun grow-and-add (coll ch)
@@ -186,7 +185,7 @@
 
 (defun put-back-tokenbuf (buf)
   (declare (optimize (speed 3) (safety 1)))
-  (mp::without-scheduling 
+  (mp::without-scheduling
     (do ((bufs *tokenbufs* (cdr bufs)))
 	((null bufs)
 	 ; toss it away
@@ -222,13 +221,13 @@
 	     (if* (or (not (tokenbuf-stream ,tokenbuf))
 		      (zerop (setf (tokenbuf-max ,tokenbuf)
 			       (if* ,read-sequence-func
-				  then (funcall ,read-sequence-func tb 
+				  then (funcall ,read-sequence-func tb
 						(tokenbuf-stream ,tokenbuf))
 				  else (read-sequence tb (tokenbuf-stream ,tokenbuf))))))
 		then (setq cur nil)	;; eof
 		else (setq cur 0)))
      (if* cur
-	then (prog1 
+	then (prog1
 		 (let ((cc (schar tb cur)))
 		   (if (and (tokenbuf-stream ,tokenbuf) (eq #\return cc)) #\newline cc))
 	       (setf (tokenbuf-cur ,tokenbuf) (1+ cur))))))
@@ -259,10 +258,10 @@
 		       (setf (iostruct-entity-names iostruct) (rest (iostruct-entity-names iostruct)))
 		       (when (not (iostruct-entity-bufs iostruct)) (return))))
 		   (if* char then char
-		      else (next-char (iostruct-tokenbuf iostruct) 
+		      else (next-char (iostruct-tokenbuf iostruct)
 				      (iostruct-read-sequence-func iostruct)))
 	      else (setf from-stream t)
-		   (next-char (iostruct-tokenbuf iostruct) 
+		   (next-char (iostruct-tokenbuf iostruct)
 			      (iostruct-read-sequence-func iostruct))))))
     (if* (and from-stream (eq tmp-char #\return)) then #\newline else tmp-char)))
 
@@ -288,7 +287,7 @@
 		      (setf (stream-external-format p)
 			(find-external-format #+(version>= 6 0 pre-final 1) :unicode
 					      #-(version>= 6 0 pre-final 1) :fat-little))
-		 else 
+		 else
 		      (xml-error "stream has incomplete Unicode marker"))
 	 else (setf (stream-external-format p)
 		(find-external-format :utf8))
@@ -305,11 +304,11 @@
 	    (dolist (def (rest tag-defaults))
 	      (if* (stringp (third def)) then
 		      (push (first def) defaults)
-		      (push (if (eq (second def) :CDATA) (third def) 
+		      (push (if (eq (second def) :CDATA) (third def)
 			      (normalize-attrib-value (third def))) defaults)
 	       elseif (and (eq (third def) :FIXED) (stringp (fourth def))) then
 		      (push (first def) defaults)
-		      (push (if (eq (second def) :CDATA) (fourth def) 
+		      (push (if (eq (second def) :CDATA) (fourth def)
 			      (normalize-attrib-value (fourth def))) defaults)
 		      ))
 	    (if* defaults then
@@ -364,12 +363,12 @@
       (when (= count stop) (return public-value))
       (setf cch (schar public-value count))
       (if* (and (eq cch #\space) (eq last-ch #\space)) then
-	      (setf public-value 
+	      (setf public-value
 		(remove #\space public-value :start count :count 1))
 	      (decf stop)
 	 else (incf count)
 	      (setf last-ch cch)))))
-  
+
 
 (defun normalize-attrib-value (attrib-value &optional first-pass)
   (declare (optimize (speed 3) (safety 1)))
@@ -379,10 +378,10 @@
 	(when (= count stop) (return))
 	(setf cch (schar attrib-value count))
 	(if* (or (eq cch #\return) (eq cch #\tab)) then (setf (schar attrib-value count) #\space)
-	 elseif (and (eq cch #\newline) (not (eq last-ch #\return))) then 
+	 elseif (and (eq cch #\newline) (not (eq last-ch #\return))) then
 		(setf (schar attrib-value count) #\space)
 	 elseif (and (eq cch #\newline) (eq last-ch #\return)) then
-		(setf attrib-value 
+		(setf attrib-value
 		  (remove #\space attrib-value :start count :count 1))
 		(decf stop))
 	(incf count)
@@ -393,7 +392,7 @@
       (when (= count stop) (return attrib-value))
       (setf cch (schar attrib-value count))
       (if* (and (eq cch #\space) (eq last-ch #\space)) then
-	      (setf attrib-value 
+	      (setf attrib-value
 		(remove #\space attrib-value :start count :count 1))
 	      (decf stop)
 	 else (incf count)
@@ -403,14 +402,14 @@
   (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))
   (when (not (and (symbolp (second val)) (string= "version" (symbol-name (second val)))))
     (xml-error "XML declaration tag does not include correct 'version' attribute"))
-  (when (and (fourth val) 
+  (when (and (fourth val)
 	     (or (not (symbolp (fourth val)))
-		 (and (not (string= "standalone" (symbol-name (fourth val)))) 
+		 (and (not (string= "standalone" (symbol-name (fourth val))))
 		      (not (string= "encoding" (symbol-name (fourth val)))))))
     (xml-error "XML declaration tag does not include correct 'encoding' or 'standalone' attribute"))
   (when (and (fourth val) (string= "standalone" (symbol-name (fourth val))))
     (if* (equal (fifth val) "yes") then
-	   (setf (iostruct-standalonep tokenbuf) t) 
+	   (setf (iostruct-standalonep tokenbuf) t)
      elseif (not (equal (fifth val) "no")) then
 	    (xml-error "XML declaration tag does not include correct 'standalone' attribute value")))
   (dotimes (i (length (third val)))

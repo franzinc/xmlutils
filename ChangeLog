@@ -1,3 +1,16 @@
+2001-03-23  Steve Haflich  <smh@romeo>
+
+	* pxml3.cl: state-dtd-!-element-type-paren-choice-name2 was
+	   missing code to handle decls such as
+	   <!ELEMENT item1 ((item2 | item3)+ , item4)>
+	   which was presumably overlooked in the merge of
+	   *-choice and *-seq into a single set of parser states
+	   It is quite clear that the dtd parsr does not return correct
+	   tree structure in all cases, but this fix may allow it at
+	   least to accept legal dtds without signalling error.
+	   Also made minor *debug-dtd* enhancements.
+	* pxml[0,1,2,3]: Added dribble-bug version number tracking.
+	
 2001-02-05 Steve Jacobson <sdj>
 
 	phtml.cl: symbols mapped to preferred case at runtime (as opposed to
