@@ -1,5 +1,6 @@
-(sys:defpatch "phtml" 1
-  "parse-html close tag closes consecutive identical open tags."
+(sys:defpatch "phtml" 2
+  "v1: parse-html close tag closes consecutive identical open tags;
+v2: add option so blank strings will be retained in the parse."
   :type :system
   :post-loadable t)
 
@@ -24,11 +25,17 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-;; $Id: phtml.cl,v 1.15.2.3.22.4 2004/03/03 16:06:48 layer Exp $
+;; $Id: phtml.cl,v 1.15.2.3.22.5 2004/04/05 23:25:07 layer Exp $
 
 ;; phtml.cl  - parse html
 
 ;; Change Log
+;; 03/30/04 - add ;eliminate-blank-strings keyword argument to 
+;;	   parse-html.  If true then content that contains *only*
+;;	   whitespace will not be returned by the parser.
+;;	   The default for this argument is t since this was the
+;;	   behavior of the parser before this option was added.
+;;
 ;; 05/14/02 - add :parse-entities arg to parse-html. If true then
 ;;	   entities are converted to the character they represent.
 ;;
@@ -1046,10 +1053,11 @@
 
 (defmethod parse-html ((p stream) &key callback-only callbacks collect-rogue-tags
 				       no-body-tags
-				       parse-entities)
+				       parse-entities
+				       (eliminate-blank-strings t))
   (declare (optimize (speed 3) (safety 1)))
   (phtml-internal p nil callback-only callbacks collect-rogue-tags
-		  no-body-tags parse-entities))
+		  no-body-tags parse-entities eliminate-blank-strings))
 
 (defmacro tag-callback (tag)
   `(rest (assoc ,tag callbacks)))
@@ -1057,7 +1065,8 @@
 (defun phtml-internal (p read-sequence-func callback-only 
 		       callbacks collect-rogue-tags 
 		       no-body-tags
-		       parse-entities)
+		       parse-entities
+		       eliminate-blank-strings)
   (declare (optimize (speed 3) (safety 1)))
   (let ((raw-mode-delimiter nil)
 	(pending nil)
@@ -1075,7 +1084,7 @@
 	       ;; close off an open 'name' tag, but search no further
 	       ;; than a 'stop-at' tag.
 	       #+ignore (format t "close off name ~s, stop at ~s, ct ~s~%"
-		       name stop-at current-tag)
+				name stop-at current-tag)
 	       (if* (member (tag-name current-tag) name :test #'eq)
 		  then ;; close current tag(s)
 		       (loop
@@ -1196,7 +1205,7 @@
 	(multiple-value-bind (val kind)
 	    (get-next-token nil)
 	  #+ignore (format t "val: ~s kind: ~s  last-tag ~s pending ~s~%" val kind 
-		  last-tag pending)
+			   last-tag pending)
 	  (case kind
 	    (:pcdata
 	     (when (or (and callback-only current-callback-tags)
@@ -1205,11 +1214,13 @@
 		  then
 		       (push val guts)
 		  else
-		       (when (dotimes (i (length val) nil)
-			       (when (not (char-characteristic (elt val i) 
-							       char-spacechar))
-				 (return t)))
-			 (push val guts))))
+		       (if* (or (not eliminate-blank-strings)
+				(dotimes (i (length val) nil)
+				  (if* (not (char-characteristic 
+					     (elt val i) char-spacechar))
+				     then (return t))))
+			  then ; string has something useful, save it
+			       (push val guts))))
 	     (when (and (= (length raw-mode-delimiter) 1) ;; xml tag...
 			(or (and callback-only current-callback-tags)
 			    (not callback-only)))
@@ -1341,24 +1352,29 @@
 	      
 
 (defmethod parse-html (file &key callback-only callbacks collect-rogue-tags
-				 no-body-tags parse-entities)
+				 no-body-tags parse-entities
+				 (eliminate-blank-strings t))
   (declare (optimize (speed 3) (safety 1)))
   (with-open-file (p file :direction :input)
     (parse-html p :callback-only callback-only :callbacks callbacks
 		:collect-rogue-tags collect-rogue-tags
 		:no-body-tags no-body-tags
 		:parse-entities parse-entities
+		:eliminate-blank-strings eliminate-blank-strings
 		)))	     
 	     
 
 (defmethod parse-html ((str string) &key callback-only callbacks collect-rogue-tags
-					 no-body-tags parse-entities)
+					 no-body-tags parse-entities
+					 (eliminate-blank-strings t)
+					 )
   (declare (optimize (speed 3) (safety 1)))
   (parse-html (make-string-input-stream str) 
 	      :callback-only callback-only :callbacks callbacks
 	      :collect-rogue-tags collect-rogue-tags
 	      :no-body-tags no-body-tags
-		:parse-entities parse-entities
+	      :parse-entities parse-entities
+	      :eliminate-blank-strings eliminate-blank-strings
 	      ))
 
 		 

@@ -1,4 +1,10 @@
 *******************************************************************************
+4/5/2004
+merge from trunk to acl62 branch
+command:
+join.sh trunk trunk_to_acl62_merge_030304 trunk_to_acl62_merge_040504 xmlutils
+
+*******************************************************************************
 Wed Mar  3 08:03:28 PST 2004
 merge from trunk to acl62 branch
 command:
@@ -34,6 +40,11 @@ Mon Jun 17 11:29:36 PDT 2002
 merge from trunk to acl62 branch (for 6.2)
 command: ../../join.sh trunk acl62 trunk_to_acl62_merge1 xmlutils
 *******************************************************************************
+
+2004-03-30  John Foderaro  <jkf@tiger.franz.com>
+
+	* phtml.cl: add :eliminate-blank-strings argument to parse-html
+	  (default t) so that one can choose to disable this feature.
 
 2003-11-21    <mm@KETCHTOO>
 
