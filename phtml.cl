@@ -7,6 +7,7 @@
 (defpackage net.html.parser
   (:use :lisp :clos :excl)
   (:export
+   #:phtml-internal
    #:parse-html))
 
 (in-package :net.html.parser)

@@ -138,7 +138,7 @@ phtml-internal          [Function]
 
 Arguments: stream read-sequence-func callback-only callbacks
 
-Package: net.html.parser (internal)
+Package: net.html.parser
 
 This internal function may be used when more control is needed for supplying
 the HTML input. The read-sequence-func argument, if non-nil, should be a function
@@ -146,7 +146,8 @@ object or a symbol naming a function. When phtml-internal requires another buffe
 of HTML input, it will invoke the read-sequence-func function with two arguments -
 the first argument is an internal buffer character array and the second argument is
 the phtml-internal stream argument. If read-sequence-fun is nil, phtml-internal
-will invoke read-sequence to fill the buffer.
+will invoke read-sequence to fill the buffer. The read-sequence-func function must
+return the number of character array elements successfully stored in the buffer.
 
 
 
