@@ -1,3 +1,9 @@
+2000-05-17 Steve Jacobson <sdj>
+
+	* phtml.cl: output keyword symbols in upper case when phtml.cl is compiled in
+	            :CASE-INSENSITIVE-UPPER lisp. 
+	            runtime raw mode (<style>,<script>) change to be case insensitive
+
 2000-05-12 Steve Jacobson <sdj>
 
 	* phtml-test.cl: added tests to check things like <b><i>bold and italic</b>just italic</i>

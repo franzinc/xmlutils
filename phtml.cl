@@ -415,7 +415,9 @@
 	     
 	     (to-preferred-case (ch)
 	       ;; should check the case mode
-	       `(char-downcase ,ch))
+	       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
+		       then `(char-upcase ,ch)
+		       else `(char-downcase ,ch)))
 	       
 	     )
     
@@ -899,10 +901,16 @@
 	     (setf last-tag val)
 	     (if* (eq last-tag :style)
 		then
-		     (setf raw-mode-delimiter "</style>")
+		     (setf raw-mode-delimiter
+		       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
+			  then "</STYLE>"
+			  else "</style>"))
 	      elseif (eq last-tag :script)
 		then
-		     (setf raw-mode-delimiter "</script>"))
+		     (setf raw-mode-delimiter
+		       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
+			  then "</SCRIPT>"
+			  else "</script>")))
 	     ; maybe this is an end tag too
 	     (let* ((name (tag-name val))
 		    (auto-close (tag-auto-close name))
