@@ -19,7 +19,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.22 2001/02/05 19:14:34 sdj Exp $
+;; $Id: phtml.cl,v 1.23 2001/05/30 17:50:46 jkf Exp $
 
 ;; phtml.cl  - parse html
 
@@ -168,29 +168,33 @@
 		 )
 	
 	(with-range (i #\A #\Z)
-	    (addit i (+ char-tagcharacter
-	       char-attribnamechar
-	       char-attribundelimattribvalue)))
+	  (addit i (+ char-tagcharacter
+		      char-attribnamechar
+		      char-attribundelimattribvalue)))
 	
 	(with-range (i #\a #\z)
-	    (addit i (+ char-tagcharacter
-	       char-attribnamechar
-	       char-attribundelimattribvalue)))
+	  (addit i (+ char-tagcharacter
+		      char-attribnamechar
+		      char-attribundelimattribvalue)))
 		      
 	(with-range (i #\0 #\9)
-	    (addit i (+ char-tagcharacter
-	       char-attribnamechar
-	       char-attribundelimattribvalue)))
+	  (addit i (+ char-tagcharacter
+		      char-attribnamechar
+		      char-attribundelimattribvalue)))
 	
 	;; let colon be legal tag character
-	(addit (char-code #\:) char-tagcharacter)
+	(addit (char-code #\:) (+ char-attribnamechar
+				  char-tagcharacter))
 	
 	;; NY times special tags have _
-	(addit (char-code #\_) char-tagcharacter)
+	(addit (char-code #\_) (+ char-attribnamechar
+				  char-tagcharacter))
 	
 	; now the unusual cases
-	(addit (char-code #\-) char-attribundelimattribvalue)
-	(addit (char-code #\.) char-attribundelimattribvalue)
+	(addit (char-code #\-) (+ char-attribnamechar
+				  char-attribundelimattribvalue))
+	(addit (char-code #\.) (+ char-attribnamechar
+				  char-attribundelimattribvalue))
 	
 	;; adding all typeable chars except for whitespace and >
 	(addit (char-code #\:) char-attribundelimattribvalue)
