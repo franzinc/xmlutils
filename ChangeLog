@@ -1,3 +1,52 @@
+*******************************************************************************
+merge from trunk to acl6 branch
+command: ../../join.sh trunk acl6 trunk_to_acl6_merge1 xmlutils
+*******************************************************************************
+
+2000-09-05 Steve Jacobson <sdj>
+
+	New files:
+
+	phtml.htm: HTML version of doc file
+	pxml.htm: HTML version of doc file
+
+	Changed files:
+
+	pxml-test.cl: Add namespace example; change because of xml-error change
+	pxml.txt: Namespace changes and other edits
+	pxml1.cl: namespace support; add format string to xml-error 'error call
+	pxml2.cl: namespace support
+
+2000-08-16  Steve Jacobson <sdj>
+
+	pxml-test.cl: cleanup for distribution
+	*.cl: add AllegroServe license text
+
+2000-08-10  Steve Jacobson <sdj>
+
+	phtml-test.cl: add tests for latest changes
+	phtml.cl: allow underscore as tag character
+	          fix <![if ..]> --> (:! "if ..]") bug ('[' lost)
+		  add collect-rogue-tags & no-body-tags arguments to
+	              support 2 pass parse for really bad pages (e.g. New
+		      York Times page)
+		  special inline character formatting close/reopen strategy
+	              preserves any attributes (smh reported bug)
+	phtml.txt: new argument and <! processing documentation
+	pxml0.cl,pxml1.cl,pxml2.cl,pxml3.cl: continued development - now in a state
+	                                     to be used by others
+	pxml-test.cl: new file (pending task: add xmltest directories to cvs -
+	                                      it will take some work because
+					      binary files must be indentified)
+	pxml.txt: new documentation file
+
+2000-07-24 Steve Jacobson <sdj>
+
+	* phtml.cl: handle <script></script> pair with no text between the tags
+	            correctly. Change works for any "raw" mode tag.
+
+	* phtml-test.cl: add test for the above change
+
 2000-07-17  Kevin Layer  <layer@ultra>
 
 	* *.cl: add rcs id's
