@@ -1,3 +1,10 @@
+2003-11-03  Charles A. Cox  <cox@fritter>
+
+	* pxml-test.cl: Fix latin1 nicknames.  Add tests for Japanese.
+	* pxml1.cl: spr27942 fix: Check for encoding before filling parse
+	buffers.  Force unicode ef to be loaded at load time.
+	
+
 2003-07-28  Kevin Layer  <layer@crikey>
 
 	* pxml0.cl: add defpatch
