@@ -1,3 +1,8 @@
+2000-10-27 Steve Jacobson <sdj>
+
+	phtml.cl: check callbacks arg when tag has no body
+	          REMEBER TO ADD TEST TO PHTML-TEST!!!
+	
 2000-10-14 Steve Jacobson <sdj>
 
 	phtml-test.cl: add test related to raw mode infinite loop

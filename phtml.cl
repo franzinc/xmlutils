@@ -19,7 +19,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.19 2000/10/16 16:58:59 sdj Exp $
+;; $Id: phtml.cl,v 1.20 2000/10/27 17:48:12 sdj Exp $
 
 ;; phtml.cl  - parse html
 
@@ -746,6 +746,7 @@
   `(rest (assoc ,tag callbacks)))
 
 (defun phtml-internal (p read-sequence-func callback-only callbacks collect-rogue-tags
+
 		       no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
   (let ((raw-mode-delimiter nil)
@@ -950,6 +951,13 @@
 			   ))
 		 (if* no-end
 		    then		; this is a singleton tag
+			 (let ((callback (tag-callback (tag-name (if* (atom val)
+								    then val
+								    else (first val))))))
+			   (when callback
+			     (funcall callback (if* (atom val)
+						  then val
+						  else (list val)))))
 			 (push (if* (atom val)
 				  then val
 				  else (list val))
