@@ -1,3 +1,9 @@
+2004-08-05  Kevin Layer  <layer@gemini>
+
+	* pxml0.cl,
+	* pxml2.cl,
+	* pxml3.cl: (excl::compiler-let ((*record-source-file-info* nil)) ..)
+	  around some definitions duplicated in the sax module
 
 2004-04-27    <mm@KETCHTOO>
 

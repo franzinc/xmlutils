@@ -23,9 +23,11 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.11 2004/01/16 19:31:39 layer Exp $")
+(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.11.26.1 2004/08/05 21:23:35 layer Exp $")
 
+(excl::compiler-let ((*record-source-file-info* nil))
 (defvar *debug-dtd* nil)
+)
 
 (defun parse-dtd (tokenbuf
 		  external external-callback)
