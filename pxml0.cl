@@ -48,9 +48,9 @@
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.11 2003/07/23 21:26:48 mm Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.12 2003/11/21 22:09:05 mm Exp $")
 
-(defparameter *pxml-version* (list 7 0 1))
+(defparameter *pxml-version* (list 7 0 2))
 (defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))
   (typecase v1
     (integer (if (or (< (first *pxml-version*) v1)
