@@ -439,6 +439,8 @@
 		    (eq ch #\'))
 	      then (setq value-delim ch)
 		   (setq state state-attribvaluedelim)
+		   ;; gobble spaces; assume since we've seen a '=' there really is a value
+	    elseif (eq #\space ch) then nil
 	      else (un-next-char stream ch)
 		   (setq state state-attribvaluenodelim)))
 	
@@ -607,7 +609,7 @@
 ; the elements with no body and thus no end tag
 (dolist (opt '(:area :base :basefont :bgsound :br :button :col 
 	       ;;:colgroup - no, this is an element with contents
-	       :embed :hr :img
+	       :embed :hr :img :frame
 	       :input :isindex :keygen :link :meta 
 	       :plaintext :spacer :wbr))
   (setf (tag-no-end opt) t))

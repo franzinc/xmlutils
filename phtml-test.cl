@@ -20,7 +20,7 @@
        <body> this is some body text
         <a name=\"this is an anchor\">with some text </a>
         <!-- testing allowing looser attribute parsing -->
-        <a href=mailto:lmcelroy@performigence.com>lmcelroy@performigence.com
+        <a href= mailto:lmcelroy@performigence.com>lmcelroy@performigence.com
            </a>
         <br>
         this is some more text
@@ -134,7 +134,8 @@
    <b>foo<a>bar</a>baz</b>
    <b>foo<a>bar</b>baz</a>
    <b>foo<i>bar</i>baz</b>
-   <script a=b> some text if (year < 1000) year += 1900; more text </script>"
+   <script a=b> some text if (year < 1000) year += 1900; more text </script>
+   <frameset><frame foo><frame bar></frameset>"
   )
 
 (setf *expected-result2*
@@ -148,6 +149,7 @@
     (:b "foo") (:a (:b "bar") "baz")
     (:b "foo" (:i "bar") "baz")
     ((:script :a "b") " some text if (year < 1000) year += 1900; more text ")
+    (:frameset ((:frame :foo "foo")) ((:frame :bar "bar")))
     ))
 
 (defmethod lhtml-equal ((a t) (b t))
