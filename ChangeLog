@@ -1,3 +1,10 @@
+2003-07-02    <mm@KETCHTOO>
+
+	* pxml0.cl (*xml-chars*): make sure that make-table is compiled
+	* pxml2.cl (next-token): allow unparsable uri as namespace marker
+	* pxml-test.cl (test-all): allow :log :new
+
+
 2003-05-28  Duane Rettig   <duane@beta>
 
 	* pxml3.cl: Change declaration :fbound -> ftype

@@ -47,7 +47,7 @@
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.9 2003/05/28 17:38:28 mm Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.10 2003/07/02 17:50:05 mm Exp $")
 
 (eval-when (compile eval)
 
@@ -251,13 +251,16 @@
 
 (eval-when (compile eval)
 
-  (defmacro make-table ()
-    (setf chars (make-array #x10000 
-			    :element-type '(unsigned-byte 8)
-			    :initial-element 0
-			    ))
+  (defmacro make-table (&aux (chars (make-array
+				     #x10000 
+				     :element-type '(unsigned-byte 8)
+				     :initial-element 0
+				     )))
     (dotimes (i #x10000 chars)
+      #+ignore
       (when (eql #xff (logand i #xff))
+	;; When macro is interpreted, this loop takes a long long time
+	;;  so it is nice to see some progress...
 	(format t ";")
 	(when (eql #x3fff (logand i #x3fff))
 	  (format t "~%")))
@@ -279,6 +282,19 @@
 
   )
  
+(eval-when (compile)
+  (compile 'xml-char-q)
+  (compile 'xml-space-q)
+  (compile 'xml-base-char-q)
+  (compile 'xml-ideographic-q)
+  (compile 'xml-combining-char-q)
+  (compile 'xml-digit-q)
+  (compile 'xml-extender-q)
+  (compile 'xml-letter-q)
+  (compile 'xml-name-char-q)
+  (compile 'xml-name-start-char-q)
+  (compile 'make-table))
+
 (defparameter *xml-chars* (make-table))
   
 (defun xml-char-p (c &optional (table *xml-chars*))

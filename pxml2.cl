@@ -27,7 +27,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.11 2003/05/27 19:33:22 mm Exp $")
+(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.12 2003/07/02 17:50:05 mm Exp $")
 
 ;; state titles can be better chosen and explained
 
@@ -631,9 +631,25 @@
 		    (setf ns-token nil)
 		    )
 	       (when ns-token
-		 (let ((package (assoc (parse-uri attrib-value)
-				       (iostruct-uri-to-package tokenbuf)
-				       :test 'uri=)))
+		 (let* ((urx (or (ignore-errors (parse-uri attrib-value))
+				 ;; If URI does not parse, use the string as
+				 ;;  the identifier - namespace uri is not
+				 ;;  required to be well-formed or to exist.
+				 attrib-value))
+			(same-uri #'(lambda (u v)
+				      (cond
+				       ;; If both are strings then compare with equal
+				       ;; since neither would parse as a URI.
+				       ;; If both are URIs, use uri=.
+				       ;; If different types, then cannot be the same
+				       ;; since one parses and the other dont.
+				       ((and (stringp u) (stringp v))
+					(equal u v))
+				       ((and (typep u 'uri) (typep v 'uri))
+					(uri= u v)))))
+			(package (assoc urx
+					(iostruct-uri-to-package tokenbuf)
+					:test same-uri)))
 		   (if* package 
 			then (setf package (rest package))
 			else
@@ -656,7 +672,7 @@
 					       :use nil
 					       ))
 					(setf (iostruct-uri-to-package tokenbuf)
-					      (acons (parse-uri attrib-value) new-package
+					      (acons urx new-package
 						     (iostruct-uri-to-package tokenbuf)))
 					(return new-package)))))))
 		   (setf (iostruct-ns-to-package tokenbuf)

@@ -1,5 +1,5 @@
 ;;
-;; copyright (c) 1986-2000 Franz Inc, Berkeley, CA 
+;; copyright (c) 1986-2003 Franz Inc, Berkeley, CA 
 ;;
 ;; This code is free software; you can redistribute it and/or
 ;; modify it under the terms of the version 2.1 of
@@ -451,6 +451,15 @@
 				:errlen errlen :pass nil :fail :all))))
 
 
+(eval-when (compile load eval)
+  (defmacro char-state () 
+    (format nil "chars:~S  case~S"
+	    excl:real-char-code-limit *current-case-mode*)))
+ 
+(defparameter *xml-compile-state* (char-state))
+
+(defvar *test-prefix* "test")
+
 (defun test-all (&key case 
 		      parser file parse (errlen 15) 
 		      log (report (if log :all :count))
@@ -459,8 +468,26 @@
   ;; report -> :count  :each  :final  :good  :bad  :maybe-good  :maybe-bad
 
   (when parser (setf *parse-xml* parser))
-  (when log
-    (setf log (merge-pathnames (pathname log) (make-pathname :type "log"))))
+
+  (typecase log
+    ((or string pathname)
+     (setf log (merge-pathnames (pathname log) (make-pathname :type "log"))))
+    ((member :new)
+     (multiple-value-bind (s m h d mo) 
+	 (get-decoded-time)
+       (declare (ignore s m h))
+       (let (suffix)
+	 (loop
+	  (setf log (merge-pathnames 
+		     (pathname (format nil "~A-~A-~A~A~A" *test-prefix* mo d 
+				       (if suffix "-" "") (or suffix "")))
+		     (make-pathname :type "log")))
+	  (or (probe-file log) (return))
+	  (if suffix (incf suffix) (setf suffix 1))))))
+    ((member nil) nil)
+    (otherwise (setf log (merge-pathnames 
+			  (pathname *test-prefix*) 
+			  (make-pathname :type "log")))))
 
   (unwind-protect
       (labels 
@@ -512,6 +539,8 @@
 
       
 	  (when log (dribble log))
+	  (format t "~&~%;;; Compiled as ~A ~%" *xml-compile-state*)
+	  (format t     ";;;  Running as ~A ~%~%" (eval '(char-state)))
 	  (dotimes (i 14)
 	    (when (or (null case) (eql case i))
 	      (multiple-value-bind (a b g mb mg)
@@ -688,3 +717,15 @@
 	     (list (cons (net.uri:parse-uri "urla")
 			 (find-package :n5)))
 	     ))
+
+
+
+(defun time-xml (&optional (fl "tempest.xml"))
+  (with-open-file
+   (s fl)
+   (time
+    (consp
+     (net.xml.parser:parse-xml s :external-callback 'default-file-callback
+			       :content-only t)))))
+
+

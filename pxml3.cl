@@ -22,7 +22,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.9 2003/05/29 00:36:16 duane Exp $")
+(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.10 2003/07/02 17:50:05 mm Exp $")
 
 (defvar *debug-dtd* nil)
 
@@ -157,7 +157,10 @@
 
 (defun next-dtd-token (tokenbuf
 		       external include-count external-callback)
-  (declare (ftype (function) parse-default-value) (optimize (speed 3) (safety 1)))
+  (declare 
+   #-(version>= 7) (:fbound parse-default-value)
+   #+(version>= 7) (ftype function parse-default-value)
+   (optimize (speed 3) (safety 1)))
   (with-coll-macros
    (macrolet 
        ((to-preferred-case (ch)
@@ -1972,7 +1975,10 @@
 
 
 (defun external-param-reference (tokenbuf old-coll external-callback)
-  (declare (ftype (function) next-token) (ignorable old-coll) (optimize (speed 3) (safety 1)))
+  (declare 
+   #-(version>= 7) (:fbound next-token)
+   #+(version>= 7) (ftype function next-token)
+   (ignorable old-coll) (optimize (speed 3) (safety 1)))
   (setf (iostruct-seen-parameter-reference tokenbuf) t)
   (with-coll-macros 
    (let ((ch (get-next-char tokenbuf))
