@@ -19,7 +19,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.24 2002/05/14 15:59:00 jkf Exp $
+;; $Id: phtml.cl,v 1.25 2003/02/13 23:08:34 layer Exp $
 
 ;; phtml.cl  - parse html
 
@@ -1066,9 +1066,11 @@
 	(guts)
 	(rogue-tags)
 	)
-    (labels ((close-off-tags (name stop-at collect-rogues)
+    (labels ((close-off-tags (name stop-at collect-rogues once-only)
 	       ;; close off an open 'name' tag, but search no further
 	       ;; than a 'stop-at' tag.
+	       #+ignore (format t "close off name ~s, stop at ~s, ct ~s~%"
+		       name stop-at current-tag)
 	       (if* (member (tag-name current-tag) name :test #'eq)
 		  then ;; close current tag(s)
 		       (loop
@@ -1077,11 +1079,12 @@
 						 *known-tags*)))
 			   (push (tag-name current-tag) rogue-tags))
 			 (close-current-tag)
-			 (when (or (member (tag-name current-tag)
-					   *ch-format*)
-				(not (member 
-				      (tag-name current-tag) name :test #'eq)))
-			     (return)))
+			 (if* (or once-only
+				  (member (tag-name current-tag)
+					  *ch-format*)
+				  (not (member 
+					(tag-name current-tag) name :test #'eq)))
+			    then (return)))
 		elseif (member (tag-name current-tag) stop-at :test #'eq)
 		  then nil
 		  else ; search if there is a tag to close
@@ -1126,7 +1129,9 @@
 	     (save-state ()
 	       ;; push the current tag state since we're starting:
 	       ;; a new open tag
-	       (push (cons current-tag guts) pending))
+	       (push (cons current-tag guts) pending)
+	       #+ignore (format t "state saved, pending ~s~%" pending)
+	       )
 	     
 	     
 	     (strip-rev-pcdata (stuff)
@@ -1166,7 +1171,7 @@
 		     (if* (eq kind :start-tag) then (push val new-opens)
 		      elseif (member val new-opens :test #'eq) then
 			     (setf new-opens (remove val new-opens :count 1))
-			else (close-off-tags (list val) nil nil)
+			else (close-off-tags (list val) nil nil nil)
 			     )))))
 		 
 	     (get-next-token (force)
@@ -1174,7 +1179,7 @@
 		       (multiple-value-bind (val kind)
 			   (next-token p nil raw-mode-delimiter read-sequence-func
 				       tokenbuf parse-entities)
-			(values val kind))
+			 (values val kind))
 		  else
 		       (let ((val (first (tokenbuf-first-pass tokenbuf)))
 			     (kind (second (tokenbuf-first-pass tokenbuf))))
@@ -1185,7 +1190,8 @@
       (loop
 	(multiple-value-bind (val kind)
 	    (get-next-token nil)
-	  ;;(format t "val: ~s kind: ~s~%" val kind)
+	  #+ignore (format t "val: ~s kind: ~s  last-tag ~s pending ~s~%" val kind 
+		  last-tag pending)
 	  (case kind
 	    (:pcdata
 	     (when (or (and callback-only current-callback-tags)
@@ -1202,7 +1208,7 @@
 	     (when (and (= (length raw-mode-delimiter) 1) ;; xml tag...
 			(or (and callback-only current-callback-tags)
 			    (not callback-only)))
-	       (close-off-tags (list last-tag) nil nil))
+	       (close-off-tags (list last-tag) nil nil t))
 	     (setf raw-mode-delimiter nil)
 	     )
 	    
@@ -1227,7 +1233,7 @@
 			  then "</STYLE>"
 			  else "</style>"))
 	      elseif (or (eq last-tag :script)
-		      (and (listp last-tag) (eq (first last-tag) :script)))
+			 (and (listp last-tag) (eq (first last-tag) :script)))
 		then
 		     (setf raw-mode-delimiter
 		       (if* (eq excl:*current-case-mode* :CASE-INSENSITIVE-UPPER)
@@ -1244,7 +1250,7 @@
 			 (not callback-only))
 		 (if* auto-close
 		    then (setq auto-close-stop (tag-auto-close-stop name))
-			 (close-off-tags auto-close auto-close-stop nil))
+			 (close-off-tags auto-close auto-close-stop nil nil))
 		 (when (and pending-ch-format (not no-end))
 		   (if* (member name *ch-format* :test #'eq) then nil
 		    elseif (member name *in-line* :test #'eq) then
@@ -1252,7 +1258,7 @@
 			   (check-in-line name)
 		      else ;; close ALL pending char tags and then reopen 
 			   (dolist (this-tag (reverse pending-ch-format))
-			     (close-off-tags (list (if (listp this-tag) (first this-tag) this-tag)) nil nil))
+			     (close-off-tags (list (if (listp this-tag) (first this-tag) this-tag)) nil nil nil))
 			   ))
 		 (if* no-end
 		    then		; this is a singleton tag
@@ -1294,7 +1300,7 @@
 	     (setf raw-mode-delimiter nil)
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
-	       (close-off-tags (list val) nil nil)
+	       (close-off-tags (list val) nil nil t)
 	       (when (member val *ch-format* :test #'eq)
 		 (setf pending-ch-format 
 		   (remove val pending-ch-format :count 1
@@ -1321,7 +1327,7 @@
 	     ;; close off all tags
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
-	       (close-off-tags '(:start-parse) nil collect-rogue-tags))
+	       (close-off-tags '(:start-parse) nil collect-rogue-tags nil))
 	     (put-back-tokenbuf tokenbuf)
 	     (if collect-rogue-tags
 		 (return (values (cdar guts) rogue-tags))
