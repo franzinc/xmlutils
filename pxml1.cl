@@ -19,15 +19,13 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-;; $Id: pxml1.cl,v 1.2.2.3.22.1 2002/04/26 13:32:27 jkf Exp $
-
-;; Change Log 
+;; Change Log
 ;;
 ;; 10/14/00 add namespace support; xml-error fix
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.2.2.3.22.1 2002/04/26 13:32:27 jkf Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.2.2.3.22.2 2002/06/17 18:29:53 layer Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 

@@ -19,11 +19,10 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place,
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-;; $Id: pxml3.cl,v 1.2.2.2 2001/06/11 20:26:32 layer Exp $
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.2.2.2 2001/06/11 20:26:32 layer Exp $")
+(pxml-dribble-bug-hook "$Id: pxml3.cl,v 1.2.2.2.22.1 2002/06/17 18:29:53 layer Exp $")
 
 (defvar *debug-dtd* nil)
 

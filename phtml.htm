@@ -180,7 +180,7 @@ parse-html [Generic function]<br>
 <br>
 Arguments: input-source &amp;key callbacks callback-only<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
-no-body-tags<br>
+no-body-tags parse-entities<br>
 <br>
 Returns LHTML output, as described above.<br>
 <br>
@@ -209,21 +209,24 @@ The no-body-tags argument, if non-nil, should be a list containing unknown tags 
 encountered, will be treated as a tag with no body or content, and thus, no associated end<br>
 tag. Typically, the argument is a list or modified list resulting from an earlier
 parse-html<br>
-execution with the :collect-rogue-tags argument specified as non-nil.<br>
+execution with the :collect-rogue-tags argument specified as non-nil.</p>
+
+<p>If the parse-entities argument is true then entities are converted to the character
+they name.&nbsp; Thus for example the &amp;lt; entity is converted to the less than sign.<br>
 <br>
 <a name="methods"></a><strong>parse-html Methods</strong><br>
 <br>
 parse-html (p stream) &amp;key callbacks callback-only<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
-no-body-tags<br>
+no-body-tags parse-entities<br>
 <br>
 parse-html (str string) &amp;key callbacks callback-only<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
-no-body-tags<br>
+no-body-tags parse-entities<br>
 <br>
 parse-html (file t) &amp;key callbacks callback-only<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
-no-body-tags<br>
+no-body-tags parse-entities<br>
 <br>
 The t method assumes the argument is a pathname suitable<br>
 for use with the with-open-file macro.<br>
@@ -232,7 +235,7 @@ for use with the with-open-file macro.<br>
 <a name="internal"></a><strong>phtml-internal [Function]</strong><br>
 <br>
 Arguments: stream read-sequence-func callback-only callbacks<br>
-collect-rogue-tags no-body-tags<br>
+collect-rogue-tags no-body-tags parse-entities<br>
 <br>
 This function may be used when more control is needed for supplying<br>
 the HTML input. The read-sequence-func argument, if non-nil, should be a function<br>

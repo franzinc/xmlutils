@@ -19,7 +19,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml-test.cl,v 1.11.2.2 2000/10/17 14:19:05 layer Exp $
+;; $Id: phtml-test.cl,v 1.11.2.2.34.1 2002/06/17 18:29:53 layer Exp $
 
 (eval-when (compile load eval)
   (require :tester))

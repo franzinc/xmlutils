@@ -1,27 +1,18 @@
-2002-04-26  John Foderaro  <jkf@tiger.franz.com>
-
-	*  pxml1.cl - if the xml tag specifies an encoding then
-	   set lisp's external format to that encoding.
-
 *******************************************************************************
-merge from trunk to acl6 branch (for 6.2.beta)
-command: ../../join.sh trunk trunk_to_acl6_merge3 trunk_to_acl6_merge4 xmlutils
+Mon Jun 17 11:29:36 PDT 2002
+merge from trunk to acl62 branch (for 6.2)
+command: ../../join.sh trunk acl62 trunk_to_acl62_merge1 xmlutils
 *******************************************************************************
 
-*******************************************************************************
-merge from trunk to acl6 branch (for 6.1.beta)
-command: ../../join.sh trunk trunk_to_acl6_merge2 trunk_to_acl6_merge3 xmlutils
-*******************************************************************************
+2002-05-14  John Foderaro  <jkf@tiger.franz.com>
 
-*******************************************************************************
-merge from trunk to acl6 branch
-command: ../../join.sh trunk trunk_to_acl6_merge1 trunk_to_acl6_merge2 xmlutils
-*******************************************************************************
+	* phtml.cl: - add :parse-entities arg to parse-html. If true then
+	   entities are converted to the character they represent.
 
-*******************************************************************************
-merge from trunk to acl6 branch
-command: ../../join.sh trunk acl6 trunk_to_acl6_merge1 xmlutils
-*******************************************************************************
+2002-04-29  John Foderaro  <jkf@tiger.franz.com>
+
+	* pxml1.cl (check-xmldecl): - if the xml tag specifies an 
+	 encoding then set lisp's external format to that encoding.
 
 2001-06-08  Steve Haflich  <smh@romeo>
 	
