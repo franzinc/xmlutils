@@ -25,7 +25,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.8 2001/03/23 22:10:00 smh Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.9 2002/04/29 19:32:28 jkf Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
@@ -409,7 +409,7 @@
     (xml-error "XML declaration tag does not include correct 'encoding' or 'standalone' attribute"))
   (when (and (fourth val) (string= "standalone" (symbol-name (fourth val))))
     (if* (equal (fifth val) "yes") then
-	   (setf (iostruct-standalonep tokenbuf) t)
+	    (setf (iostruct-standalonep tokenbuf) t)
      elseif (not (equal (fifth val) "no")) then
 	    (xml-error "XML declaration tag does not include correct 'standalone' attribute value")))
   (dotimes (i (length (third val)))
@@ -419,16 +419,26 @@
 		 (not (member c '(#\. #\_ #\- #\:)))
 		 )
 	(xml-error "XML declaration tag does not include correct 'version' attribute value"))))
-  (when (and (fourth val) (eql :encoding (fourth val)))
-    (dotimes (i (length (fifth val)))
-      (let ((c (schar (fifth val) i)))
-	(when (and (not (alpha-char-p c))
-		   (if* (> i 0) then
-			   (and (not (digit-char-p c))
-				(not (member c '(#\. #\_ #\-))))
-		      else t))
-	  (xml-error "XML declaration tag does not include correct 'encoding' attribute value")))))
-  )
+  (if* (and (fourth val) (eql :encoding (fourth val)))
+     then (dotimes (i (length (fifth val)))
+	    (let ((c (schar (fifth val) i)))
+	      (when (and (not (alpha-char-p c))
+			 (if* (> i 0) then
+				 (and (not (digit-char-p c))
+				      (not (member c '(#\. #\_ #\-))))
+			    else t))
+		(xml-error "XML declaration tag does not include correct 'encoding' attribute value"))))
+	  ;; jkf 3/26/02 
+	  ;; if we have a stream we're reading from set its external-format
+	  ;; to the encoding
+	  ;; note - tokenbuf is really an iostruct, not a tokenbuf
+	  (if* (tokenbuf-stream (iostruct-tokenbuf tokenbuf))
+	     then (setf (stream-external-format 
+			 (tokenbuf-stream (iostruct-tokenbuf tokenbuf)))
+		    (find-external-format (fifth val))))
+			 
+    
+	  ))
 
 (defun xml-error (text)
   (declare (optimize (speed 3) (safety 1)))

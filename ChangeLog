@@ -1,3 +1,8 @@
+2002-04-29  John Foderaro  <jkf@tiger.franz.com>
+
+	* pxml1.cl (check-xmldecl): - if the xml tag specifies an 
+	 encoding then set lisp's external format to that encoding.
+
 2001-06-08  Steve Haflich  <smh@romeo>
 	
 	* pxml.htm: Added mention that it is necessary to load or require
