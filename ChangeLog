@@ -1,3 +1,10 @@
+*******************************************************************************
+Wed Jul 23 18:17:38 PDT 2003
+merge from trunk to acl62 branch
+command:
+  join.sh trunk trunk_to_acl62_merge1 trunk_to_acl62_merge2 xmlutils
+*******************************************************************************
+
 2003-02-13  Kevin Layer  <layer@crikey>
 
     from jkf:
@@ -9,6 +16,60 @@ Mon Jun 17 11:29:36 PDT 2002
 merge from trunk to acl62 branch (for 6.2)
 command: ../../join.sh trunk acl62 trunk_to_acl62_merge1 xmlutils
 *******************************************************************************
+
+2003-07-23    <mm@KETCHTOO>
+
+	* pxml0.cl (*pxml-version*): new variable = 7.0.1
+	             (pxml-version): new exported function
+
+
+2003-07-02    <mm@KETCHTOO>
+
+	* pxml0.cl (*xml-chars*): make sure that make-table is compiled
+	* pxml2.cl (next-token): allow unparsable uri as namespace marker
+	* pxml-test.cl (test-all): allow :log :new
+
+
+2003-05-28  Duane Rettig   <duane@beta>
+
+	* pxml3.cl: Change declaration :fbound -> ftype
+	
+2003-05-28  Martin Mikelsons  <mm@ketchtoo>
+
+	* pxml0.cl: allow compilation in 8-bit and ANSI images
+
+	
+2003-05-27  Martin Mikelsons  <mm@ketchtoo>
+
+	* pxml-test.cl (test-all): More comprehensive OASIS test suite driver
+	                     (n1): simple namesapce tests
+	* pxml1.cl (check-xmldecl): enforce ordering of pars in XMLDecl
+	* pxml1.cl (tag-from-string): new function
+	* pxml1.cl (compute-tag): pass tokenbuff instead of ns-to-package slot
+	* pxml2.cl (next-token): add internals apply-namespaces and exit-namespaces
+	* pxml2.cl: update calls to compute-tag
+	    (next-token): abstract out token-error and friends
+	* pxml2.cl (pxml-internal): return a top-level DTD entry as (:dtd ...)
+	* pxml3.cl (next-dtd-token): allow unparsable URI strings
+	* pxml3.cl (next-dtd-token): add token-error and friends
+	* pxml3.cl (next-dtd-token): add internal function verify-choice
+	        fix bug that allowed switch between choice and sequence 
+	            after one of these had already been determined
+		(next-dtd-token): from spr26980
+		    Fix handling of ? + and * at 
+		    first state-dtd-!-element-type-paren-name
+	* pxml0.cl: replace character predicates with inline macros and hash table
+
+	
+2003-04-17  Martin Mikelsons  <mm@gemini>
+
+	* pxml2.cl (next-token): when creating a namespace package set use=nil
+
+2003-02-13  Kevin Layer  <layer@crikey>
+
+    from jkf:
+	* phtml.cl: bug13050: parse-html close tag closes consecutive
+	  identical open tags
 
 2002-05-14  John Foderaro  <jkf@tiger.franz.com>
 

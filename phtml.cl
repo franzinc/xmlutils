@@ -23,8 +23,7 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-
-;; $Id: phtml.cl,v 1.15.2.3.22.2 2003/02/13 19:29:44 layer Exp $
+;; $Id: phtml.cl,v 1.15.2.3.22.3 2003/07/24 01:20:19 layer Exp $
 
 ;; phtml.cl  - parse html
 

@@ -31,8 +31,9 @@
 (defpackage net.xml.parser
   (:use :lisp :clos :excl :net.uri)
   (:export
-   #:parse-xml)
-  )
+   #:parse-xml
+   #:pxml-version
+   ))
 
 (in-package :net.xml.parser)
 
@@ -47,33 +48,47 @@
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.2.2.2.22.1 2002/06/17 18:29:53 layer Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.2.2.2.22.2 2003/07/24 01:20:19 layer Exp $")
 
-(defun xml-char-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
+(defparameter *pxml-version* (list 7 0 1))
+(defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))
+  (typecase v1
+    (integer (if (or (< (first *pxml-version*) v1)
+		     (and v2
+			  (or 
+			   (and (= (first *pxml-version*) v1)
+				(< (second *pxml-version*) v2))
+			   (and v3
+				(= (second *pxml-version*) v2)
+				(< (third *pxml-version*) v3)))))
+		 (if error-p
+		     (error "PXML Version ~A.~A.~A needed, but ~{~A.~A.~A~} is loaded."
+			    v1 (or v2 0) (or v3 0) *pxml-version*)
+		   nil)
+	       *pxml-version*))
+    (otherwise (format v1-or-s "PXML Version ~{~A.~A.~A~}" *pxml-version*))))
+    
+
+(eval-when (compile eval)
+
+  (defun xml-char-q (code)
     (if* (eq code #x9) then t
-     elseif (eq code #xA) then t
-     elseif (eq code #xD) then t
-     elseif (<= #x20 code #xD7FF) then t
-     elseif (<= #xE000 code #xFFFD) then t
-       else nil)))
+	 elseif (eq code #xA) then t
+	 elseif (eq code #xD) then t
+	 elseif (<= #x20 code #xD7FF) then t
+	 elseif (<= #xE000 code #xFFFD) then t
+	 else nil))
 
-(defun xml-space-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
+  (defun xml-space-q (code)
     (or (eq code #x20)
 	(eq code #x9)
 	(eq code #xD)
-	(eq code #xA))))
+	(eq code #xA)))
 
-#+unused
-(defmacro xml-eql-char-p (char)
-  `(eq ,char #\=))
+  #+unused
+  (defmacro xml-eql-char (char) `(eq ,char #\=))
 
-(defun xml-base-char-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
+  (defun xml-base-char-q (code)
     (or (<= #x0041 code #x005A) (<= #x0061 code #x007A)
 	(<= #x00C0 code #x00D6) (<= #x00D8 code #x00F6)
 	(<= #x00F8 code #x00FF) (<= #x0100 code #x0131)
@@ -155,16 +170,12 @@
 	(= code #x212E) (<= #x2180 code #x2182) (<= #x3041 code #x3094)
 	(<= #x30A1 code #x30FA) (<= #x3105 code #x312C)
 	(<= #xAC00 code #xD7A3)
-	)))
+	))
 
-(defun xml-ideographic-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
-    (or (<= #x4E00 code #x9FA5) (= code #x3007) (<= #x3021 code #x3029))))
+  (defun xml-ideographic-q (code)
+    (or (<= #x4E00 code #x9FA5) (= code #x3007) (<= #x3021 code #x3029)))
 
-(defun xml-combining-char-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
+  (defun xml-combining-char-q (code)
     (or (<= #x0300 code #x0345) (<= #x0360 code #x0361)
 	(<= #x0483 code #x0486) (<= #x0591 code #x05A1)
 	(<= #x05A3 code #x05B9) (<= #x05BB code #x05BD) (= code #x05BF)
@@ -201,11 +212,9 @@
 	(<= #x0F90 code #x0F95) (= code #x0F97) (<= #x0F99 code #x0FAD)
 	(<= #x0FB1 code #x0FB7) (= code #x0FB9) (<= #x20D0 code #x20DC)
 	(= code #x20E1) (<= #x302A code #x302F) (= code #x3099) (= code #x309A)
-	)))
+	))
 
-(defun xml-digit-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
+  (defun xml-digit-q (code)
     (or (<= #x0030 code #x0039) (<= #x0660 code #x0669)
 	(<= #x06F0 code #x06F9) (<= #x0966 code #x096F)
 	(<= #x09E6 code #x09EF) (<= #x0A66 code #x0A6F)
@@ -214,26 +223,287 @@
 	(<= #x0CE6 code #x0CEF) (<= #x0D66 code #x0D6F)
 	(<= #x0E50 code #x0E59) (<= #x0ED0 code #x0ED9)
 	(<= #x0F20 code #x0F29)
-	)))
+	))
 
-(defun xml-extender-p (char)
-  (declare (optimize (speed 3) (safety 1)))
-  (let ((code (char-code char)))
+  (defun xml-extender-q (code)
     (or (= code #x00B7) (= code #x02D0) (= code #x02D1) (= code #x0387) (= code #x0640)
 	(= code #x0E46) (= code #x0EC6) (= code #x3005) (<= #x3031 code #x3035)
 	(<= #x309D code #x309E) (<= #x30FC code #x30FE)
-	)))
+	))
 
-(defmacro xml-letter-p (char)
-  `(or (xml-base-char-p ,char) (xml-ideographic-p ,char)))
+  (defun xml-letter-q (char)
+    (or (xml-base-char-q char) (xml-ideographic-q char)))
 
-(defmacro xml-name-char-p (char)
-  `(or (xml-letter-p ,char) (xml-digit-p ,char) (eq ,char #\.)
-       (eq ,char #\-) (eq ,char #\_) (eq ,char #\:)
-       (xml-combining-char-p ,char) (xml-extender-p ,char)))
+  (defun xml-name-char-q (code)
+    (or (xml-letter-q code)
+	(xml-digit-q code) 
+	(eq code (char-code #\.))
+	(eq code (char-code #\-))
+	(eq code (char-code #\_))
+	(eq code (char-code #\:))
+	(xml-combining-char-q code)
+	(xml-extender-q code)))
 
-(defmacro xml-name-start-char-p (char)
-  `(or (xml-letter-p ,char)
-       (eq #\_ ,char) (eq #\: ,char)
-       ))
+  (defun xml-name-start-char-q (code)
+    (or (xml-letter-q code)
+	(eq (char-code #\_) code)
+	(eq (char-code #\:) code)
+	))
+
+
+  )
+
+(eval-when (compile load eval)
+  (defconstant xml-base           #x01)
+  (defconstant xml-ideographic    #x02)
+  (defconstant xml-extender       #x04)
+  (defconstant xml-combining-char #x08)
+  (defconstant xml-name-char      #x10)
+  (defconstant xml-name-start     #x20)
+
+  (defconstant xml-other          #x40)
+  (defconstant xml-space          #x80)
+  (defconstant xml-digit          #xc0)
+
+  (defconstant xml-char           #xc0)
+  (defconstant xml-letter         #x03)
+  )
+
+(eval-when (compile eval)
+
+  (defmacro make-table (&aux (chars (make-array
+				     #x10000 
+				     :element-type '(unsigned-byte 8)
+				     :initial-element 0
+				     )))
+    (dotimes (i #x10000 chars)
+      #+ignore
+      (when (eql #xff (logand i #xff))
+	;; When macro is interpreted, this loop takes a long long time
+	;;  so it is nice to see some progress...
+	(format t ";")
+	(when (eql #x3fff (logand i #x3fff))
+	  (format t "~%")))
+      (setf (elt chars i)
+	    (if (xml-char-q i)
+		(logior
+		 (cond ((xml-space-q i) xml-space)
+		       ((xml-digit-q i) xml-digit)
+		       (t xml-other))
+		 (if (xml-base-char-q i)       xml-base           0)
+		 (if (xml-ideographic-q i)     xml-ideographic    0)
+		 (if (xml-combining-char-q i)  xml-combining-char 0)
+		 (if (xml-extender-q i)        xml-extender       0)
+		 (if (xml-name-char-q i)       xml-name-char      0)
+		 (if (xml-name-start-char-q i) xml-name-start     0)
+		 )
+	      0))
+      ))
+
+  )
+ 
+(eval-when (compile)
+  (compile 'xml-char-q)
+  (compile 'xml-space-q)
+  (compile 'xml-base-char-q)
+  (compile 'xml-ideographic-q)
+  (compile 'xml-combining-char-q)
+  (compile 'xml-digit-q)
+  (compile 'xml-extender-q)
+  (compile 'xml-letter-q)
+  (compile 'xml-name-char-q)
+  (compile 'xml-name-start-char-q)
+  (compile 'make-table))
+
+(defparameter *xml-chars* (make-table))
+  
+(defun xml-char-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-char (elt table (char-code c))))))
+(define-compiler-macro xml-char-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-char 
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+;;#+debug
+(defun test-char-p (x)
+  (declare (optimize (speed 3) (safety 1))
+	   (:explain :calls))
+  (xml-char-p x))
+
+(defun xml-space-p (c &optional (table *xml-chars*))
+  (eql xml-space (elt table (char-code c))))
+(define-compiler-macro xml-space-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(eql xml-space (the fixnum
+			(aref
+			 (the (simple-array (unsigned-byte 8) (*))
+			   ,tvar)
+			 (the (integer 0 #xffff) 
+			   (char-code (the character ,c))))))
+    form))
+
+
+(defun xml-base-char-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-base (elt table (char-code c))))))
+(define-compiler-macro xml-base-char-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-base
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+(defun xml-ideographic-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-ideographic (elt table (char-code c))))))
+(define-compiler-macro xml-ideographic-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-ideographic
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+
+(defun xml-combining-char-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-combining-char (elt table (char-code c))))))
+(define-compiler-macro xml-combining-char-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-combining-char
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+
+(defun xml-digit-p (c &optional (table *xml-chars*))
+  (eql xml-digit (logand xml-digit (elt table (char-code c)))))
+(define-compiler-macro xml-digit-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(eql xml-digit (logand xml-digit
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c)))))))
+    form))
+
+
+(defun xml-extender-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-extender (elt table (char-code c))))))
+(define-compiler-macro xml-extender-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-extender
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+
+(defun xml-letter-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-letter (elt table (char-code c))))))
+(define-compiler-macro xml-letter-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-letter
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+
+(defun xml-name-char-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-name-char (elt table (char-code c))))))
+(define-compiler-macro xml-name-char-p (&whole form c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-name-char
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+
+(defun xml-name-start-char-p (c &optional (table *xml-chars*))
+  (not (eql 0 (logand xml-name-start (elt table (char-code c))))))
+(define-compiler-macro xml-name-start-char-p (&whole form 
+						     c &optional (tvar '*xml-chars*))
+  (if (and (symbolp c) (symbolp tvar))
+      `(not (eql 0 (logand xml-name-start
+			   (the fixnum
+			     (aref
+			      (the (simple-array (unsigned-byte 8) (*))
+				,tvar)
+			      (the (integer 0 #xffff) 
+				(char-code (the character ,c))))))))
+    form))
+
+
+
+;;#+debug
+(defun verify-table (&aux v c b one two all (r (list 0 0 0 0 0 0 0 0 0 0 0 0)))
+  (labels ((count-bits (x)
+		       (if (zerop x)
+			   0
+			 (+ (logand 1 x) (count-bits (ash x -1)))))
+	   (same-bool (test char p q)
+		      (or (and p q) (and (not p) (not q))
+			  (error "Not same-bool for ~S ~S" test char))))
+    (dotimes (i #x10000)
+      (when (eql #xff (logand i #xff))
+	(format t ";")
+	(when (eql #x3fff (logand i #x3fff))
+	  (format t "~%")))
+      (setf c (code-char i))
+      (setf v (elt *xml-chars* i))
+
+      (same-bool 'xml-char-p c (xml-char-p c) (xml-char-q c))
+      (same-bool 'xml-space-p c (xml-space-p c) (xml-space-q c))
+      (same-bool 'xml-digit-p c (xml-digit-p c) (xml-digit-q c))
+      (same-bool 'xml-base-char-p c (xml-base-char-p c) (xml-base-char-q c))
+      (same-bool 'xml-ideographic-p c (xml-ideographic-p c) (xml-ideographic-q c))
+      (same-bool 'xml-combining-char-p c 
+		 (xml-combining-char-p c) (xml-combining-char-q c))
+      (same-bool 'xml-extender-p c (xml-extender-p c) (xml-extender-q c))
+      (same-bool 'xml-name-char-p c (xml-name-char-p c) (xml-name-char-q c))
+      (same-bool 'xml-name-start-char-p c 
+		 (xml-name-start-char-p c) (xml-name-start-char-q c))
+      (same-bool 'xml-letter-p c (xml-letter-p c) (xml-letter-q c))
+
+      (incf (elt r (setf b (count-bits v))))
+      (case b
+	(1 (pushnew v one))
+	(2 (pushnew v two)))
+      (pushnew v all)
+      )
+    (setf all (sort all #'<))
+
+    (format t "~&~%~{ ~9B~%~}" all)
+
+    (values r one two all )))
+
+
+
 

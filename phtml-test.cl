@@ -18,8 +18,7 @@
 ;; version) or write to the Free Software Foundation, Inc., 59 Temple Place, 
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
-
-;; $Id: phtml-test.cl,v 1.11.2.2.34.1 2002/06/17 18:29:53 layer Exp $
+;; $Id: phtml-test.cl,v 1.11.2.2.34.2 2003/07/24 01:20:19 layer Exp $
 
 (eval-when (compile load eval)
   (require :tester))
