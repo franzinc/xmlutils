@@ -19,7 +19,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml-test.cl,v 1.11.2.1 2000/10/13 23:48:59 layer Exp $
+;; $Id: phtml-test.cl,v 1.11.2.2 2000/10/17 14:19:05 layer Exp $
 
 (eval-when (compile load eval)
   (require :tester))
@@ -159,6 +159,7 @@
    prev<b><a href=foo>bar</a>baz</b>
    <b>foo<a>bar</a>baz</b>
    <b>foo<a>bar</b>baz</a>
+   <b>foo<script>bar</script><a>baz</a></b>
    <b>foo<i>bar</i>baz</b>
    <script a=b> some text if (year < 1000) year += 1900; more text </script>
    <script a=b></script>
@@ -175,6 +176,7 @@
     "prev" (:b ((:a :href "foo") "bar") "baz")
     (:b "foo" (:a "bar") "baz")
     (:b "foo") (:a (:b "bar") "baz")
+    (:b "foo") (:script "bar") (:b (:a "baz"))
     (:b "foo" (:i "bar") "baz")
     ((:script :a "b") " some text if (year < 1000) year += 1900; more text ")
     ((:script :a "b"))

@@ -20,6 +20,10 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
+;; Change Log 
+;;
+;; 10/14/00 add namespace example; xml-error related change
+
 (eval-when (compile load eval)
   (require :tester))
 

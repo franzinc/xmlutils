@@ -20,7 +20,11 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml1.cl,v 1.2.2.1 2000/10/13 23:49:01 layer Exp $
+;; $Id: pxml1.cl,v 1.2.2.2 2000/10/17 14:19:06 layer Exp $
+
+;; Change Log 
+;;
+;; 10/14/00 add namespace support; xml-error fix
 
 (in-package :net.xml.parser)
 
@@ -263,17 +267,27 @@
     (if* (and from-stream (eq tmp-char #\return)) then #\newline else tmp-char)))
 
 (defun unicode-check (p tokenbuf)
-  (declare (optimize (speed 3) (safety 1)))
+  (declare (ignorable tokenbuf) (optimize (speed 3) (safety 1)))
   ;; need no-OO check because external format support isn't completely done yet
   (when (not (typep p 'string-input-simple-stream))
+    #+(version>= 6 0 pre-final 1)
+    (let ((format (ignore-errors (excl:sniff-for-unicode p))))
+      (if* (eq format (find-external-format :unicode))
+	 then
+	      (setf (stream-external-format p) format)
+	 else
+	      (setf (stream-external-format p) (find-external-format :utf8))))
+    #-(version>= 6 0 pre-final 1)
     (let* ((c (read-char p nil)) c2
 	   (c-code (if c (char-code c) nil)))
       (if* (eq #xFF c-code) then
 	      (setf c2 (read-char p nil))
 	      (setf c-code (if c (char-code c2) nil))
 	      (if* (eq #xFE c-code) then
+		      (format t "set unicode~%")
 		      (setf (stream-external-format p)
-			(find-external-format :fat-little))
+			(find-external-format #+(version>= 6 0 pre-final 1) :unicode
+					      #-(version>= 6 0 pre-final 1) :fat-little))
 		 else 
 		      (xml-error "stream has incomplete Unicode marker"))
 	 else (setf (stream-external-format p)

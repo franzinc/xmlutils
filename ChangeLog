@@ -1,7 +1,26 @@
 *******************************************************************************
 merge from trunk to acl6 branch
+command: ../../join.sh trunk trunk_to_acl6_merge1 trunk_to_acl6_merge2 xmlutils
+*******************************************************************************
+
+*******************************************************************************
+merge from trunk to acl6 branch
 command: ../../join.sh trunk acl6 trunk_to_acl6_merge1 xmlutils
 *******************************************************************************
+
+2000-10-14 Steve Jacobson <sdj>
+
+	phtml-test.cl: add test related to raw mode infinite loop
+	phtml.cl: remove risk of negative buffer index
+	             caused by multiple un-next-char calls in raw mode
+	             fixed it by moving first-pass parse buffer to tokenbuf
+		  removed :script from *in-line* to prevent infinite loop
+	              (it should not have been there, anyway)
+		  fixed :table tag-auto-close-stop typo
+	          don't reopen char format tags within raw mode tags
+	pxml1.cl: changes required by 6.0 unicode changes
+	pxml2.cl: show char code in debug output
+	         
 
 2000-09-05 Steve Jacobson <sdj>
 
