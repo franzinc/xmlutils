@@ -1,3 +1,8 @@
+2002-05-14  John Foderaro  <jkf@tiger.franz.com>
+
+	* phtml.cl: - add :parse-entities arg to parse-html. If true then
+	   entities are converted to the character they represent.
+
 2002-04-29  John Foderaro  <jkf@tiger.franz.com>
 
 	* pxml1.cl (check-xmldecl): - if the xml tag specifies an 
