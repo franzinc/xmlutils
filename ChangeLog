@@ -1,3 +1,11 @@
+2003-11-21    <mm@KETCHTOO>
+
+	* pxml2.cl (next-token): bug13668 - note that xmlns="" in this scope
+
+	* pxml1.cl (compute-tag): bug13668 - look for xmlns="" in this scope
+	       (tag-from-string): bug13668 - look for xmlns="" in this scope
+
+	
 2003-11-03  Charles A. Cox  <cox@fritter>
 
 	* pxml-test.cl: Fix latin1 nicknames.  Add tests for Japanese.

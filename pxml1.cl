@@ -25,7 +25,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.11 2003/11/04 01:18:04 cox Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.12 2003/11/21 21:59:07 mm Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
@@ -123,9 +123,12 @@
 		   (eq (schar data 4) #\s)
 		   (or (eq (schar data 5) #\:)
 		       (= (collector-next coll) 5)))
-	      then   ;;; putting xmlns: in :none namespace
-	      (setf new-package (assoc :none ns-to-package))
-	      (when new-package (setf package (rest new-package)))
+	      then
+	      ;; putting xmlns: in :none namespace
+	      (and (setf new-package (assoc :none ns-to-package))
+		   ;; bug13668 - look for xmlns="" in this scope
+		   (rest new-package)
+		   (setf package (rest new-package)))
 	      (excl::intern* (collector-data coll) (collector-next coll) package)
 	      else
 	      (let ((colon-index -1)
@@ -155,8 +158,10 @@
 					   (collector-next coll) package)))
 		     else
 		     (let ((new-package (assoc :none ns-to-package)))
-		       (when new-package
-			 (setf package (rest new-package))))
+		       (and new-package
+			    ;; bug13668 - look for xmlns="" in this scope
+			    (rest new-package)
+			    (setf package (rest new-package))))
 		     (excl::intern* (collector-data coll)
 				    (collector-next coll) package)))
 	      ))
@@ -185,6 +190,8 @@
 	      )
 	 elseif (setf entry (assoc :none ns-to-p :test #'equal))
 	 then
+	 ;; bug13668 - look for xmlns="" in this scope
+	 (when (null (cdr entry)) (setf entry nil))
 	 ;; this is an unqualified name and there is a default namespace
 	 (setf suffix name)
 	 else
