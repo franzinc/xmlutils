@@ -165,6 +165,7 @@
   (defconstant state-readcomment-one 9)
   (defconstant state-readcomment-two 10)
   (defconstant state-findvalue 11)
+  (defconstant state-rawdata 12)
 )
 
 
@@ -309,18 +310,24 @@
 
     
     
-(defun next-token (stream ignore-strings)
+(defun next-token (stream ignore-strings raw-mode-delimiter
+		   read-sequence-func)
   ;; return two values: 
   ;;    the next token from the stream.
   ;; 	the kind of token (:pcdata, :start-tag, :end-tag, :eof)
   ;;
+  ;; if read-sequence-func is non-nil, stream is ignored, and 
+  ;; read-sequence-func is called to fetch the next character
+  ;; read-sequence-func has one argument - the sequence to be filled
   (macrolet ((next-char (stream)
 	       `(let ((cur *cur-tokenbuf*)
 		      (tb *tokenbuf*))
 		  (if* (>= cur *max-tokenbuf*)
 		     then ; fill buffer
-			  (if* (zerop (setq *max-tokenbuf* 
-					(read-sequence tb stream)))
+			  (if* (zerop (setq *max-tokenbuf*
+					(if* read-sequence-func
+					   then (funcall read-sequence-func tb)
+					   else (read-sequence tb stream))))
 			     then (setq cur nil) ; eof
 			     else (setq cur 0)))
 		  (if* cur
@@ -348,7 +355,7 @@
 	       
 	     )
     
-    (let ((state state-pcdata)
+    (let ((state (if* raw-mode-delimiter then state-rawdata else state-pcdata))
 	  (coll  (get-collector))
 	  (ch)
 
@@ -362,7 +369,9 @@
 	  (attrib-name)
 	  (attrib-value)
 	  
-	  (name-length 0) ; count only when it could be a comment
+	  (name-length 0) ;; count only when it could be a comment
+	  
+	  (raw-length 0)
 	  
 	  )
     
@@ -536,7 +545,32 @@
 		   (add-to-coll coll #\-)
 		   (add-to-coll coll #\-)
 		   (setq state state-readcomment)))
-		   
+	  
+	  (#.state-rawdata
+	   ;; collect everything until we see the delimiter
+	   (if* (eq (to-preferred-case ch) (elt raw-mode-delimiter raw-length))
+	      then
+		   (incf raw-length)
+		   (when (= raw-length (length raw-mode-delimiter))
+		     ;; push the end tag back so it can then be lexed
+		     (dotimes (i (length raw-mode-delimiter))
+		       (un-next-char stream 
+				     ch
+				     #+ignore ;; un-next-char doesn't
+				     ;; use args, so save time by not doing the
+				     ;; char manipulation
+				     (elt raw-mode-delimiter
+					  (- raw-length (+ 1 i)))))
+		     ;; set state to state-pcdata for next section
+		     (setf state state-pcdata) 
+		     (return))
+	      else
+		   ;; push partial matches into data string
+		   (dotimes (i raw-length)
+		     (add-to-coll coll (elt raw-mode-delimiter i)))
+		   (setf raw-length 0)
+		   (add-to-coll coll ch)))
+		     
 	  ))
       
       
@@ -623,16 +657,21 @@
 
 ; the elements with no body and thus no end tag
 (dolist (opt '(:area :base :basefont :bgsound :br :button :col 
-	       :colgroup :embed :hr :img
+	       ;;:colgroup - no, this is an element with contents
+	       :embed :hr :img
 	       :input :isindex :keygen :link :meta 
 	       :object 
 	       ;:p  ;; legally isn't but this makes thing work better
 	       :plaintext :spacer :wbr))
   (setf (tag-no-end opt) t))
 
+(defvar *in-line* '(:tt :i :b :big :small :em :strong :dfn :code :samp :kbd
+		    :var :cite :abbr :acronym :a :img :object :br :script :map
+		    :q :sub :sup :span :bdo :input :select :textarea :label :button))
+
 ; the elements whose start tag can end a previous tag
 
-(setf (tag-auto-close :tr) '(:tr :td th))
+(setf (tag-auto-close :tr) '(:tr :td :th :colgroup))
 (setf (tag-auto-close-stop :tr) '(:table))
 
 (setf (tag-auto-close :td) '(:td :th))
@@ -641,24 +680,66 @@
 (setf (tag-auto-close :th) '(:td :th))
 (setf (tag-auto-close-stop :td) '(:table))
 
-(setf (tag-auto-close :dt) '(:dt dd))
+(setf (tag-auto-close :dt) '(:dt :dd))
 (setf (tag-auto-close-stop :dt) '(:dl))
 
 (setf (tag-auto-close :li) '(:li))
 (setf (tag-auto-close-stop :li) '(:ul :ol))
 
+;; new stuff to close off tags with optional close tags
+(setf (tag-auto-close :address) '(:head :p))
+(setf (tag-auto-close :blockquote) '(:head :p))
+(setf (tag-auto-close :body) '(:body :frameset :head))
+
+(setf (tag-auto-close :dd) '(:dd))
+(setf (tag-auto-close-stop :dd) '(:dl))
+
+(setf (tag-auto-close :dl) '(:head :p))
+(setf (tag-auto-close :div) '(:head :p))
+(setf (tag-auto-close :fieldset) '(:head :p))
+(setf (tag-auto-close :form) '(:head :p))
+(setf (tag-auto-close :frameset) '(:body :frameset :head))
+(setf (tag-auto-close :hr) '(:head :p))
+(setf (tag-auto-close :h1) '(:head :p))
+(setf (tag-auto-close :h2) '(:head :p))
+(setf (tag-auto-close :h3) '(:head :p))
+(setf (tag-auto-close :h4) '(:head :p))
+(setf (tag-auto-close :h5) '(:head :p))
+(setf (tag-auto-close :h6) '(:head :p))
+(setf (tag-auto-close :noscript) '(:head :p))
+(setf (tag-auto-close :ol) '(:head :p))
+
+(setf (tag-auto-close :option) '(:option))
+(setf (tag-auto-close-stop :option) '(:select))
+
+(setf (tag-auto-close :pre) '(:head :p))
+(setf (tag-auto-close :table) '(:head :p))
+
+(setf (tag-auto-close :tbody) '(:colgroup :tfoot :tbody :thead))
+(setf (tag-auto-close-stop :tbody) '(:table))
+
+(setf (tag-auto-close :tfoot) '(:colgroup :tfoot :tbody :thead))
+(setf (tag-auto-close-stop :tfoot) '(:table))
+
+(setf (tag-auto-close :thead) '(:colgroup :tfoot :tbody :thead))
+(setf (tag-auto-close-stop :thead) '(:table))
+
+(setf (tag-auto-close :ul) '(:head :p))
 
 (setf (tag-no-pcdata :table) t)
 (setf (tag-no-pcdata :tr) t)
 
 
-
-
-
 (defmethod phtml ((p stream))
+  (phtml-internal p nil))
+
+
+(defun phtml-internal (p read-sequence-func)
   
   (let ((pending nil)
 	(current-tag :start-parse)
+	(last-tag :start-parse)
+	(raw-mode-delimiter nil)
 	(guts))
 
     (labels ((close-off-tags (name stop-at)
@@ -713,12 +794,28 @@
       
     
       (loop 
-	(multiple-value-bind (val kind) (next-token p nil)
+	(multiple-value-bind (val kind) 
+	    (next-token p nil raw-mode-delimiter read-sequence-func)
 	  (case kind
 	    (:pcdata
-	     (push val guts))
+	     (setf raw-mode-delimiter nil)
+	     (if* (member last-tag *in-line*)
+		then
+		     (push val guts)
+		else
+		     (when (dotimes (i (length val) nil)
+			     (when (not (char-characteristic (elt val i) char-spacechar))
+			       (return t)))
+		       (push val guts))))
 	  
 	    (:start-tag
+	     (setf last-tag val)
+	     (if* (eq last-tag :comment)
+		then
+		     (setf raw-mode-delimiter "</comment>")
+	      elseif (eq last-tag :script)
+		then
+		     (setf raw-mode-delimiter "</script>"))
 	     ; maybe this is an end tag too
 	     (let* ((name (tag-name val))
 		    (auto-close (tag-auto-close name))
@@ -740,12 +837,15 @@
 		       (setq guts nil))))
 	  
 	    (:end-tag
+	     (setf raw-mode-delimiter nil)
 	     (close-off-tags (list val) nil))
 
 	    (:comment
+	     (setf raw-mode-delimiter nil)
 	     (push `(:comment ,val) guts))
 	    
 	    (:eof
+	     (setf raw-mode-delimiter nil)
 	     ; close off all tags
 	     (close-off-tags '(:start-parse) nil)
 	     (return (cdar guts)))))))))
