@@ -1,4 +1,9 @@
 *******************************************************************************
+merge from trunk to acl6 branch (for 6.2.beta)
+command: ../../join.sh trunk trunk_to_acl6_merge3 trunk_to_acl6_merge4 xmlutils
+*******************************************************************************
+
+*******************************************************************************
 merge from trunk to acl6 branch (for 6.1.beta)
 command: ../../join.sh trunk trunk_to_acl6_merge2 trunk_to_acl6_merge3 xmlutils
 *******************************************************************************
