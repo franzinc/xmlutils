@@ -1,4 +1,9 @@
-2000-08-9  Steve Jacobson <sdj>
+2000-08-16  Steve Jacobson <sdj>
+
+	pxml-test.cl: cleanup for distribution
+	*.cl: add AllegroServe license text
+
+2000-08-10  Steve Jacobson <sdj>
 
 	phtml-test.cl: add tests for latest changes
 	phtml.cl: allow underscore as tag character
