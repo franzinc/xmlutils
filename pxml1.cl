@@ -20,7 +20,7 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml1.cl,v 1.4 2000/08/16 16:50:33 sdj Exp $
+;; $Id: pxml1.cl,v 1.5 2000/09/05 20:41:44 sdj Exp $
 
 (in-package :net.xml.parser)
 
@@ -65,6 +65,9 @@
   seen-external-dtd
   seen-parameter-reference
   standalonep
+  uri-to-package
+  ns-to-package
+  ns-scope
   )
 
 (defstruct tokenbuf
@@ -101,11 +104,57 @@
   data  ; string vector
   )
 
-(defun compute-tag (coll &optional (package *keyword-package*))
+(defun compute-tag (coll &optional (package *keyword-package*) ns-to-package)
   (declare (optimize (speed 3) (safety 1)))
   ;; compute the symbol named by what's in the collector
-  ;; this will change when namespace stuff is determined...
-  (excl::intern* (collector-data coll) (collector-next coll) package))
+  (if* (not ns-to-package)
+     then (excl::intern* (collector-data coll) (collector-next coll) package)
+     else
+	  (let (new-package (data (collector-data coll)))
+	    (if* (and (eq (schar data 0) #\x)
+		      (eq (schar data 1) #\m)
+		      (eq (schar data 2) #\l)
+		      (eq (schar data 3) #\n)
+		      (eq (schar data 4) #\s)
+		      (or (eq (schar data 5) #\:)
+			  (= (collector-next coll) 5)))
+	       then ;; putting xmlns: in :none namespace
+		    (setf new-package (assoc :none ns-to-package))
+		    (when new-package (setf package (rest new-package)))
+		    (excl::intern* (collector-data coll) (collector-next coll) package)
+	       else
+		    (let ((colon-index -1)
+			  (data (collector-data coll)))
+		      (dotimes (i (collector-next coll))
+			(when (eq (schar data i) #\:)
+			  (setf colon-index i)
+			  (return)))
+		      (if* (> colon-index -1) then
+			      (let ((string1 (make-string colon-index))
+				    new-package string2)
+				(dotimes (i colon-index)
+				  (setf (schar string1 i) (schar data i)))
+				(setf new-package (assoc string1 ns-to-package :test 'string=))
+				(if* new-package
+				   then
+					(setf string2 (make-string (- (collector-next coll)
+								      (+ 1 colon-index))))
+					(dotimes (i (- (collector-next coll)
+						       (+ 1 colon-index)))
+					  (setf (schar string2 i) 
+					    (schar data (+ colon-index 1 i))))
+					(excl::intern string2 (rest new-package))
+				   else
+					(excl::intern* (collector-data coll) 
+						       (collector-next coll) package)))
+			 else
+			      (let ((new-package (assoc :none ns-to-package)))
+				(when new-package
+				  (setf package (rest new-package))))
+			      (excl::intern* (collector-data coll) 
+					     (collector-next coll) package)))
+		    ))
+	  ))
 
 (defun compute-coll-string (coll)
   (declare (optimize (speed 3) (safety 1)))
@@ -367,4 +416,4 @@
 
 (defun xml-error (text)
   (declare (optimize (speed 3) (safety 1)))
-  (funcall 'error (concatenate 'string "XML not well-formed - " text)))
+  (funcall 'error "~a" (concatenate 'string "XML not well-formed - " text)))

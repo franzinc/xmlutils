@@ -20,27 +20,27 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml2.cl,v 1.4 2000/08/16 16:50:33 sdj Exp $
+;; $Id: pxml2.cl,v 1.5 2000/09/05 20:41:44 sdj Exp $
 
 (in-package :net.xml.parser)
-
-;; todo - compute-tag currently puts symbols in keyword package
 
 ;; state titles can be better chosen and explained
 
 (defvar *debug-xml* nil)
 
 (defmethod parse-xml ((str string) &key external-callback general-entities parameter-entities
-					content-only)
+					content-only uri-to-package)
   (declare (optimize (speed 3) (safety 1)))
   (parse-xml (make-string-input-stream str) :external-callback external-callback
 	     :general-entities general-entities
-	     :parameter-entities parameter-entities :content-only content-only))
+	     :parameter-entities parameter-entities :content-only content-only
+	     :uri-to-package uri-to-package))
 
 (defmethod parse-xml ((p stream) &key external-callback general-entities 
-				      parameter-entities content-only)
+				      parameter-entities content-only uri-to-package)
   (declare (optimize (speed 3) (safety 1)))
-  (pxml-internal0 p nil external-callback general-entities parameter-entities content-only))
+  (pxml-internal0 p nil external-callback general-entities parameter-entities content-only
+		  uri-to-package))
 
 (eval-when (compile load eval)
   (defconstant state-docstart 0) ;; looking for XMLdecl, Misc, doctypedecl, 1st element
@@ -55,7 +55,7 @@
     (when (not (xml-space-p (elt val i))) (return nil))))
 
 (defun pxml-internal0 (p read-sequence-func external-callback
-		      general-entities parameter-entities content-only)
+		      general-entities parameter-entities content-only uri-to-package)
   (declare (optimize (speed 3) (safety 1)))
   (let ((tokenbuf (make-iostruct :tokenbuf (get-tokenbuf)
 				 :do-entity t
@@ -65,10 +65,12 @@
     ;; set up user specified entities
     (setf (iostruct-parameter-entities tokenbuf) parameter-entities)
     (setf (iostruct-general-entities tokenbuf) general-entities)
+    (setf (iostruct-uri-to-package tokenbuf) uri-to-package)
     ;; look for Unicode file
     (unicode-check p tokenbuf)
     (unwind-protect
-	(pxml-internal tokenbuf external-callback content-only)
+	(values (pxml-internal tokenbuf external-callback content-only)
+		(iostruct-uri-to-package tokenbuf))
       (dolist (entity-buf (iostruct-entity-bufs tokenbuf))
 	(when (streamp (tokenbuf-stream entity-buf))
 	  (close (tokenbuf-stream entity-buf))
@@ -86,7 +88,7 @@
 	(entity-open-tags)
 	)
     
-    (loop 
+    (loop
       (multiple-value-bind (val kind kind2) 
 	  (next-token tokenbuf external-callback attlist-data)
 	(when *debug-xml*
@@ -566,6 +568,7 @@
 	  (coll  (get-collector))
 	  (entity  (get-collector))
 	  (tag-to-return)
+	  (tag-to-return-string)
 	  (attrib-name)
 	  (empty-delim)
 	  (value-delim)
@@ -579,6 +582,7 @@
 	  (cdatap t)
 	  (pcdatap t)
 	  (entity-source)
+	  (ns-token)
 	  (ch))
       
       (loop
@@ -871,10 +875,28 @@
 	   (if* (xml-name-char-p ch)
 	      then (add-to-coll coll ch)
 	    elseif (eq #\> ch) then 
-		   (setq tag-to-return (compute-tag coll *package*))
+		   (let ((tag-string (compute-coll-string coll)))
+		     (when (and (iostruct-ns-scope tokenbuf)
+				(string= tag-string
+				    (first (first (iostruct-ns-scope tokenbuf)))))
+		       (dolist (item (second (first (iostruct-ns-scope tokenbuf))))
+			 (setf (iostruct-ns-to-package tokenbuf)
+			   (remove (assoc item (iostruct-ns-to-package tokenbuf))
+				   (iostruct-ns-to-package tokenbuf))))
+		       (setf (iostruct-ns-scope tokenbuf)
+			 (rest (iostruct-ns-scope tokenbuf)))))
+		   (setq tag-to-return (compute-tag coll *package* 
+						    (iostruct-ns-to-package tokenbuf)))
 		   (return)
 	    elseif (xml-space-p ch) then (setf state state-readtag-end3)
-		   (setq tag-to-return (compute-tag coll *package*))
+		   (let ((tag-string (compute-coll-string coll)))
+		     (when (and (iostruct-ns-scope tokenbuf)
+				(string= tag-string
+				    (first (first (iostruct-ns-scope tokenbuf)))))
+		       (setf (iostruct-ns-scope tokenbuf)
+			 (rest (iostruct-ns-scope tokenbuf)))))
+		   (setq tag-to-return (compute-tag coll *package*
+						    (iostruct-ns-to-package tokenbuf)))
 	      else (let ((tmp (compute-coll-string coll)))
 		     (clear-coll coll)
 		     (dotimes (i 15)
@@ -1080,18 +1102,22 @@
 		   (add-to-coll coll ch)
 	      else
 		   (if* (xml-space-p ch) then
+			   (setf tag-to-return-string (compute-coll-string coll))
 			   (setq tag-to-return 
-			     (compute-tag coll *package*))
+			     (compute-tag coll *package*
+					  (iostruct-ns-to-package tokenbuf)))
 			   (clear-coll coll)
 			   (setf state state-readtag2)
 		    elseif (eq #\> ch) then 
 			   (setq tag-to-return 
-			     (compute-tag coll *package*))
+			     (compute-tag coll *package*
+					  (iostruct-ns-to-package tokenbuf)))
 			   (clear-coll coll)
 			   (return)
 		    elseif (eq #\/ ch) then 
 			   (setq tag-to-return 
-			     (compute-tag coll *package*))
+			     (compute-tag coll *package*
+					  (iostruct-ns-to-package tokenbuf)))
 			   (clear-coll coll)
 			   (setf state state-readtag3)
 		      else (dotimes (i 15)
@@ -1131,12 +1157,31 @@
 	      then
 		   (add-to-coll coll ch)
 	    elseif (eq #\= ch) then
-		   (setq attrib-name (compute-tag coll *package*))
+		   (setq attrib-name (compute-tag coll *package*
+						  (iostruct-ns-to-package tokenbuf)))
 		   (clear-coll coll)
+		   (let ((name (symbol-name attrib-name)))
+		     (when (and (>= (length name) 5)
+				(string= name "xmlns" :end1 5))
+		       (if* (= (length name) 5)
+			  then
+			       (setf ns-token :none)
+			elseif (eq (schar name 5) #\:)
+			  then
+			       (setf ns-token (subseq name 6)))))
 		   (setf state state-readtag5)
 	    elseif (xml-space-p ch) then
-		   (setq attrib-name (compute-tag coll *package*))
+		   (setq attrib-name (compute-tag coll *package*
+						  (iostruct-ns-to-package tokenbuf)))
 		   (clear-coll coll)
+		   (let ((name (symbol-name attrib-name)))
+		     (when (and (>= (length name) 5)
+				(string= name "xmlns" :end1 5))
+		       (if* (= (length name) 5)
+			  then
+			       (setf ns-token :none)
+			  else
+			       (setf ns-token (subseq name 6)))))
 		   (setf state state-readtag12)
 	      else (let ((tmp (compute-coll-string coll)))
 		     (clear-coll coll)
@@ -1209,6 +1254,38 @@
 		     (clear-coll coll)
 		     (push attrib-name attribs-to-return)
 		     (push attrib-value attribs-to-return)
+		     (when ns-token
+		       (let ((package (assoc (parse-uri attrib-value)
+					     (iostruct-uri-to-package tokenbuf)
+					     :test 'uri=)))
+			 (if* package then (setf package (rest package))
+			    else
+				 (setf package
+				   (let ((i 0) new-package)
+				     (loop
+				       (let* ((candidate (concatenate 'string
+							   "net.xml.namespace."
+							   (format nil "~s" i)))
+					      (exists (find-package candidate)))
+					 (if* exists
+					    then (incf i)
+					    else (setf new-package (make-package candidate))
+						 (setf (iostruct-uri-to-package tokenbuf)
+						   (acons (parse-uri attrib-value) new-package
+							  (iostruct-uri-to-package tokenbuf)))  
+						 (return new-package)))))))
+			 (setf (iostruct-ns-to-package tokenbuf)
+			   (acons ns-token package (iostruct-ns-to-package tokenbuf)))
+			 )
+		       (if* (and (first (iostruct-ns-scope tokenbuf))
+				 (string= (first (first (iostruct-ns-scope tokenbuf)))
+				     tag-to-return-string))
+			  then
+			       (push ns-token (second (first (iostruct-ns-scope tokenbuf))))
+			  else
+			       (push (list tag-to-return-string (list ns-token))
+				     (iostruct-ns-scope tokenbuf)))
+		       (setf ns-token nil))
 		     (setq state state-readtag6a)
 	      elseif (eq #\newline ch) then
 		     (when (not (eq #\return last-ch)) (add-to-coll coll #\space))

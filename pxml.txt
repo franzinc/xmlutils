@@ -1,7 +1,7 @@
 Description
 
 The parse-xml function processes XML input, returning a list of XML tags,
-attributes, and test. Here is a simple example:
+attributes, and text. Here is a simple example:
 
 (parse-xml "<item1><item2 att1='one'/>this is some text</item1>")
 
@@ -22,13 +22,13 @@ a. a string containing text content, such as "Here is some text with a "
 b. a list representing a XML tag with associated attributes and/or content,
    such as ('item1 "text") or (('item1 :att1 "help.html") "link"). If the XML tag
    does not have associated attributes, then the first list member will be a
-   symbol in the current package representing the XML tag, and the other elements will 
-   represent the content, which can be a string (text content), a current package symbol (XML
+   symbol representing the XML tag, and the other elements will 
+   represent the content, which can be a string (text content), a symbol (XML
    tag with no attributes or content), or list (nested XML tag with
    associated attributes and/or content). If there are associated attributes,
-   then the first list member will be a list containing a current package symbol
-   followed by two list members for each associated attribute; the first member is a current
-   package symbol representing the attribute, and the next member is a string corresponding
+   then the first list member will be a list containing a symbol
+   followed by two list members for each associated attribute; the first member is a
+   symbol representing the attribute, and the next member is a string corresponding
    to the attribute value.
 
 c. XML comments and or processing instructions - see the more detailed example below for
@@ -40,6 +40,9 @@ parser would, including the processing of an external DTD subset and external en
 
 By default, parse-xml outputs a DTD parse along with the parsed XML contents. The DTD  parse may
 be optionally suppressed. The following example shows DTD parsed output components:
+
+(defvar *xml-example-external-url*
+    "<!ENTITY ext1 'this is some external entity %param1;'>")
 
 (defun example-callback (var-name token &optional public)
   (declare (ignorable token public))
@@ -98,17 +101,76 @@ Usage Notes:
    case support and wide character support found in modern ACL.
 
 2. The parser uses the keyword package for DTD tokens and other
-   special XML tokens. Since element and attribute tokens are interned
+   special XML tokens. Since element and attribute token symbols are usually interned
    in the current package, it is not recommended to execute parse-xml
    when the current package is the keyword package.
 
-3. Special XML namespace support is envisioned but has not yet been
-   implemented. Currently, element tags using XML namespace protocol will
-   be parsed in the same manner as any other tag; for example, the tag
-   <bib:book> will result in an interned symbol in the current package bearing
-   a "bib:book" symbol name. In the future, a parse-xml optional argument
-   will allow the caller to associate an XML namespace indicator (such as "bib:")
-   with a package other than the current package.
+3. The XML parser supports the XML Namespaces specification. The parser
+   recognizes a "xmlns" attribute and attribute names starting with "xmlns:".
+   As per the specification, the parser expects that the associated value
+   is an URI string. The parser then associates XML Namespace prefixes with a
+   Lisp package provided via the parse-xml :uri-to-package option or, if 
+   necessary, a package created on the fly. The following example demonstrates
+   this behavior:
+
+   (setf *xml-example-string4*
+  "<bibliography
+      xmlns:bib='http://www.bibliography.org/XML/bib.ns'
+      xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'>
+    <bib:book owner='Smith'>
+       <bib:title>A Tale of Two Cities</bib:title>
+       <bib:bibliography
+         xmlns:bib='http://www.franz.com/XML/bib.ns'
+         xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'>
+        <bib:library branch='Main'>UK Library</bib:library>
+        <bib:date calendar='Julian'>1999</bib:date>
+        </bib:bibliography>
+       <bib:date calendar='Julian'>1999</bib:date>
+       </bib:book>
+     </bibliography>")
+
+   (setf *uri-to-package* nil)
+   (setf *uri-to-package*
+	      (acons (parse-uri "http://www.bibliography.org/XML/bib.ns")
+		     (make-package "bib") *uri-to-package*))
+   (setf *uri-to-package*
+	      (acons (parse-uri "urn:royal-mail.gov.uk/XML/ns/postal.ns,1999")
+		     (make-package "royal") *uri-to-package*))
+   (setf *uri-to-package*
+	      (acons (parse-uri "http://www.franz.com/XML/bib.ns")
+		     (make-package "franz-ns") *uri-to-package*))
+   (pprint (multiple-value-list 
+              (parse-xml *xml-example-string4*
+                  :uri-to-package *uri-to-package*)))
+
+-->
+
+((((bibliography |xmlns:bib| "http://www.bibliography.org/XML/bib.ns" xmlns
+    "urn:royal-mail.gov.uk/XML/ns/postal.ns,1999")
+   "
+    "
+   ((bib::book royal::owner "Smith") "
+       " (bib::title "A Tale of Two Cities") "
+       "
+    ((bib::bibliography royal::|xmlns:bib| "http://www.franz.com/XML/bib.ns" royal::xmlns
+      "urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999")
+     "
+        " ((franz-ns::library net.xml.namespace.0::branch "Main") "UK Library") "
+        " ((franz-ns::date net.xml.namespace.0::calendar "Julian") "1999") "
+        ")
+    "
+       " ((bib::date royal::calendar "Julian") "1999") "
+       ")
+   "
+     "))
+ ((#<uri urn:royal-mail2.gov.ukXML/ns/postal.ns,1999> . #<The net.xml.namespace.0 package>)
+  (#<uri http://www.franz.com/XML/bib.ns> . #<The franz-ns package>)
+  (#<uri urn:royal-mail.gov.ukXML/ns/postal.ns,1999> . #<The royal package>)
+  (#<uri http://www.bibliography.org/XML/bib.ns> . #<The bib package>)))
+
+ In the absence of XML Namespace attributes, element and attribute symbols are interned
+ in the current package. Note that this implies that attributes and elements referenced
+ in DTD content will be interned in the current package.
 
 4. The ACL 6.0 beta does not contain a little-endian Unicode external format. To 
    process XML input containing Unicode characters correctly:
@@ -169,7 +231,7 @@ Usage Notes:
 
 XML Conformance Test Suite
 
-Using the OASIS test suite (http://www.oasis-open.org/committees/xmltest/testsuite.htm),
+Using the OASIS test suite (http://www.oasis-open.org),
 here are the current parse-xml results:
 
 xmltest/invalid:	Not tested, since parse-xml is a non-validating parser
@@ -204,8 +266,14 @@ parse-xml			[Generic function]
 
 Arguments: input-source &key external-callback content-only 
 			    general-entities parameter-entities
+			    uri-to-package
 
-Returns LXML and parsed DTD output, as described above.
+Returns multiple values:
+
+ 1) LXML and parsed DTD output, as described above.
+ 2) An association list containing the uri-to-package argument conses (if any)
+    and conses associated with any XML Namespace packages created during the
+    parse (see uri-to-package argument description, below).
 
 The external-callback argument, if specified, is a function object or symbol
 that parse-xml will execute when encountering an external DTD subset
@@ -242,13 +310,22 @@ and replacement text pairs. The entity symbols should be in the keyword package.
 Note that this option may be useful in generating desirable parse results in 
 situations where you do not wish to parse external entities or the external DTD subset.
 
+The uri-to-package argument is an association list containing uri objects and package
+objects. Typically, the uri objects correspond to XML Namespace attribute values, and
+the package objects correspond to the desired package for interning symbols associated
+with the uri namespace. If the parser encounters an uri object not contained in this list,
+it will generate a new package. The first generated package will be named net.xml.namespace.0,
+the second will be named net.xml.namespace.1, and so on.
+
 parse-xml Methods
 
 (parse-xml (p stream) &key external-callback content-only 
-			    general-entities parameter-entities)
+			    general-entities parameter-entities
+                            uri-to-package)
 
 (parse-xml (str string) &key external-callback content-only 
-			    general-entities parameter-entities)
+			    general-entities parameter-entities
+                            uri-to-package)
 
 An easy way to parse a file containing XML input:
 

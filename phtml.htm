@@ -1,0 +1,254 @@
+<html>
+
+<head>
+<title>A Lisp Based HTML Parser</title>
+<meta name="GENERATOR" content="Microsoft FrontPage 3.0">
+</head>
+
+<body>
+
+<p><big><strong><big>A Lisp Based HTML Parser</big></strong></big></p>
+
+<p><a href="#intro">Introduction/Simple Example</a><br>
+<a href="#lhtml">LHTML&nbsp; parse output format</a><br>
+<a href="#case">Case mode notes</a><br>
+<a href="#comment">Parsing HTML comments</a><br>
+<a href="#script">Parsing &lt;SCRIPT&gt; and &lt;STYLE&gt; tags</a><br>
+<a href="#sgml">Parsing SGML &lt;! tags</a><br>
+<a href="#illegal">Parsing Illegal and Deprecated Tags</a><br>
+<a href="#default">Default Attribute Values</a><br>
+<a href="#char">Parsing Interleaved Character Formatting Tags</a><br>
+<a href="#reference">parse-html reference</a><br>
+&nbsp;&nbsp; <a href="#methods">methods</a><br>
+&nbsp;&nbsp; <a href="#internal">phtml-internal</a></p>
+
+<p><a name="intro"></a>The <strong>parse-html</strong> generic function processes HTML
+input, returning a list of HTML tags, attributes, and text. Here is a simple example:<br>
+<br>
+(parse-html &quot;&lt;HTML&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;HEAD&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;TITLE&gt;Example HTML input&lt;/TITLE&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;BODY&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;P&gt;Here is some text with a &lt;B&gt;bold&lt;/B&gt; word&lt;br&gt;and a &lt;A
+HREF=\&quot;help.html\&quot;&gt;link&lt;/P&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;/HTML&gt;&quot;)</p>
+
+<p>generates:<br>
+<br>
+((:html (:head (:title &quot;Example HTML input&quot;))<br>
+&nbsp; (:body (:p &quot;Here is some text with a &quot; (:b &quot;bold&quot;) &quot;
+word&quot; :br &quot;and a &quot; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+((:a :href &quot;help.html&quot;) &quot;link&quot;)))))<br>
+</p>
+
+<p>The output format is known as LHTML format; it is the same format that the<br>
+aserve htmlgen macro accepts. <br>
+<br>
+<a name="lhtml"></a><strong><big>LHTML format</big></strong><br>
+<br>
+LHTML is a list representation of HTML tags and content.<br>
+<br>
+Each list member may be: 
+
+<ol>
+  <li>a string containing text content, such as &quot;Here is some text with a &quot;<br>
+  </li>
+  <li>a keyword package symbol representing a HTML tag with no associated attributes <br>
+    or content, such as :br.<br>
+  </li>
+  <li>a list representing an HTML tag with associated attributes and/or content,<br>
+    such as (:b &quot;bold&quot;) or ((:a :href &quot;help.html&quot;) &quot;link&quot;). If
+    the HTML tag<br>
+    does not have associated attributes, then the first list member will be a<br>
+    keyword package symbol representing the HTML tag, and the other elements will <br>
+    represent the content, which can be a string (text content), a keyword package symbol
+    (HTML<br>
+    tag with no attributes or content), or list (nested HTML tag with<br>
+    associated attributes and/or content). If there are associated attributes,<br>
+    then the first list member will be a list containing a keyword package symbol<br>
+    followed by two list members for each associated attribute; the first member is a keyword<br>
+    package symbol representing the attribute, and the next member is a string corresponding<br>
+    to the attribute value.<br>
+  </li>
+</ol>
+
+<p><a name="case"></a><strong>Case Mode and LHTML</strong></p>
+
+<p>If excl:*current-case-mode* is :CASE-INSENSITIVE-UPPER, keyword package symbols will be<br>
+in upper case; otherwise, they will be in lower case.</p>
+
+<p><a name="comment"></a><strong>HTML Comments</strong></p>
+
+<p>HTML comments are represented use a :comment symbol. For example,<br>
+<br>
+(parse-html &quot;&lt;!-- this is a comment--&gt;&quot;)<br>
+<br>
+--&gt; ((:comment &quot; this is a comment&quot;))</p>
+
+<p><a name="script"></a><strong>HTML &lt;SCRIPT&gt; and &lt;STYLE&gt; tags</strong></p>
+
+<p>All &lt;SCRIPT&gt; and &lt;STYLE&gt; content is not parsed; it is returned as text
+content.<br>
+<br>
+For example,<br>
+<br>
+(parse-html &quot;&lt;SCRIPT&gt;this &lt;B&gt;will not&lt;/B&gt; be
+parsed&lt;/SCRIPT&gt;&quot;)<br>
+<br>
+--&gt; ((:script &quot;this &lt;B&gt;will not&lt;/B&gt; be parsed&quot;))</p>
+
+<p><a name="sgml"></a><strong>XML and SGML &lt;! tags</strong></p>
+
+<p>Since, some HTML pages contain special XML/SGML tags, non-comment tags<br>
+starting with '&lt;!' are treated specially:<br>
+<br>
+(parse-html &quot;&lt;!doctype this is some text&gt;&quot;)<br>
+<br>
+--&gt; ((:!doctype &quot; this is some text&quot;))</p>
+
+<p><a name="illegal"></a><strong>Illegal and Deprecated HTML</strong></p>
+
+<p>There is plenty of illegal and deprecated HTML on the web that popular browsers<br>
+nonetheless successfully display. The parse-html parser is generous - it will not<br>
+raise an error condition upon encountering most input. In particular, it does not<br>
+maintain a list of legal HTML tags and will successfully parse nonsense input.<br>
+<br>
+For example,<br>
+<br>
+(parse-html &quot;&lt;this&gt; &lt;is&gt; &lt;some&gt; &lt;nonsense&gt;
+&lt;input&gt;&quot;)<br>
+<br>
+--&gt; ((:this (:is (:some (:nonsense :input)))))<br>
+<br>
+In some situations, you may prefer a two-pass parse that results in a parse where<br>
+deep nesting related to unrecognized tags is minimized:<br>
+<br>
+(let ((string &quot;&lt;this&gt; &lt;is&gt; &lt;some&gt; &lt;nonsense&gt; &lt;/some&gt;
+&lt;input&gt;&quot;))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (multiple-value-bind (res rogues)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (parse-html string
+:collect-rogue-tags t)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (declare (ignorable
+res))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (parse-html string
+:no-body-tags rogues)))<br>
+<br>
+--&gt; (:this :is (:some (:nonsense)) :input)<br>
+<br>
+See the <strong>:collect-rogue-tags</strong> and <strong>:no-body-tags</strong> argument
+descriptions in the reference<br>
+section below for more information.</p>
+
+<p><a name="default"></a><strong>Default Attribute values</strong></p>
+
+<p>As per the HTML 4.0 specification, attributes without specified values are given a
+lower case<br>
+string value that matches the attribute name.<br>
+<br>
+For example,<br>
+<br>
+(parse-html &quot;&lt;P here ARE some attributes&gt;&quot;)<br>
+<br>
+--&gt; (((:p :here &quot;here&quot; :are &quot;are&quot; :some &quot;some&quot;
+:attributes &quot;attributes&quot;)))</p>
+
+<p><a name="char"></a><strong>Interleaved Character Formatting Tags</strong></p>
+
+<p>Existing HTML pages often have character format tags that are interleaved among<br>
+other tags. Such interleaving is removed in a manner consistent with the HTML 4.0<br>
+specification.<br>
+<br>
+For example,<br>
+<br>
+(parse-html &quot;&lt;P&gt;Here is &lt;B&gt;bold text&lt;P&gt;that spans&lt;/B&gt;two
+paragraphs&quot;)<br>
+<br>
+--&gt; ((:p &quot;Here is &quot; (:b &quot;bold text&quot;)) (:p (:b &quot;that
+spans&quot;) &quot;two paragraphs&quot;))</p>
+
+<hr>
+
+<p><a name="reference"></a><strong><big>parse-html Reference</big></strong><br>
+<br>
+parse-html [Generic function]<br>
+<br>
+Arguments: input-source &amp;key callbacks callback-only<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
+no-body-tags<br>
+<br>
+Returns LHTML output, as described above.<br>
+<br>
+The callbacks argument, if non-nil, should be an association list. Each list member's<br>
+car (first) element specifies a keyword package symbol, and each list member's cdr (rest)<br>
+element specifies a function object or a symbol naming a function. The function should<br>
+expect one argument. The function will be invoked once for each time the HTML tag<br>
+corresponding to the specified keyword package symbol is encountered in the HTML input;
+the<br>
+argument will be an LHTML list containing the tag, along with associated attributes and<br>
+content. The default callbacks argument value is nil.<br>
+<br>
+The callback-only argument, if non-nil, directs parse-html to not generate a complete
+LHTML<br>
+output. Instead, LHTML lists will only be generated when necessary as arguments for
+functions<br>
+specified in the callbacks association list. This results in faster parser execution. The
+default<br>
+callback-only argument value is nil.<br>
+<br>
+The collect-rogue-tags argument, if non-nil, directs parse-html to return an additional
+value, <br>
+a list containing any unrecognized tags closed by the end of input.<br>
+<br>
+The no-body-tags argument, if non-nil, should be a list containing unknown tags that, if<br>
+encountered, will be treated as a tag with no body or content, and thus, no associated end<br>
+tag. Typically, the argument is a list or modified list resulting from an earlier
+parse-html<br>
+execution with the :collect-rogue-tags argument specified as non-nil.<br>
+<br>
+<a name="methods"></a><strong>parse-html Methods</strong><br>
+<br>
+parse-html (p stream) &amp;key callbacks callback-only<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
+no-body-tags<br>
+<br>
+parse-html (str string) &amp;key callbacks callback-only<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
+no-body-tags<br>
+<br>
+parse-html (file t) &amp;key callbacks callback-only<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; collect-rogue-tags
+no-body-tags<br>
+<br>
+The t method assumes the argument is a pathname suitable<br>
+for use with the with-open-file macro.<br>
+<br>
+<br>
+<a name="internal"></a><strong>phtml-internal [Function]</strong><br>
+<br>
+Arguments: stream read-sequence-func callback-only callbacks<br>
+collect-rogue-tags no-body-tags<br>
+<br>
+This function may be used when more control is needed for supplying<br>
+the HTML input. The read-sequence-func argument, if non-nil, should be a function<br>
+object or a symbol naming a function. When phtml-internal requires another buffer<br>
+of HTML input, it will invoke the read-sequence-func function with two arguments -<br>
+the first argument is an internal buffer character array and the second argument is<br>
+the phtml-internal stream argument. If read-sequence-fun is nil, phtml-internal<br>
+will invoke read-sequence to fill the buffer. The read-sequence-func function must<br>
+return the number of character array elements successfully stored in the buffer.<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+</p>
+</body>
+</html>

@@ -75,7 +75,7 @@
 	  (test-one-bad-file filename external-callback) 
 	(format t "i: ~s error: ~s~%"
 		index (if error
-			  (simple-condition-format-control error) val))))))
+			  (simple-condition-format-arguments error) val))))))
 
 ;; have to be in not-wf/sa directory when this is run
 (defun test-not-wf-sa-files ()
@@ -138,4 +138,20 @@
 ]>
 <item1/>")
 
+(defvar *xml-example-string4*)
 
+(setf *xml-example-string4*
+  "<bibliography
+      xmlns:bib='http://www.bibliography.org/XML/bib.ns'
+      xmlns='urn:royal-mail.gov.uk/XML/ns/postal.ns,1999'>
+    <bib:book owner='Smith'>
+       <bib:title>A Tale of Two Cities</bib:title>
+       <bib:bibliography
+         xmlns:bib='http://www.franz.com/XML/bib.ns'
+         xmlns='urn:royal-mail2.gov.uk/XML/ns/postal.ns,1999'>
+        <bib:library branch='Main'>UK Library</bib:library>
+        <bib:date calendar='Julian'>1999</bib:date>
+        </bib:bibliography>
+       <bib:date calendar='Julian'>1999</bib:date>
+       </bib:book>
+     </bibliography>")

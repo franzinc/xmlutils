@@ -1,3 +1,17 @@
+2000-09-05 Steve Jacobson <sdj>
+
+	New files:
+
+	phtml.htm: HTML version of doc file
+	pxml.htm: HTML version of doc file
+
+	Changed files:
+
+	pxml-test.cl: Add namespace example; change because of xml-error change
+	pxml.txt: Namespace changes and other edits
+	pxml1.cl: namespace support; add format string to xml-error 'error call
+	pxml2.cl: namespace support
+
 2000-08-16  Steve Jacobson <sdj>
 
 	pxml-test.cl: cleanup for distribution
