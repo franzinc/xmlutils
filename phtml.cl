@@ -302,10 +302,33 @@
 	(addit (char-code #\-) char-attribundelimattribvalue)
 	(addit (char-code #\.) char-attribundelimattribvalue)
 	
-	;; adding some that we found out there...
+	;; adding all typeable chars except for whitespace and >
 	(addit (char-code #\:) char-attribundelimattribvalue)
 	(addit (char-code #\@) char-attribundelimattribvalue)
 	(addit (char-code #\/) char-attribundelimattribvalue)
+	(addit (char-code #\!) char-attribundelimattribvalue)
+	(addit (char-code #\#) char-attribundelimattribvalue)
+	(addit (char-code #\$) char-attribundelimattribvalue)
+	(addit (char-code #\%) char-attribundelimattribvalue)
+	(addit (char-code #\^) char-attribundelimattribvalue)
+	(addit (char-code #\&) char-attribundelimattribvalue)
+	(addit (char-code #\() char-attribundelimattribvalue)
+	(addit (char-code #\)) char-attribundelimattribvalue)
+	(addit (char-code #\_) char-attribundelimattribvalue)
+	(addit (char-code #\=) char-attribundelimattribvalue)
+	(addit (char-code #\+) char-attribundelimattribvalue)
+	(addit (char-code #\\) char-attribundelimattribvalue)
+	(addit (char-code #\|) char-attribundelimattribvalue)
+	(addit (char-code #\{) char-attribundelimattribvalue)
+	(addit (char-code #\}) char-attribundelimattribvalue)
+	(addit (char-code #\[) char-attribundelimattribvalue)
+	(addit (char-code #\]) char-attribundelimattribvalue)
+	(addit (char-code #\;) char-attribundelimattribvalue)
+	(addit (char-code #\') char-attribundelimattribvalue)
+	(addit (char-code #\") char-attribundelimattribvalue)
+	(addit (char-code #\,) char-attribundelimattribvalue)
+	(addit (char-code #\<) char-attribundelimattribvalue)
+	(addit (char-code #\?) char-attribundelimattribvalue)
 	
 	; i'm not sure what can be in a tag name but we know that
 	; ! and - must be there since it's used in comments
@@ -712,6 +735,9 @@
 		    :var :cite :abbr :acronym :a :img :object :br :script :map
 		    :q :sub :sup :span :bdo :input :select :textarea :label :button))
 
+;; this will have more
+(defvar *ch-format* '(:i :b :tt :big :small :strike :s :u))
+
 ; the elements whose start tag can end a previous tag
 
 (setf (tag-auto-close :tr) '(:tr :td :th :colgroup))
@@ -786,6 +812,8 @@
 	(last-tag :start-parse)
 	(raw-mode-delimiter nil)
 	(current-callback-tags nil)
+	(pending-ch-format nil)
+	(closed-pending-ch-format nil)
 	(guts))
 
     (labels ((close-off-tags (name stop-at)
@@ -817,7 +845,9 @@
 				 ))))
 	   
 	     (close-current-tag ()
-	       ; close off the current tag and open the pending tag
+	       ;; close off the current tag and open the pending tag
+	       (when (member (tag-name current-tag) *ch-format* :test #'eq)
+		 (push (tag-name current-tag) closed-pending-ch-format))
 	       (let (element)
 		 (if* (tag-no-pcdata (tag-name current-tag))
 		    then (setq element `(,current-tag
@@ -885,8 +915,12 @@
 		 (if* auto-close
 		    then (setq auto-close-stop (tag-auto-close-stop name))
 			 (close-off-tags auto-close auto-close-stop))
-	     
-	     
+		 (when (not (member name *ch-format* :test #'eq))
+		   ;; this should close all open char format tags
+		   (when (not (= (length pending-ch-format) (length closed-pending-ch-format)))
+		     (close-off-tags (last pending-ch-format) nil))
+		   (setf closed-pending-ch-format nil))
+		     
 		 (if* no-end
 		    then		; this is a singleton tag
 			 (push (if* (atom val)
@@ -895,13 +929,28 @@
 			       guts)
 		    else (save-state)
 			 (setq current-tag val)
-			 (setq guts nil)))))
+			 (setq guts nil))
+		 (if* (member name *ch-format* :test #'eq)
+		    then (push val pending-ch-format)
+		    else (dolist (tmp pending-ch-format)
+			   (save-state)
+			   (setf current-tag tmp)
+			   (setf guts nil)))
+		 )))
 	  
 	    (:end-tag
 	     (setf raw-mode-delimiter nil)
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
-	       (close-off-tags (list val) nil)))
+	       (close-off-tags (list val) nil)
+	       (dolist (tmp (rest closed-pending-ch-format))
+		 (save-state)
+		 (setf current-tag tmp)
+		 (setf guts nil))
+	       (setf closed-pending-ch-format nil)
+	       (when (member val *ch-format* :test #'eq)
+		 (setf pending-ch-format (remove val pending-ch-format :count 1)))
+	       ))
 
 	    (:comment
 	     (setf raw-mode-delimiter nil)

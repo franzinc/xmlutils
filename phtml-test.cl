@@ -5,7 +5,9 @@
 (in-package :user)
 
 (defvar *test-string*)
+(defvar *test-string2*)
 (defvar *expected-result*)
+(defvar *expected-result2*)
 
 (setf *test-string*
     "<html>
@@ -119,6 +121,19 @@
 	(:b "force")
 	(:p "whitespace only")
 	))))
+
+(setf *test-string2*
+  "<i><b>text</i> more text</b>
+   <i><b>text</i></b> more text
+   <b>text<p>more text</b> yet more text</p>
+   <ul><li><b>text<li>more text</ul>"
+  )
+
+(setf *expected-result2*
+  '((:i (:b "text")) (:b " more text")
+    (:i (:b "text")) (:b) " more text"
+    (:b "text") (:p (:b "more text") " yet more text")
+    (:ul (:li (:b "text")) (:li (:b "more text")))))
 
 (defmethod lhtml-equal ((a t) (b t))
   (equal a b))
@@ -267,6 +282,7 @@
 (defun testit ()
   (let ((util.test:*test-errors* 0)
 	(util.test:*test-successes* 0))
+    (test t (lhtml-equal (parse-html *test-string2*) *expected-result2*))
     (setf (element-callback :a) nil)
     (setf (element-callback :p) nil)
     (setf *callback-called* 0)
