@@ -225,41 +225,86 @@
     (if* (= *pass* 0)
        then
 	    (incf *pass*)
-	    (test-t (lhtml-equal arg
+	    (test t (lhtml-equal arg
 				 '((:a :name "this is an anchor") 
 				   "with some text")))
        else
 	    (setf *pass* 0)
-	    (test-t (lhtml-equal arg
+	    (test t (lhtml-equal arg
 				 '((:a :href 
 				       "mailto:lmcelroy@performigence.com")
 				   "lmcelroy@performigence.com"))))))
+
+(let ((*pass* 0))
+  (defun nested-callback (arg)
+    ;; incf *callback-called* so we know exactly how many times this is
+    ;; called
+    (incf *callback-called*)
+    (if* (= *pass* 0)
+       then
+	    (incf *pass*)
+	    (test t (lhtml-equal arg
+				 '(:p "Navigate the site:"
+				   ((:map :name "mainmap")
+				    ((:area :shape "rect" :coords "0,100,100,200"))
+				    ((:area :shape "rect" :coords "100,100,100,200"))))))
+     elseif (= *pass* 1)
+       then
+	    (incf *pass*)
+	    (test t (lhtml-equal arg
+				 '(:p
+				   (:object
+				    (:p "Navigate the site:"
+				     ((:map :name "mainmap")
+				      ((:area :shape "rect" :coords "0,100,100,200"))
+				      ((:area :shape "rect" 
+					      :coords "100,100,100,200"))))))))
+       else
+	    (setf *pass* 0)
+	    (test t (lhtml-equal arg
+				 '(:p "whitespace only"))))))
 
 (defun testit ()
   (let ((util.test:*test-errors* 0)
 	(util.test:*test-successes* 0))
     (setf (element-callback :a) nil)
+    (setf (element-callback :p) nil)
     (setf *callback-called* 0)
-    (test-t (lhtml-equal (parse-html *test-string*) *expected-result*))
-    (test-eq 0 *callback-called*)
+    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    (test 0 *callback-called*)
     (setf (element-callback :a) 'callback-test-func)
     (setf *callback-called* 0)
-    (test-t (lhtml-equal (parse-html *test-string*) *expected-result*))
-    (test-eq 2 *callback-called*)
+    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    (test 2 *callback-called*)
     (setf (element-callback :a) nil)
     (setf *callback-called* 0)
-    (test-t (lhtml-equal (parse-html *test-string*) *expected-result*))
-    (test-eq 0 *callback-called*)
+    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    (test 0 *callback-called*)
     (setf *callback-called* 0)
     ;; make sure function is OK arg
     (setf (element-callback :a) (symbol-function 'callback-test-func))
-    (test-t (lhtml-equal (parse-html *test-string*) *expected-result*))
-    (test-eq 2 *callback-called*)
+    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    (test 2 *callback-called*)
     (setf (element-callback :a) nil)
+    ;; try with :callback-only t
+    (setf *callback-called* 0)
+    (setf (element-callback :a) 'callback-test-func)
+    (parse-html *test-string* :callback-only t) ;; won't return parse output
+    (test 2 *callback-called*)
+    ;; try nested callback
+    (setf *callback-called* 0)
+    (setf (element-callback :a) nil)
+    (setf (element-callback :p) 'nested-callback)
+    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    (test 3 *callback-called*)
+    (setf *callback-called* 0)
+    (parse-html *test-string* :callback-only t)
+    (test 3 *callback-called*)
+    (setf (element-callback :p) nil)
     ;; try some bad ones
-    (test-err (setf (element-callback :a) 1))
-    (test-err (setf (element-callback 1) 'callback-test-func))
-    (test-err (setf (element-callback 1) 2))
+    (test-error (setf (element-callback :a) 1))
+    (test-error (setf (element-callback 1) 'callback-test-func))
+    (test-error (setf (element-callback 1) 2))
     (format t "End test: ~s,   ~d errors, ~d successes~%"
 	    "parse-html" util.test:*test-errors* util.test:*test-successes*)
     ))

@@ -760,16 +760,16 @@
 (setf (tag-no-pcdata :tr) t)
 
 
-(defmethod parse-html ((p stream))
-  (phtml-internal p nil))
+(defmethod parse-html ((p stream) &key callback-only)
+  (phtml-internal p nil callback-only))
 
 
-(defun phtml-internal (p read-sequence-func)
-  
+(defun phtml-internal (p read-sequence-func callback-only)
   (let ((pending nil)
 	(current-tag :start-parse)
 	(last-tag :start-parse)
 	(raw-mode-delimiter nil)
+	(current-callback-tags nil)
 	(guts))
 
     (labels ((close-off-tags (name stop-at)
@@ -808,7 +808,9 @@
 					 ,@(strip-rev-pcdata guts)))
 		    else (setq element `(,current-tag ,@(nreverse guts))))
 		 (let ((callback (tag-callback (tag-name current-tag))))
-		   (when callback (funcall callback element)))
+		   (when callback
+		     (setf current-callback-tags (rest current-callback-tags))
+		     (funcall callback element)))
 		 (let* ((prev (pop pending)))
 		   (setq current-tag (car prev)
 			 guts (cdr prev))
@@ -835,14 +837,17 @@
 	  (case kind
 	    (:pcdata
 	     (setf raw-mode-delimiter nil)
-	     (if* (member last-tag *in-line*)
-		then
-		     (push val guts)
-		else
-		     (when (dotimes (i (length val) nil)
-			     (when (not (char-characteristic (elt val i) char-spacechar))
-			       (return t)))
-		       (push val guts))))
+	     (when (or (and callback-only current-callback-tags)
+		       (not callback-only))
+	       (if* (member last-tag *in-line*)
+		  then
+		       (push val guts)
+		  else
+		       (when (dotimes (i (length val) nil)
+			       (when (not (char-characteristic (elt val i) 
+							       char-spacechar))
+				 (return t)))
+			 (push val guts)))))
 	  
 	    (:start-tag
 	     (setf last-tag val)
@@ -857,44 +862,54 @@
 		    (auto-close (tag-auto-close name))
 		    (auto-close-stop nil)
 		    (no-end (tag-no-end name)))
-	       (if* auto-close
-		  then (setq auto-close-stop (tag-auto-close-stop name))
-		       (close-off-tags auto-close auto-close-stop))
+	       (when (and callback-only (tag-callback name))
+		 (push name current-callback-tags))
+	       (when (or (and callback-only current-callback-tags)
+			 (not callback-only))
+		 (if* auto-close
+		    then (setq auto-close-stop (tag-auto-close-stop name))
+			 (close-off-tags auto-close auto-close-stop))
 	     
 	     
-	       (if* no-end
-		  then ; this is a singleton tag
-		       (push (if* (atom val)
-				then val
-				else (list val))
-			     guts)
-		  else (save-state)
-		       (setq current-tag val)
-		       (setq guts nil))))
+		 (if* no-end
+		    then		; this is a singleton tag
+			 (push (if* (atom val)
+				  then val
+				  else (list val))
+			       guts)
+		    else (save-state)
+			 (setq current-tag val)
+			 (setq guts nil)))))
 	  
 	    (:end-tag
 	     (setf raw-mode-delimiter nil)
-	     (close-off-tags (list val) nil))
+	     (when (or (and callback-only current-callback-tags)
+		       (not callback-only))
+	       (close-off-tags (list val) nil)))
 
 	    (:comment
 	     (setf raw-mode-delimiter nil)
-	     (push `(:comment ,val) guts))
+	     (when (or (and callback-only current-callback-tags)
+		       (not callback-only))
+	       (push `(:comment ,val) guts)))
 	    
 	    (:eof
 	     (setf raw-mode-delimiter nil)
-	     ; close off all tags
-	     (close-off-tags '(:start-parse) nil)
+	     ;; close off all tags
+	     (when (or (and callback-only current-callback-tags)
+		       (not callback-only))
+	       (close-off-tags '(:start-parse) nil))
 	     (return (cdar guts)))))))))
 
 	  
 	     
-(defmethod parse-html (file)
+(defmethod parse-html (file &key callback-only)
   (with-open-file (p file :direction :input)
-    (parse-html p)))	     
+    (parse-html p :callback-only callback-only)))	     
 	     
 
-(defmethod parse-html ((str string))
-  (parse-html (make-string-input-stream str)))
+(defmethod parse-html ((str string) &key callback-only)
+  (parse-html (make-string-input-stream str) :callback-only callback-only))
 
 		 
 	      

@@ -1,3 +1,15 @@
+2000-04-21  Steve Jacobson <sdj>
+
+        phtml.cl
+
+	* add :callback-only keyword to parse-html methods and change
+	  code to speed processing when set to non-nil
+
+	phtml-test.cl
+
+	* complete transition to using test harness
+	* add :callback-only tests and callback test with nested elements
+	
 2000-04-19  Steve Jacobson <sdj>
 
 	phtml.cl:
