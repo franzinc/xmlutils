@@ -1,3 +1,29 @@
+2000-04-19  Steve Jacobson <sdj>
+
+	phtml.cl:
+
+	* take out stale comments
+	* use net.html.parser package - exported symbols are:
+	      parse-html element-callback
+	* phtml methods renamed parse-html
+	* setf'able element-callback method registers function to be invoked
+	  with parse tree output that starts with specified HTML tag
+	* support raw mode in <comment> and <script> tags
+	* parse incorrect HTML in a manner that reflects writer's intentions:
+	    <a href=mailto:lmcelroy@performigence.com>lmcelroy@performigence.com</a>
+	    is processed as if it read:
+            <a href="mailto:lmcelroy@performigence.com">lmcelroy@performigence.com</a>
+	* :colgroup was incorrectly identified as a tag that can't have a body
+	* fixes resulting from test suite
+
+	phtml-test.cl:
+
+	* reflect above package and symbol changes
+	* use test harness
+	* add tests for element-callback methods
+	* user::testit invokes test suite
+	
+
 2000-03-28  Steve Jacobson <sdj>
 
 	* take out comments that are no longer relevant
