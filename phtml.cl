@@ -362,10 +362,10 @@
 			   (setq state state-readcomment))
 			   
 	      else (setq tag-to-return (compute-tag coll))
+		   (clear-coll coll)
 		   (if* (eq ch #\>)
 		      then (return) ; we're done
-		      else (clear-coll coll)
-			   (if* (eq tag-to-return :!--)
+		      else (if* (eq tag-to-return :!--)
 			      then ; a comment
 				   (setq state state-readcomment)
 			      else (setq state state-findattribname)))))
@@ -519,7 +519,6 @@
       ;; out of the loop. 
       ;; if we're in certain states then it means we should return a value
       ;;
-      
       (case state
 	(#.state-pcdata
 	 ;; return the buffer as a string
@@ -532,6 +531,8 @@
 			 :pcdata)))
 	
 	(#.state-readtag
+	 (when (null tag-to-return)
+	       (error "unexpected end of input encountered"))
 	 ;; we've read a tag with no attributes
 	 (put-back-collector coll)
 	 (values tag-to-return
@@ -558,7 +559,9 @@
 		   (put-back-collector coll))
 		 :comment))
 	
-	(t (error "internal error, can't be here in state ~d" state))))))
+	(t 
+	 (if* (null ch) then (error "unexpected end of input encountered")
+	    else (error "internal error, can't be here in state ~d" state)))))))
 
 
 (defvar *kwd-package* (find-package :keyword))

@@ -1,3 +1,9 @@
+2000-06-20 Steve Jacobson <sdj>
+
+	* phtml.cl: identify end of input errors
+
+	* phtml-test.cl: add end of input error test
+
 2000-06-10 Steve Jacobson <sdj>
 
 	* phtml.cl: made input buffer usage thread-safe, without increasing 

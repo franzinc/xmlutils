@@ -329,6 +329,7 @@
     (parse-html *test-string* :callback-only t
 		:callbacks (acons :p 'nested-callback nil))
     (test 3 *callback-called*)
+    (test-error (parse-html "b<a"))
     (format t "End test: ~s,   ~d errors, ~d successes~%"
 	    "parse-html" util.test:*test-errors* util.test:*test-successes*)
     ))
