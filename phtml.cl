@@ -1,12 +1,6 @@
 ;; phtml.cl  - parse html
 
-; to do
-;  when the start tag is <!-- meaning comment we have to go into
-;	a state where we scan up to the next -- and the ignore everything
-;	until the next >
-;  Likewise inside a <script> tag we have to turn off char entity checking
-;
-;
+
 ; do character entity stuff
 ;
 
@@ -316,9 +310,8 @@
   ;;    the next token from the stream.
   ;; 	the kind of token (:pcdata, :start-tag, :end-tag, :eof)
   ;;
-  ;; if read-sequence-func is non-nil, stream is ignored, and 
+  ;; if read-sequence-func is non-nil,
   ;; read-sequence-func is called to fetch the next character
-  ;; read-sequence-func has one argument - the sequence to be filled
   (macrolet ((next-char (stream)
 	       `(let ((cur *cur-tokenbuf*)
 		      (tb *tokenbuf*))
@@ -660,8 +653,6 @@
 	       ;;:colgroup - no, this is an element with contents
 	       :embed :hr :img
 	       :input :isindex :keygen :link :meta 
-	       :object 
-	       ;:p  ;; legally isn't but this makes thing work better
 	       :plaintext :spacer :wbr))
   (setf (tag-no-end opt) t))
 
@@ -691,7 +682,7 @@
 (setf (tag-auto-close :blockquote) '(:head :p))
 (setf (tag-auto-close :body) '(:body :frameset :head))
 
-(setf (tag-auto-close :dd) '(:dd))
+(setf (tag-auto-close :dd) '(:dd :dt))
 (setf (tag-auto-close-stop :dd) '(:dl))
 
 (setf (tag-auto-close :dl) '(:head :p))
@@ -746,8 +737,12 @@
 	       ;; close off an open 'name' tag, but search no further
 	       ;; than a 'stop-at' tag.
 	       (if* (member (tag-name current-tag) name :test #'eq)
-		  then ; close current tag
-		       (close-current-tag)
+		  then ;; close current tag(s)
+		       (loop
+			 (close-current-tag)
+			   (when (not (member 
+				       (tag-name current-tag) name :test #'eq))
+			     (return)))
 		elseif (member (tag-name current-tag) stop-at :test #'eq)
 		  then nil
 		  else ; search if there is a tag to close
@@ -763,7 +758,7 @@
 				 (return)
 			  elseif (member (tag-name (car ent)) stop-at
 					 :test #'eq)
-			    then (return) ; do nothign
+			    then (return) ;; do nothing
 				 ))))
 	   
 	     (close-current-tag ()
