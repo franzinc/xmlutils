@@ -1,3 +1,8 @@
+2001-06-08  Steve Haflich  <smh@romeo>
+	
+	* pxml.htm: Added mention that it is necessary to load or require
+		the module.  Cleaned up a little html formatting.
+	
 2001-05-30  John Foderaro  <jkf@tiger.franz.com>
 
 	* phtml.cl - add :,_,- and . to valid attribute name characters.
