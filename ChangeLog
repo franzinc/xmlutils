@@ -1,7 +1,7 @@
 2003-11-21    <mm@KETCHTOO>
 
+	* pxml0.cl (*pxml-version*): 7.0.2
 	* pxml2.cl (next-token): bug13668 - note that xmlns="" in this scope
-
 	* pxml1.cl (compute-tag): bug13668 - look for xmlns="" in this scope
 	       (tag-from-string): bug13668 - look for xmlns="" in this scope
 
