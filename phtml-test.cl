@@ -1,4 +1,4 @@
-;; $Id: phtml-test.cl,v 1.11 2000/07/17 20:03:07 layer Exp $
+;; $Id: phtml-test.cl,v 1.12 2000/07/24 17:29:04 sdj Exp $
 
 (eval-when (compile load eval)
   (require :tester))
@@ -137,6 +137,7 @@
    <b>foo<a>bar</b>baz</a>
    <b>foo<i>bar</i>baz</b>
    <script a=b> some text if (year < 1000) year += 1900; more text </script>
+   <script a=b></script>
    <frameset><frame foo><frame bar></frameset>"
   )
 
@@ -151,6 +152,7 @@
     (:b "foo") (:a (:b "bar") "baz")
     (:b "foo" (:i "bar") "baz")
     ((:script :a "b") " some text if (year < 1000) year += 1900; more text ")
+    ((:script :a "b"))
     (:frameset ((:frame :foo "foo")) ((:frame :bar "bar")))
     ))
 

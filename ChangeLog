@@ -1,3 +1,10 @@
+2000-07-24 Steve Jacobson <sdj>
+
+	* phtml.cl: handle <script></script> pair with no text between the tags
+	            correctly. Change works for any "raw" mode tag.
+
+	* phtml-test.cl: add test for the above change
+
 2000-07-17  Kevin Layer  <layer@ultra>
 
 	* *.cl: add rcs id's

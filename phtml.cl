@@ -1,4 +1,4 @@
-;; $Id: phtml.cl,v 1.15 2000/07/17 20:03:07 layer Exp $
+;; $Id: phtml.cl,v 1.16 2000/07/24 17:29:04 sdj Exp $
 
 ;; phtml.cl  - parse html
 
@@ -516,7 +516,6 @@
 				       (elt raw-mode-delimiter
 					    (- raw-length (+ 1 i))))))
 		     ;; set state to state-pcdata for next section
-		     (setf state state-pcdata) 
 		     (return))
 	      else
 		   ;; push partial matches into data string
@@ -532,10 +531,10 @@
       ;; if we're in certain states then it means we should return a value
       ;;
       (case state
-	(#.state-pcdata
+	((#.state-pcdata #.state-rawdata)
 	 ;; return the buffer as a string
 	 (if* (zerop (collector-next coll))
-	    then (values nil :eof)
+	    then (values nil (if (eq state state-pcdata) :eof :pcdata))
 	    else (values (prog1 
 			     (if* (null ignore-strings)
 				then (compute-coll-string coll))
