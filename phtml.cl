@@ -940,3 +940,4 @@
 ;;;	  (parse-response
 ;;;	   (simple-get host path)))))
 
+(provide :phtml)
