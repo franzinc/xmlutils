@@ -4,10 +4,6 @@
 ; do character entity stuff
 ;
 
-(in-package :user)
-
-(declaim (optimize (speed 3) (safety 1)))
-
 (defpackage net.html.parser
   (:use :lisp :clos :excl)
   (:export
@@ -20,7 +16,7 @@
 (defparameter *entity-mapping*
     ;; hash table to map entity to number
     (let ((ht (make-hash-table :test #'equal)))
-      
+      (declare (optimize (speed 3) (safety 1)))
       (macrolet ((setem (list)
 		   `(dolist (val ',list)
 		      (setf (gethash (car val) ht) (cadr val)))))
@@ -147,26 +143,32 @@
 (defmacro tag-callback (tag) `(get ,tag 'tag-callback))
 
 (defmethod element-callback ((arg t))
+  (declare (optimize (speed 3) (safety 1)))
   (error "~s not a symbol" arg))
 
 (defmethod element-callback ((symbol symbol))
+  (declare (optimize (speed 3) (safety 1)))
   (tag-callback symbol))
 
 (defmethod (setf element-callback) ((arg1 t) (arg2 t))
+  (declare (optimize (speed 3) (safety 1)))
   (when (and (not (symbolp arg1)) (not (functionp arg1)) arg1)
     (error "value must be nil, function, or function symbol"))
   ;; arg2 must be reason we got here
   (error "~s not a symbol" arg2))
 
 (defmethod (setf element-callback) ((func-symbol symbol) (symbol symbol))
+  (declare (optimize (speed 3) (safety 1)))
   ;; let symbol-function generate error if there is no function
   (when (symbol-function func-symbol)
     (setf (tag-callback symbol) func-symbol)))
 
 (defmethod (setf element-callback) ((nil-arg null) (symbol symbol))
+  (declare (optimize (speed 3) (safety 1)))
   (setf (tag-callback symbol) nil-arg))
 
 (defmethod (setf element-callback) ((function function) (symbol symbol))
+  (declare (optimize (speed 3) (safety 1)))
   (setf (tag-callback symbol) function))
   
 
@@ -209,6 +211,7 @@
 (defparameter *collectors* (list nil nil nil nil))
 
 (defun get-collector ()
+  (declare (optimize (speed 3) (safety 1)))
   (let (col)
     (mp::without-scheduling
       (do* ((cols *collectors* (cdr cols))
@@ -227,6 +230,7 @@
 	     :data (make-string 100)))))
 
 (defun put-back-collector (col)
+  (declare (optimize (speed 3) (safety 1)))
   (mp::without-scheduling 
     (do ((cols *collectors* (cdr cols)))
 	((null cols)
@@ -239,6 +243,7 @@
 
 
 (defun grow-and-add (coll ch)
+  (declare (optimize (speed 3) (safety 1)))
   ;; increase the size of the data portion of the collector and then
   ;; add the given char at the end
   (let* ((odata (collector-data coll))
@@ -265,6 +270,7 @@
 (defparameter *characteristics* 
     ;; array of bits describing character characteristics
     (let ((arr (make-array 128 :initial-element 0)))
+      (declare (optimize (speed 3) (safety 1)))
       (macrolet ((with-range ((var from to) &rest body)
 		   `(do ((,var (char-code ,from) (1+ ,var))
 			 (mmax  (char-code ,to)))
@@ -299,6 +305,7 @@
 	;; adding some that we found out there...
 	(addit (char-code #\:) char-attribundelimattribvalue)
 	(addit (char-code #\@) char-attribundelimattribvalue)
+	(addit (char-code #\/) char-attribundelimattribvalue)
 	
 	; i'm not sure what can be in a tag name but we know that
 	; ! and - must be there since it's used in comments
@@ -320,6 +327,7 @@
 	
 
 (defun char-characteristic (char bit)
+  (declare (optimize (speed 3) (safety 1)))
   ;; return true if the given char has the given bit set in 
   ;; the characteristic array
   (let ((code (char-code char)))
@@ -345,6 +353,7 @@
     
 (defun next-token (stream ignore-strings raw-mode-delimiter
 		   read-sequence-func)
+  (declare (optimize (speed 3) (safety 1)))
   ;; return two values: 
   ;;    the next token from the stream.
   ;; 	the kind of token (:pcdata, :start-tag, :end-tag, :eof)
@@ -410,6 +419,7 @@
       (loop
       
 	(setq ch (next-char stream))
+	;;(format t "ch: ~s state: ~s~%" ch state)
       
 	(if* (null ch)
 	   then (return) ; eof -- exit loop
@@ -654,12 +664,14 @@
 (defvar *kwd-package* (find-package :keyword))
 
 (defun compute-tag (coll)
+  (declare (optimize (speed 3) (safety 1)))
   ;; compute the symbol named by what's in the collector
   (excl::intern* (collector-data coll) (collector-next coll) *kwd-package*))
 
 
 
 (defun compute-coll-string (coll)
+  (declare (optimize (speed 3) (safety 1)))
   ;; return the string that's in the collection
   (let ((str (make-string (collector-next coll)))
 	(from (collector-data coll)))
@@ -669,6 +681,7 @@
     str))
 
 (defun coll-has-comment (coll)
+  (declare (optimize (speed 3) (safety 1)))
   ;; true if the collector has exactly "!--" in it
   (and (eq 3 (collector-next coll))
        (let ((data (collector-data coll)))
@@ -761,10 +774,13 @@
 
 
 (defmethod parse-html ((p stream) &key callback-only)
+  (declare (optimize (speed 3) (safety 1)))
   (phtml-internal p nil callback-only))
 
 
 (defun phtml-internal (p read-sequence-func callback-only)
+  (declare (optimize (speed 3) (safety 1)))
+  (reset-tokenbuf)
   (let ((pending nil)
 	(current-tag :start-parse)
 	(last-tag :start-parse)
@@ -851,9 +867,9 @@
 	  
 	    (:start-tag
 	     (setf last-tag val)
-	     (if* (eq last-tag :comment)
+	     (if* (eq last-tag :style)
 		then
-		     (setf raw-mode-delimiter "</comment>")
+		     (setf raw-mode-delimiter "</style>")
 	      elseif (eq last-tag :script)
 		then
 		     (setf raw-mode-delimiter "</script>"))
@@ -904,11 +920,13 @@
 	  
 	     
 (defmethod parse-html (file &key callback-only)
+  (declare (optimize (speed 3) (safety 1)))
   (with-open-file (p file :direction :input)
     (parse-html p :callback-only callback-only)))	     
 	     
 
 (defmethod parse-html ((str string) &key callback-only)
+  (declare (optimize (speed 3) (safety 1)))
   (parse-html (make-string-input-stream str) :callback-only callback-only))
 
 		 

@@ -1,3 +1,11 @@
+2000-05-09 Steve Jacobson <sdj>
+
+	* phtml-test.cl: added STYLE test
+	* phtml.cl: replaced declaim optimization with declarations in each function
+	            allow / in undelimited attribute value
+	            don't treat :comment as special, but treat :style as special "raw" mode
+
+	
 2000-04-21  Steve Jacobson <sdj>
 
         phtml.cl

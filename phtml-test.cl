@@ -11,7 +11,7 @@
     "<html>
        <!-- this should be <h1>one</h1> string -->
        <head>
-        <comment> this should be <h1>one</h1> string </COMMENT>
+        <style> this should be <h1>one</h1> string </STYLE>
         <title> this is some title text </title> 
        <body> this is some body text
         <a name=\"this is an anchor\">with some text </a>
@@ -66,7 +66,7 @@
     '((:html
        (:comment "this should be <h1>one</h1> string")
        (:head
-	(:comment "this should be <h1>one</h1> string")
+	(:style "this should be <h1>one</h1> string")
 	(:title "this is some title text"))
        (:body 
 	"this is some body text"
