@@ -7,130 +7,9 @@
 (defpackage net.html.parser
   (:use :lisp :clos :excl)
   (:export
-   #:element-callback
    #:parse-html))
 
 (in-package :net.html.parser)
-
-
-(defparameter *entity-mapping*
-    ;; hash table to map entity to number
-    (let ((ht (make-hash-table :test #'equal)))
-      (declare (optimize (speed 3) (safety 1)))
-      (macrolet ((setem (list)
-		   `(dolist (val ',list)
-		      (setf (gethash (car val) ht) (cadr val)))))
-	;; special.ent
-	(setem 
-	 (("quot" 34) ("amp" 38) ("lt" 60) ("gt" 62) ("OElig" 338)
-		      ("oelig" 339) ("Scaron" 352) ("scaron" 353) 
-		      ("Yuml" 376) ("circ" 710) ("tilde" 732)
-		      ("ensp" 8194) ("emsp" 8195) ("thinsp" 8201) 
-		      ("zwnj" 8204) ("zwj" 8205)
-		      ("lrm" 8206) ("rlm" 8207) ("ndash" 8211) 
-		      ("mdash" 8212) ("lsquo" 8216)
-		      ("rsquo" 8217) ("sbquo" 8218) ("ldquo" 8220) 
-		      ("rdquo" 8221) ("bdquo" 8222)
-		      ("dagger" 8224) ("Dagger" 8225) ("permil" 8240) 
-		      ("lsaquo" 8249) ("rsaquo" 8250) ("euro" 8364)))
-      
-	;; symbol.ent
-	(setem (("fnof" 402) ("Alpha" 913) ("Beta" 914) ("Gamma" 915) 
-			     ("Delta" 916) ("Epsilon" 917) ("Zeta" 918)
-			     ("Eta" 919) ("Theta" 920) ("Iota" 921)
-			     ("Kappa" 922) ("Lambda" 923) ("Mu" 924) 
-			     ("Nu" 925) ("Xi" 926) ("Omicron" 927)
-			     ("Pi" 928) ("Rho" 929) ("Sigma" 931) 
-			     ("Tau" 932) ("Upsilon" 933) ("Phi" 934)
-			     ("Chi" 935) ("Psi" 936) ("Omega" 937) 
-			     ("alpha" 945) ("beta" 946)
-			     ("gamma" 947) ("delta" 948) ("epsilon" 949) 
-			     ("zeta" 950) ("eta" 951)
-			     ("theta" 952) ("iota" 953) ("kappa" 954) 
-			     ("lambda" 955) ("mu" 956) ("nu" 957)
-			     ("xi" 958) ("omicron" 959) ("pi" 960) 
-			     ("rho" 961) ("sigmaf" 962)
-			     ("sigma" 963) ("tau" 964) ("upsilon" 965) 
-			     ("phi" 966) ("chi" 967) ("psi" 968)
-			     ("omega" 969) ("thetasym" 977) ("upsih" 978) 
-			     ("piv" 982) ("bull" 8226)
-			     ("hellip" 8230) ("prime" 8242) ("Prime" 8243) 
-			     ("oline" 8254) ("frasl" 8260)
-			     ("weierp" 8472) ("image" 8465) ("real" 8476) 
-			     ("trade" 8482) ("alefsym" 8501)
-			     ("larr" 8592) ("uarr" 8593) ("rarr" 8594) 
-			     ("darr" 8595) ("harr" 8596)
-			     ("crarr" 8629) ("lArr" 8656) ("uArr" 8657) 
-			     ("rArr" 8658) ("dArr" 8659)
-			     ("hArr" 8660) ("forall" 8704) ("part" 8706) 
-			     ("exist" 8707) ("empty" 8709)
-			     ("nabla" 8711) ("isin" 8712) ("notin" 8713) 
-			     ("ni" 8715) ("prod" 8719)
-			     ("sum" 8721) ("minus" 8722) ("lowast" 8727) 
-			     ("radic" 8730) ("prop" 8733)
-			     ("infin" 8734) ("ang" 8736) ("and" 8743) 
-			     ("or" 8744) ("cap" 8745)
-			     ("cup" 8746) ("int" 8747) ("sim" 8764) 
-			     ("cong" 8773) ("asymp" 8776)
-			     ("ne" 8800) ("equiv" 8801) ("le" 8804) 
-			     ("ge" 8805) ("sub" 8834) ("sup" 8835)
-			     ("nsub" 8836) ("sube" 8838) ("supe" 8839) 
-			     ("oplus" 8853) ("otimes" 8855)
-			     ("perp" 8869) ("sdot" 8901) ("lceil" 8968) 
-			     ("rceil" 8969) ("lfloor" 8970)
-			     ("rfloor" 8971) ("lang" 9001) ("rang" 9002) 
-			     ("loz" 9674) ("spades" 9824)
-			     ("clubs" 9827) ("hearts" 9829) ("diams" 9830)))
-      
-      
-      
-	;; latin1.ent
-	(setem (("nbsp" 160) ("iexcl" 161) ("cent" 162) ("pound" 163) 
-			     ("curren" 164) ("yen" 165) ("brvbar" 166) 
-			     ("sect" 167) ("uml" 168) ("copy" 169) ("ordf" 170)
-			     ("laquo" 171) ("not" 172) ("shy" 173) ("reg" 174)
-			     ("macr" 175) ("deg" 176) ("plusmn" 177) 
-			     ("acute" 180) ("micro" 181) ("para" 182) 
-			     ("middot" 183) ("cedil" 184) ("ordm" 186) 
-			     ("raquo" 187) ("iquest" 191) ("Agrave" 192)
-			     ("Aacute" 193) ("Acirc" 194) ("Atilde" 195) 
-			     ("Auml" 196) ("Aring" 197)
-			     ("AElig" 198) ("Ccedil" 199) ("Egrave" 200)
-			     ("Eacute" 201) ("Ecirc" 202)
-			     ("Euml" 203) ("Igrave" 204) ("Iacute" 205) 
-			     ("Icirc" 206) ("Iuml" 207)
-			     ("ETH" 208) ("Ntilde" 209) ("Ograve" 210)
-			     ("Oacute" 211) ("Ocirc" 212)
-			     ("Otilde" 213) ("Ouml" 214) ("times" 215)
-			     ("Oslash" 216) ("Ugrave" 217)
-			     ("Uacute" 218) ("Ucirc" 219) ("Uuml" 220)
-			     ("Yacute" 221) ("THORN" 222)
-			     ("szlig" 223) ("agrave" 224) ("aacute" 225)
-			     ("acirc" 226) ("atilde" 227)
-			     ("auml" 228) ("aring" 229) ("aelig" 230)
-			     ("ccedil" 231) ("egrave" 232)
-			     ("eacute" 233) ("ecirc" 234) ("euml" 235)
-			     ("igrave" 236) ("iacute" 237)
-			     ("icirc" 238) ("iuml" 239) ("eth" 240)
-			     ("ntilde" 241) ("ograve" 242)
-			     ("oacute" 243) ("ocirc" 244) ("otilde" 245)
-			     ("ouml" 246) ("divide" 247)
-			     ("oslash" 248) ("ugrave" 249) ("uacute" 250)
-			     ("ucirc" 251) ("uuml" 252)
-			     ("yacute" 253) ("thorn" 254) ("yuml" 255)))
-      
-	ht)))
-
-
-      
-
-
-
-
-
-
-;; tag info on plist of kwd symbol
-
 
 (defmacro tag-auto-close (tag) `(get ,tag 'tag-auto-close))
 (defmacro tag-auto-close-stop (tag) `(get ,tag 'tag-auto-close-stop))
@@ -138,39 +17,6 @@
 
 ; only subelements allowed in this element, no strings
 (defmacro tag-no-pcdata (tag) `(get ,tag 'tag-no-pcdata))
-
-;; user will end up setting this when a callback is desired
-(defmacro tag-callback (tag) `(get ,tag 'tag-callback))
-
-(defmethod element-callback ((arg t))
-  (declare (optimize (speed 3) (safety 1)))
-  (error "~s not a symbol" arg))
-
-(defmethod element-callback ((symbol symbol))
-  (declare (optimize (speed 3) (safety 1)))
-  (tag-callback symbol))
-
-(defmethod (setf element-callback) ((arg1 t) (arg2 t))
-  (declare (optimize (speed 3) (safety 1)))
-  (when (and (not (symbolp arg1)) (not (functionp arg1)) arg1)
-    (error "value must be nil, function, or function symbol"))
-  ;; arg2 must be reason we got here
-  (error "~s not a symbol" arg2))
-
-(defmethod (setf element-callback) ((func-symbol symbol) (symbol symbol))
-  (declare (optimize (speed 3) (safety 1)))
-  ;; let symbol-function generate error if there is no function
-  (when (symbol-function func-symbol)
-    (setf (tag-callback symbol) func-symbol)))
-
-(defmethod (setf element-callback) ((nil-arg null) (symbol symbol))
-  (declare (optimize (speed 3) (safety 1)))
-  (setf (tag-callback symbol) nil-arg))
-
-(defmethod (setf element-callback) ((function function) (symbol symbol))
-  (declare (optimize (speed 3) (safety 1)))
-  (setf (tag-callback symbol) function))
-  
 
 ;; given :foo or (:foo ...) return :foo
 (defmacro tag-name (expr)
@@ -255,6 +101,7 @@
     (let ((next (collector-next coll)))
       (setf (schar ndata next) ch)
       (setf (collector-next coll) (1+ next)))))
+
 	 
 
 
@@ -715,14 +562,6 @@
 	      (eq #\- (schar data 2))))))
 		 
 
-
-
-	      
-
-
-		 
-
-
 ;;;;;;;;;;; quick and dirty parse
 
 ; the elements with no body and thus no end tag
@@ -735,10 +574,10 @@
 
 (defvar *in-line* '(:tt :i :b :big :small :em :strong :dfn :code :samp :kbd
 		    :var :cite :abbr :acronym :a :img :object :br :script :map
-		    :q :sub :sup :span :bdo :input :select :textarea :label :button))
+		    :q :sub :sup :span :bdo :input :select :textarea :label :button :font))
 
-;; this will have more
-(defvar *ch-format* '(:i :b :tt :big :small :strike :s :u))
+(defvar *ch-format* '(:i :b :tt :big :small :strike :s :u
+		      :em :strong :font))
 
 ; the elements whose start tag can end a previous tag
 
@@ -801,23 +640,27 @@
 (setf (tag-no-pcdata :tr) t)
 
 
-(defmethod parse-html ((p stream) &key callback-only)
+(defmethod parse-html ((p stream) &key callback-only callbacks)
   (declare (optimize (speed 3) (safety 1)))
-  (phtml-internal p nil callback-only))
+  (phtml-internal p nil callback-only callbacks))
 
+(defmacro tag-callback (tag)
+  `(rest (assoc ,tag callbacks)))
 
-(defun phtml-internal (p read-sequence-func callback-only)
+(defun phtml-internal (p read-sequence-func callback-only callbacks)
   (declare (optimize (speed 3) (safety 1)))
   (reset-tokenbuf)
-  (let ((pending nil)
+  (let ((first-pass nil)
+	(raw-mode-delimiter nil)
+	(pending nil)
 	(current-tag :start-parse)
 	(last-tag :start-parse)
-	(raw-mode-delimiter nil)
 	(current-callback-tags nil)
 	(pending-ch-format nil)
 	(closed-pending-ch-format nil)
-	(guts))
-
+	(new-opens nil)
+	(guts)
+	)
     (labels ((close-off-tags (name stop-at)
 	       ;; close off an open 'name' tag, but search no further
 	       ;; than a 'stop-at' tag.
@@ -825,8 +668,10 @@
 		  then ;; close current tag(s)
 		       (loop
 			 (close-current-tag)
-			   (when (not (member 
-				       (tag-name current-tag) name :test #'eq))
+			 (when (or (member (tag-name current-tag)
+					   *ch-format*)
+				(not (member 
+				      (tag-name current-tag) name :test #'eq)))
 			     (return)))
 		elseif (member (tag-name current-tag) stop-at :test #'eq)
 		  then nil
@@ -876,12 +721,64 @@
 		 (dolist (st stuff)
 		   (if* (not (stringp st)) then (push st res)))
 		 res))
+	     (check-in-line (check-tag)
+	       (setf new-opens nil)
+	       (let (val kind (i 0)
+		     (length (length first-pass)))
+		 (loop
+		   (if* (< i length) then
+			   (setf val (nth i first-pass))
+			   (setf kind (nth (+ i 1) first-pass))
+			   (setf i (+ i 2))
+			   (if* (= i length) then (setf first-pass (nreverse first-pass)))
+		      else
+			   (multiple-value-setq (val kind)
+			     (get-next-token t))
+			   (push val first-pass)
+			   (push kind first-pass)
+			   )
+		   (when (eq kind :eof)
+		     (if* (= i length) then (setf first-pass (nreverse first-pass)))
+		     (return))
+		   (when (and (eq val check-tag) (eq kind :end-tag))
+		     (if* (= i length) then (setf first-pass (nreverse first-pass)))
+		     (return))
+		   (when (member val *ch-format* :test #'eq)
+		     (if* (eq kind :start-tag) then (push val new-opens)
+		      elseif (member val new-opens :test #'eq) then
+			     (setf new-opens (remove val new-opens :count 1))
+			else (close-off-tags (list val) nil)
+			     )))))
+		 
+	     (get-next-token (force)
+	       (if* (or force (null first-pass)) then
+		       (multiple-value-bind (val kind)
+			   (next-token p nil raw-mode-delimiter read-sequence-func)
+			(if* (eq kind :start-tag) then
+				(if* (eq val :style) then
+					(setf raw-mode-delimiter
+					  (if* (eq excl:*current-case-mode* 
+						   :CASE-INSENSITIVE-UPPER)
+					     then "</STYLE>"
+					     else "</style>"))
+				 elseif (eq val :script) then
+					(setf raw-mode-delimiter
+					  (if* (eq excl:*current-case-mode* 
+						   :CASE-INSENSITIVE-UPPER)
+					     then "</SCRIPT>"
+					     else "</script>"))
+				   else (setf raw-mode-delimiter nil)))
+			(values val kind))
+		  else
+		       (let ((val (first first-pass))
+			     (kind (second first-pass)))
+			 (setf first-pass (rest (rest first-pass)))
+			 (values val kind))))
 	     )
-      
-    
-      (loop 
-	(multiple-value-bind (val kind) 
-	    (next-token p nil raw-mode-delimiter read-sequence-func)
+      (loop
+	(multiple-value-bind (val kind)
+	    (get-next-token nil)
+	  ;;(format t "val: ~s kind: ~s~%" val kind)
 	  (case kind
 	    (:pcdata
 	     (setf raw-mode-delimiter nil)
@@ -923,12 +820,15 @@
 		 (if* auto-close
 		    then (setq auto-close-stop (tag-auto-close-stop name))
 			 (close-off-tags auto-close auto-close-stop))
-		 (when (not (member name *ch-format* :test #'eq))
-		   ;; this should close all open char format tags
-		   (when (not (= (length pending-ch-format) (length closed-pending-ch-format)))
-		     (close-off-tags (last pending-ch-format) nil))
-		   (setf closed-pending-ch-format nil))
-		     
+		 (when (and pending-ch-format (not no-end))
+		   (if* (member name *ch-format* :test #'eq) then nil
+		    elseif (member name *in-line* :test #'eq) then
+			   ;; close off only tags that are within *in-line* block
+			   (check-in-line name)
+		      else ;; close ALL pending char tags and then reopen 
+			   (dolist (this-tag (reverse pending-ch-format))
+			     (close-off-tags (list this-tag) nil))
+			   ))
 		 (if* no-end
 		    then		; this is a singleton tag
 			 (push (if* (atom val)
@@ -939,11 +839,14 @@
 			 (setq current-tag val)
 			 (setq guts nil))
 		 (if* (member name *ch-format* :test #'eq)
-		    then (push val pending-ch-format)
-		    else (dolist (tmp pending-ch-format)
+		    then (push (if* (listp val) then (first val) else val)
+			       pending-ch-format)
+		    else (dolist (tmp (reverse closed-pending-ch-format))
 			   (save-state)
 			   (setf current-tag tmp)
-			   (setf guts nil)))
+			   (setf guts nil))
+			 )
+		 (setf closed-pending-ch-format nil)
 		 )))
 	  
 	    (:end-tag
@@ -951,13 +854,15 @@
 	     (when (or (and callback-only current-callback-tags)
 		       (not callback-only))
 	       (close-off-tags (list val) nil)
-	       (dolist (tmp (rest closed-pending-ch-format))
+	       (when (member val *ch-format* :test #'eq)
+		 (setf pending-ch-format (remove val pending-ch-format :count 1))
+		 (setf closed-pending-ch-format 
+		   (remove val closed-pending-ch-format :count 1)))
+	       (dolist (tmp (reverse closed-pending-ch-format))
 		 (save-state)
 		 (setf current-tag tmp)
 		 (setf guts nil))
 	       (setf closed-pending-ch-format nil)
-	       (when (member val *ch-format* :test #'eq)
-		 (setf pending-ch-format (remove val pending-ch-format :count 1)))
 	       ))
 
 	    (:comment
@@ -974,17 +879,18 @@
 	       (close-off-tags '(:start-parse) nil))
 	     (return (cdar guts)))))))))
 
-	  
-	     
-(defmethod parse-html (file &key callback-only)
+	      
+
+(defmethod parse-html (file &key callback-only callbacks)
   (declare (optimize (speed 3) (safety 1)))
   (with-open-file (p file :direction :input)
-    (parse-html p :callback-only callback-only)))	     
+    (parse-html p :callback-only callback-only :callbacks callbacks)))	     
 	     
 
-(defmethod parse-html ((str string) &key callback-only)
+(defmethod parse-html ((str string) &key callback-only callbacks)
   (declare (optimize (speed 3) (safety 1)))
-  (parse-html (make-string-input-stream str) :callback-only callback-only))
+  (parse-html (make-string-input-stream str) 
+	      :callback-only callback-only :callbacks callbacks))
 
 		 
 	      

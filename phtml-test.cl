@@ -126,14 +126,23 @@
   "<i><b>text</i> more text</b>
    <i><b>text</i></b> more text
    <b>text<p>more text</b> yet more text</p>
-   <ul><li><b>text<li>more text</ul>"
+   <ul><li><b>text<li>more text</ul></b>
+   prev<b><a href=foo>bar</a>baz</b>
+   <b>foo<a>bar</a>baz</b>
+   <b>foo<a>bar</b>baz</a>
+   <b>foo<i>bar</i>baz</b>"
   )
 
 (setf *expected-result2*
   '((:i (:b "text")) (:b " more text")
     (:i (:b "text")) (:b) " more text"
     (:b "text") (:p (:b "more text") " yet more text")
-    (:ul (:li (:b "text")) (:li (:b "more text")))))
+    (:ul (:li (:b "text")) (:li (:b "more text"))) (:b)
+    "prev" (:b ((:a :href "foo") "bar") "baz")
+    (:b "foo" (:a "bar") "baz")
+    (:b "foo") (:a (:b "bar") "baz")
+    (:b "foo" (:i "bar") "baz")
+    ))
 
 (defmethod lhtml-equal ((a t) (b t))
   (equal a b))
@@ -283,44 +292,43 @@
   (let ((util.test:*test-errors* 0)
 	(util.test:*test-successes* 0))
     (test t (lhtml-equal (parse-html *test-string2*) *expected-result2*))
-    (setf (element-callback :a) nil)
-    (setf (element-callback :p) nil)
     (setf *callback-called* 0)
     (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
     (test 0 *callback-called*)
-    (setf (element-callback :a) 'callback-test-func)
+    ;;(setf (element-callback :a) 'callback-test-func)
     (setf *callback-called* 0)
-    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    (test t (lhtml-equal (parse-html *test-string* 
+				     :callbacks (acons :a 'callback-test-func nil)) 
+			 *expected-result*))
     (test 2 *callback-called*)
-    (setf (element-callback :a) nil)
     (setf *callback-called* 0)
     (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
     (test 0 *callback-called*)
     (setf *callback-called* 0)
     ;; make sure function is OK arg
-    (setf (element-callback :a) (symbol-function 'callback-test-func))
-    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    ;;(setf (element-callback :a) (symbol-function 'callback-test-func))
+    (test t (lhtml-equal 
+	     (parse-html *test-string*
+			 :callbacks (acons :a (symbol-function 'callback-test-func) nil)) 
+			 *expected-result*))
     (test 2 *callback-called*)
-    (setf (element-callback :a) nil)
     ;; try with :callback-only t
     (setf *callback-called* 0)
-    (setf (element-callback :a) 'callback-test-func)
-    (parse-html *test-string* :callback-only t) ;; won't return parse output
+    ;;(setf (element-callback :a) 'callback-test-func)
+    (parse-html *test-string* :callback-only t
+		:callbacks (acons :a 'callback-test-func nil)) ;; won't return parse output
     (test 2 *callback-called*)
     ;; try nested callback
     (setf *callback-called* 0)
-    (setf (element-callback :a) nil)
-    (setf (element-callback :p) 'nested-callback)
-    (test t (lhtml-equal (parse-html *test-string*) *expected-result*))
+    ;;(setf (element-callback :p) 'nested-callback)
+    (test t (lhtml-equal (parse-html *test-string*
+				     :callbacks (acons :p 'nested-callback nil))
+			 *expected-result*))
     (test 3 *callback-called*)
     (setf *callback-called* 0)
-    (parse-html *test-string* :callback-only t)
+    (parse-html *test-string* :callback-only t
+		:callbacks (acons :p 'nested-callback nil))
     (test 3 *callback-called*)
-    (setf (element-callback :p) nil)
-    ;; try some bad ones
-    (test-error (setf (element-callback :a) 1))
-    (test-error (setf (element-callback 1) 'callback-test-func))
-    (test-error (setf (element-callback 1) 2))
     (format t "End test: ~s,   ~d errors, ~d successes~%"
 	    "parse-html" util.test:*test-errors* util.test:*test-successes*)
     ))

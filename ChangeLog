@@ -1,3 +1,18 @@
+2000-05-24 Steve Jacobson <sdj>
+
+	* phtml-test.cl: added more character format (<b>,<i>,etc.) tests
+	                 test changes to reflect new callback API
+
+	* phtml.cl: removed element-callback support; replaced it with
+	                parse-html :callbacks argument
+	            took *entity-mapping* out of source until we decide to
+	                add entity processing
+	            added some more tags to "character formating" group
+		    changed "character formating" tag parsing to both
+	                coerce parse results to HTML 4.0 spec and also
+	                prevent generating syntax equivalent yet unexpected
+	                results
+	
 2000-05-17 Steve Jacobson <sdj>
 
 	* phtml.cl: output keyword symbols in upper case when phtml.cl is compiled in
