@@ -25,7 +25,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.10 2003/05/27 19:33:22 mm Exp $")
+(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.11 2003/11/04 01:18:04 cox Exp $")
 
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
@@ -303,6 +303,10 @@
 			      (iostruct-read-sequence-func iostruct))))))
     (if* (and from-stream (eq tmp-char #\return)) then #\newline else tmp-char)))
 
+;; Force unicode external-format to be loaded at load time so that
+;; it will be available at runtime without needing to autoload.
+(find-external-format :unicode)
+
 (defun unicode-check (p tokenbuf)
   (declare (ignorable tokenbuf) (optimize (speed 3) (safety 1)))
   ;; need no-OO check because external format support isn't completely done yet
@@ -312,8 +316,9 @@
       (if* (eq format (find-external-format :unicode))
 	 then
 	      (setf (stream-external-format p) format)
-	 else
-	      (setf (stream-external-format p) (find-external-format :utf8))))
+	 else 
+	      (setf (stream-external-format p) (find-external-format :utf8))
+	      (encoding-to-external-format p tokenbuf)))
     #-(version>= 6 0 pre-final 1)
     (let* ((c (read-char p nil)) c2
 	   (c-code (if c (char-code c) nil)))
@@ -333,6 +338,62 @@
 		(push c (iostruct-unget-char tokenbuf))
 		#+ignore (unread-char c p)  ;; bug when there is single ^M in file
 		)))))
+
+;; spr27942.  Try to set stream-external-format to encoding before we
+;; fill parser buffers.
+(defun encoding-to-external-format (p tokenbuf)
+  (let ((chars nil)
+	(saw-> nil)
+	(saw-< nil)
+	(saw-<? nil))
+    (dotimes (i 100)
+      (let ((ch (read-char p nil)))
+	(if* ch
+	   then (push ch chars)
+		(unless (excl::whitespace-char-p ch)
+		  (if* saw-<
+		     then (if* saw-<?
+			     then (when (eq ch #\>)
+				    (setq saw-> t)
+				    (return))
+			   elseif (eq ch #\?)
+			     then (setq saw-<? t)
+			     else (return))
+		   elseif (eq ch #\<)
+		     then (setq saw-< t)
+		     else (return)))
+	   else (return))))
+    (setq chars (nreverse chars))
+    (when saw->
+      (let* ((st (coerce chars 'string))
+	     (enc-start (search "encoding" st)))
+	(when enc-start
+	  (let* ((enc-string (subseq st enc-start))
+		 (=-start (position #\= enc-string)))
+	    (when =-start
+	      (let ((encoding
+		     (do* ((pos (1+ =-start) (1+ pos))
+			   (lg (length enc-string))
+			   (ch #1=(if* (< pos lg)
+				     then (schar enc-string pos)
+				     else ':eof)
+			       #1#)
+			   (result nil)
+			   (start-quote nil))
+			 ((eq start-quote ch)
+			  (coerce (nreverse result) 'string))
+		       (when (eq ':eof ch)
+			 (return nil))
+		       (if* start-quote
+			  then (push ch result)
+			  else (unless (excl::whitespace-char-p ch)
+				 (setq start-quote ch))))))
+		(when encoding
+		  (setf (stream-external-format p)
+		    (find-external-format encoding)))))))))
+    (dolist (ch (nreverse chars))
+      (push ch (iostruct-unget-char tokenbuf)))))
+	  
 
 (defun add-default-values (val attlist-data)
   (declare (ignorable old-coll) (optimize (speed 3) (safety 1)))

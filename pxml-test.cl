@@ -167,8 +167,12 @@
 ;;; Var *test-root* points to OASIS test suite root
 
 ;; This encoding (external-format) is mentioned in the IBM tests.
-(or (find-external-format :us-ascii :errorp nil)
-    (def-external-format :latin1 :nicknames '(:us-ascii)))
+#+old (or (find-external-format :us-ascii :errorp nil)
+	  (def-external-format :latin1 :nicknames '(:us-ascii)))
+(pushnew :us-ascii (ef-nicknames (find-external-format :latin1)))
+(pushnew :euc-jp (ef-nicknames (find-external-format :euc)))
+(pushnew :shift_jis (ef-nicknames (find-external-format :shiftjis)))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -401,6 +405,16 @@
     (:not-wf  (test-one-folder :root (test-folder "not-wf/" root)
 			       :errlen errlen :parse parse 
 			       :file file :pass nil :fail :all))))
+
+(defun test-japanese (case case2 &key file parse (errlen 50)
+			   (root (test-folder "japanese/")))
+  (declare (ignore case case2))
+  (test-one-folder :root root
+		   :errlen errlen
+		   :parse parse
+		   :file file
+		   :pass :all
+		   :fail nil))
 	      
 (defun test-xml (case sub-case 
 		  &key file parse (errlen 50) (root (test-folder "xmltest/")))
@@ -541,7 +555,7 @@
 	  (when log (dribble log))
 	  (format t "~&~%;;; Compiled as ~A ~%" *xml-compile-state*)
 	  (format t     ";;;  Running as ~A ~%~%" (eval '(char-state)))
-	  (dotimes (i 14)
+	  (dotimes (i 15)
 	    (when (or (null case) (eql case i))
 	      (multiple-value-bind (a b g mb mg)
 
@@ -587,6 +601,9 @@
 		    (13 (report-one 
 			 (test-ibm :not-wf nil
 				   :file file :parse parse :errlen errlen)))
+		    (14 (report-one
+			 (test-japanese nil nil :file file :parse parse
+					:errlen errlen)))
 		    )
 		(incf all (first a))
 		(setf bad (append b bad))
