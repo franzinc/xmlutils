@@ -1,4 +1,7 @@
+2003-05-28  Duane Rettig   <duane@beta>
 
+	* pxml3.cl: Change declaration :fbound -> ftype
+	
 2003-05-28  Martin Mikelsons  <mm@ketchtoo>
 
 	* pxml0.cl: allow compilation in 8-bit and ANSI images
