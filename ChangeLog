@@ -1,3 +1,17 @@
+2000-10-14 Steve Jacobson <sdj>
+
+	phtml-test.cl: add test related to raw mode infinite loop
+	phtml.cl: remove risk of negative buffer index
+	             caused by multiple un-next-char calls in raw mode
+	             fixed it by moving first-pass parse buffer to tokenbuf
+		  removed :script from *in-line* to prevent infinite loop
+	              (it should not have been there, anyway)
+		  fixed :table tag-auto-close-stop typo
+	          don't reopen char format tags within raw mode tags
+	pxml1.cl: changes required by 6.0 unicode changes
+	pxml2.cl: show char code in debug output
+	         
+
 2000-09-05 Steve Jacobson <sdj>
 
 	New files:

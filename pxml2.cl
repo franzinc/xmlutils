@@ -20,7 +20,11 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: pxml2.cl,v 1.5 2000/09/05 20:41:44 sdj Exp $
+;; $Id: pxml2.cl,v 1.6 2000/10/16 16:58:59 sdj Exp $
+
+;; Change Log 
+;;
+;; 10/14/00 add namespace support
 
 (in-package :net.xml.parser)
 
@@ -588,8 +592,8 @@
       (loop
 
 	(setq ch (get-next-char tokenbuf))
-	(when *debug-xml* (format t "ch: ~s state:~s entity-names:~s~%" 
-				  ch state (iostruct-entity-names tokenbuf)))
+	(when *debug-xml* (format t "ch: ~s code: ~x state:~s entity-names:~s~%" 
+				  ch (char-code ch) state (iostruct-entity-names tokenbuf)))
 	(if* (null ch)
 	   then (return) ; eof -- exit loop
 		)

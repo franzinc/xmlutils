@@ -19,9 +19,17 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.18 2000/08/16 16:50:32 sdj Exp $
+;; $Id: phtml.cl,v 1.19 2000/10/16 16:58:59 sdj Exp $
 
 ;; phtml.cl  - parse html
+
+;; Change Log
+;;
+;; 10/14/00 add first-pass member to tokenbuf structure; used to remove
+;;             multiple un-next-char calls in raw mode
+;;          removed :script from *in-line* (incoreect and led to infinite loop
+;;          char format reopen not done in :script and :style
+;;          fixed :table/:th tag-auto-close-stop typo
 
 
 ; do character entity stuff
@@ -240,6 +248,7 @@
   cur ;; next index to use to grab from tokenbuf
   max ;; index one beyond last character
   data ;; character array
+  first-pass ;; previously parsed tokens
   )
 
 ;; cache of tokenbuf structs
@@ -534,14 +543,17 @@
 		     ;; push the end tag back so it can then be lexed
 		     ;; but don't do it for xml stuff
 		     (when (/= (length  raw-mode-delimiter) 1)
-		       (dotimes (i (length raw-mode-delimiter))
-			 (un-next-char stream 
-				       ch
-				       #+ignore ;; un-next-char doesn't
-				       ;; use args, so save time by not doing the
-				       ;; char manipulation
-				       (elt raw-mode-delimiter
-					    (- raw-length (+ 1 i))))))
+		       (push :end-tag (tokenbuf-first-pass tokenbuf))
+		       (if* (equal raw-mode-delimiter "</STYLE>")
+			  then (push :STYLE (tokenbuf-first-pass tokenbuf))
+			elseif (equal raw-mode-delimiter "</style>")
+			  then (push :style (tokenbuf-first-pass tokenbuf))
+			elseif (equal raw-mode-delimiter "</SCRIPT>")
+			  then (push :SCRIPT (tokenbuf-first-pass tokenbuf))
+			elseif (equal raw-mode-delimiter "</script>")
+			  then (push :script (tokenbuf-first-pass tokenbuf))
+			  else (error "unexpected raw-mode-delimiter"))
+		       )
 		     ;; set state to state-pcdata for next section
 		     (return))
 	      else
@@ -643,7 +655,7 @@
   (setf (tag-no-end opt) t))
 
 (defvar *in-line* '(:tt :i :b :big :small :em :strong :dfn :code :samp :kbd
-		    :var :cite :abbr :acronym :a :img :object :br :script :map
+		    :var :cite :abbr :acronym :a :img :object :br :map
 		    :q :sub :sup :span :bdo :input :select :textarea :label :button :font))
 
 (defvar *ch-format* '(:i :b :tt :big :small :strike :s :u
@@ -670,7 +682,7 @@
 (setf (tag-auto-close-stop :td) '(:table))
 
 (setf (tag-auto-close :th) '(:td :th))
-(setf (tag-auto-close-stop :td) '(:table))
+(setf (tag-auto-close-stop :th) '(:table))
 
 (setf (tag-auto-close :dt) '(:dt :dd))
 (setf (tag-auto-close-stop :dt) '(:dl))
@@ -736,8 +748,7 @@
 (defun phtml-internal (p read-sequence-func callback-only callbacks collect-rogue-tags
 		       no-body-tags)
   (declare (optimize (speed 3) (safety 1)))
-  (let ((first-pass nil)
-	(raw-mode-delimiter nil)
+  (let ((raw-mode-delimiter nil)
 	(pending nil)
 	(current-tag :start-parse)
 	(last-tag :start-parse)
@@ -821,24 +832,29 @@
 	     (check-in-line (check-tag)
 	       (setf new-opens nil)
 	       (let (val kind (i 0)
-		     (length (length first-pass)))
+		     (length (length (tokenbuf-first-pass tokenbuf))))
 		 (loop
 		   (if* (< i length) then
-			   (setf val (nth i first-pass))
-			   (setf kind (nth (+ i 1) first-pass))
+			   (setf val (nth i (tokenbuf-first-pass tokenbuf)))
+			   (setf kind (nth (+ i 1) (tokenbuf-first-pass tokenbuf)))
 			   (setf i (+ i 2))
-			   (if* (= i length) then (setf first-pass (nreverse first-pass)))
+			   (if* (= i length) then (setf (tokenbuf-first-pass tokenbuf)
+						    (nreverse (tokenbuf-first-pass tokenbuf))))
 		      else
 			   (multiple-value-setq (val kind)
 			     (get-next-token t))
-			   (push val first-pass)
-			   (push kind first-pass)
+			   (push val (tokenbuf-first-pass tokenbuf))
+			   (push kind (tokenbuf-first-pass tokenbuf))
 			   )
 		   (when (eq kind :eof)
-		     (if* (= i length) then (setf first-pass (nreverse first-pass)))
+		     (if* (= i length) then 
+			     (setf (tokenbuf-first-pass tokenbuf) 
+			       (nreverse (tokenbuf-first-pass tokenbuf))))
 		     (return))
 		   (when (and (eq val check-tag) (eq kind :end-tag))
-		     (if* (= i length) then (setf first-pass (nreverse first-pass)))
+		     (if* (= i length) then 
+			     (setf (tokenbuf-first-pass tokenbuf) 
+			       (nreverse (tokenbuf-first-pass tokenbuf))))
 		     (return))
 		   (when (member val *ch-format* :test #'eq)
 		     (if* (eq kind :start-tag) then (push val new-opens)
@@ -848,15 +864,16 @@
 			     )))))
 		 
 	     (get-next-token (force)
-	       (if* (or force (null first-pass)) then
+	       (if* (or force (null (tokenbuf-first-pass tokenbuf))) then
 		       (multiple-value-bind (val kind)
 			   (next-token p nil raw-mode-delimiter read-sequence-func
 				       tokenbuf)
 			(values val kind))
 		  else
-		       (let ((val (first first-pass))
-			     (kind (second first-pass)))
-			 (setf first-pass (rest (rest first-pass)))
+		       (let ((val (first (tokenbuf-first-pass tokenbuf)))
+			     (kind (second (tokenbuf-first-pass tokenbuf))))
+			 (setf (tokenbuf-first-pass tokenbuf) 
+			   (rest (rest (tokenbuf-first-pass tokenbuf))))
 			 (values val kind))))
 	     )
       (loop
@@ -942,12 +959,22 @@
 			 (setq guts nil))
 		 (if* (member name *ch-format* :test #'eq)
 		    then (push val pending-ch-format)
-		    else (dolist (tmp (reverse closed-pending-ch-format))
-			   (save-state)
-			   (setf current-tag tmp)
-			   (setf guts nil))
+		    else (when (not
+				(or (eq last-tag :style)
+				    (and (listp last-tag) (eq (first last-tag) :style))
+				    (eq last-tag :script)
+				    (and (listp last-tag) (eq (first last-tag) :script))))
+			   (dolist (tmp (reverse closed-pending-ch-format))
+			     (save-state)
+			     (setf current-tag tmp)
+			     (setf guts nil)))
 			 )
-		 (setf closed-pending-ch-format nil)
+		 (when (not
+			(or (eq last-tag :style)
+			    (and (listp last-tag) (eq (first last-tag) :style))
+			    (eq last-tag :script)
+			    (and (listp last-tag) (eq (first last-tag) :script))))
+		   (setf closed-pending-ch-format nil))
 		 )))
 	  
 	    (:end-tag
