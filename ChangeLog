@@ -1,3 +1,7 @@
+2003-07-28  Kevin Layer  <layer@crikey>
+
+	* pxml0.cl: add defpatch
+
 *******************************************************************************
 Wed Jul 23 18:17:38 PDT 2003
 merge from trunk to acl62 branch
