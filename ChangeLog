@@ -1,3 +1,7 @@
+2003-04-17  Martin Mikelsons  <mm@gemini>
+
+	* pxml2.cl (next-token): when creating a namespace package set use=nil
+
 2003-02-13  Kevin Layer  <layer@crikey>
 
     from jkf:

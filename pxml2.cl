@@ -25,7 +25,7 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.9 2001/03/23 22:10:02 smh Exp $")
+(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.10 2003/04/17 21:51:21 mm Exp $")
 
 ;; state titles can be better chosen and explained
 
@@ -1274,7 +1274,11 @@
 					      (exists (find-package candidate)))
 					 (if* exists
 					    then (incf i)
-					    else (setf new-package (make-package candidate))
+					    else (setf new-package 
+						   ;; use=nil to make sure that the symbol-package
+						   ;; of symbols in this package will identify
+						   ;; the namespace correctly
+						   (make-package candidate :use nil))
 						 (setf (iostruct-uri-to-package tokenbuf)
 						   (acons (parse-uri attrib-value) new-package
 							  (iostruct-uri-to-package tokenbuf)))
