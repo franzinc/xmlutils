@@ -1,3 +1,7 @@
+2000-03-28  John Foderaro  <jkf@tiger.franz.com>
+
+	*  add stream when user supplied read-sequence function is called
+
 2000-03-23  Steve Jacobson <sdj>
 
 	* added state-rawdata lexer state, which can be triggered

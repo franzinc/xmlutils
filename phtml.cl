@@ -326,7 +326,7 @@
 		     then ; fill buffer
 			  (if* (zerop (setq *max-tokenbuf*
 					(if* read-sequence-func
-					   then (funcall read-sequence-func tb)
+					   then (funcall read-sequence-func tb stream)
 					   else (read-sequence tb stream))))
 			     then (setq cur nil) ; eof
 			     else (setq cur 0)))
