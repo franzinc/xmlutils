@@ -49,8 +49,9 @@
 
     (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
 
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.13 2004/01/16 19:31:38 layer Exp $")
+(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.14 2005/08/03 05:17:14 layer Exp $")
 
+(excl::compiler-let ((*record-source-file-info* nil))
 (defparameter *pxml-version* (list 7 0 2))
 (defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))
   (typecase v1
@@ -68,7 +69,7 @@
 		   nil)
 	       *pxml-version*))
     (otherwise (format v1-or-s "PXML Version ~{~A.~A.~A~}" *pxml-version*))))
-    
+)
 
 
 (eval-when (compile eval)

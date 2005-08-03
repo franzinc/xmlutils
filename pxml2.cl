@@ -28,11 +28,13 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.14 2004/01/16 19:31:38 layer Exp $")
+(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.15 2005/08/03 05:17:14 layer Exp $")
 
 ;; state titles can be better chosen and explained
 
+(excl::compiler-let ((*record-source-file-info* nil))
 (defvar *debug-xml* nil)
+)
 
 (defmethod parse-xml ((str string) &key external-callback general-entities parameter-entities
 					content-only uri-to-package)
