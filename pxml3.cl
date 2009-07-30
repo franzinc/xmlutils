@@ -29,6 +29,9 @@
 (defvar *debug-dtd* nil)
 )
 
+;; [bug18475]: Never save source debug info here; it isn't worth it
+(excl::compiler-let ((comp::save-source-level-debug-info-switch nil))
+
 (defun parse-dtd (tokenbuf
 		  external external-callback)
   (declare (optimize (speed 3) (safety 1)))
@@ -53,6 +56,7 @@
 			 (xml-error "<?xml...> is not first in DTD.")))
 	  (otherwise  (when (iostruct-do-entity tokenbuf) (push val guts))))
 	))))
+) ;; compiler-let
 
 (defparameter dtd-parser-states ())
 
@@ -157,6 +161,8 @@
 
 
 
+;; [bug18475]: Never save source debug info here; it isn't worth it
+(excl::compiler-let ((comp::save-source-level-debug-info-switch nil))
 
 (defun next-dtd-token (tokenbuf
 		       external include-count external-callback)
@@ -2068,5 +2074,4 @@
 	   else
 	   (token-error0
 	    "Illegal DTD parameter entity name stating at: " :coll-string))))))
-
-
+) ;; compiler-let

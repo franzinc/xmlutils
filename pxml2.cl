@@ -36,6 +36,9 @@
 (defvar *debug-xml* nil)
 )
 
+;; [bug18475]: Never save source debug info here; it isn't worth it
+(excl::compiler-let ((comp::save-source-level-debug-info-switch nil))
+
 (defmethod parse-xml ((str string) &key external-callback general-entities parameter-entities
 					content-only uri-to-package)
   (declare (optimize (speed 3) (safety 1)))
@@ -49,6 +52,7 @@
   (declare (optimize (speed 3) (safety 1)))
   (pxml-internal0 p nil external-callback general-entities parameter-entities content-only
 		  uri-to-package))
+) ;; compiler-let
 
 (eval-when (compile load eval)
   (defconstant state-docstart 0) ;; looking for XMLdecl, Misc, doctypedecl, 1st element
@@ -57,6 +61,9 @@
   (defconstant state-element-done 3) ;; looking for Misc
   (defconstant state-element-contents 4) ;; looking for element content
   )
+
+;; [bug18475]: Never save source debug info here; it isn't worth it
+(excl::compiler-let ((comp::save-source-level-debug-info-switch nil))
 
 (defun all-xml-whitespace-p (val)
   (dotimes (i (length val) t)
@@ -502,6 +509,7 @@
 	  (t
 	   (error "need to support state:~s token:~s  kind:~s kind2:~s <parse>" state val kind kind2)))
 	))))
+) ;; compiler-let
 
 (eval-when (compile load eval)
   (defconstant state-pcdata 0) ;;looking for < (tag start), & (reference); all else is string data
@@ -566,6 +574,9 @@
   (defconstant state-readtag12 59)
   (defconstant state-attribname2 60)
   )
+
+;; [bug18475]: Never save source debug info here; it isn't worth it
+(excl::compiler-let ((comp::save-source-level-debug-info-switch nil))
 
 (defun next-token (tokenbuf external-callback attlist-data)
   (declare (optimize (speed 3) (safety 1)))
@@ -2027,5 +2038,6 @@
 	  (if* name-data then
 		  (rplacd (assoc name attlist-data) (nreverse new-name-data))
 	     else (setf attlist-data (acons name (nreverse new-name-data) attlist-data))))))))
+) ;; compiler-let
 
 (provide :pxml)
