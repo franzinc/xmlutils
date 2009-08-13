@@ -194,12 +194,11 @@
 		then
 		(when (or (not kind2) (not (all-xml-whitespace-p val)))
 		  (if* (not kind2)
-		       then
-		       (xml-error "An entity reference occured where only whitespace or the first element may occur")
-		       else
-		       (xml-error (concatenate 'string
-					       "unrecognized content '"
-					       (subseq val 0 (min (length val) 40)) "'"))))
+		     then ;; [bug18403]:
+			  (xml-error "An entity reference occurred where only whitespace or the first element may occur")
+		     else (xml-error (concatenate 'string
+				       "unrecognized content '"
+				       (subseq val 0 (min (length val) 40)) "'"))))
 		(setf state state-docstart-misc)
 		elseif (or (symbolp val)
 			   (and (listp val) (symbolp (first val))))
@@ -235,14 +234,13 @@
 		then
 		(when (or (not kind2) (not (all-xml-whitespace-p val)))
 		  (if* (not kind2)
-		       then
-		       (xml-error
-			"An entity reference occured where only whitespace or the first element may occur")
-		       else
-		       (xml-error
-			(concatenate 'string
-				     "unrecognized content '"
-				     (subseq val 0 (min (length val) 40)) "'"))))
+		       then ;; [bug18403]:
+			  (xml-error
+			   "An entity reference occurred where only whitespace or the first element may occur")
+		     else (xml-error
+			   (concatenate 'string
+			     "unrecognized content '"
+			     (subseq val 0 (min (length val) 40)) "'"))))
 		elseif (and (listp val) (eq :comment (first val)))
 		then
 		(when (not content-only) (push val guts))
@@ -294,12 +292,12 @@
 		elseif (eq kind :pcdata)
 		then
 		(when (or (not kind2) (not (all-xml-whitespace-p val)))
-		  (if* (not kind2) then
-		       (xml-error "An entity reference occured where only whitespace or the first element may occur")
-		       else
-		       (xml-error (concatenate 'string
-					       "unrecognized content '"
-					       (subseq val 0 (min (length val) 40)) "'"))))
+		  (if* (not kind2)
+		     then ;; [bug18403]
+			  (xml-error "An entity reference occurred where only whitespace or the first element may occur")
+		     else (xml-error (concatenate 'string
+				       "unrecognized content '"
+				       (subseq val 0 (min (length val) 40)) "'"))))
 		elseif (and (listp val) (eq :DOCTYPE (first val)))
 		then
 		(if* (eq (third val) :SYSTEM) then
@@ -484,10 +482,10 @@
 	   (if* (eq kind :pcdata)
 	      then
 		   (when (or (not kind2) (not (all-xml-whitespace-p val)))
-		     (if* (not kind2) then
-			     (xml-error "An entity reference occured where only whitespace or the first element may occur")
-			else
-			     (xml-error (concatenate 'string
+		     (if* (not kind2)
+			then ;; [bug18403]
+			     (xml-error "An entity reference occurred where only whitespace or the first element may occur")
+			else (xml-error (concatenate 'string
 					  "unrecognized content '"
 					  (subseq val 0 (min (length val) 40)) "'"))))
 	    elseif (eq kind :eof) then

@@ -1,3 +1,7 @@
+2009-08-12  Duane Rettig  <duane@franz.com>
+
+	* pxml2.cl: Fix typos
+
 2009-07-29  Duane Rettig  <duane@franz.com>
 
 	* pxml2.cl: 
