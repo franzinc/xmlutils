@@ -1,3 +1,8 @@
+2010-01-21  Robert Rorschach  <rfr@franz.com>
+
+	* phtml.cl: thread-safe resource management
+	* pxml1.cl: thread-safe resource management
+
 2004-08-05  Kevin Layer  <layer@gemini>
 
 	* pxml0.cl,

@@ -28,18 +28,35 @@
 
 (pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.13 2004/01/16 19:31:38 layer Exp $")
 
+;; go through a list of items and grab one that isn't nil
+;; a successful grab leaves nil in place of the grabbed item
+(defmacro item-from-available-list (source)
+  (let ((cellvar (gensym "cell"))
+	(thisvar (gensym "this")))
+    `(do ((,cellvar ,source (cdr ,cellvar)))
+	 ((null ,cellvar))
+       (let ((,thisvar (car ,cellvar)))
+	 (when (and ,thisvar
+		    (atomic-conditional-setf (car ,cellvar) nil ,thisvar))
+	   (return ,thisvar))))))
+  
+;; go through a list of items and drop an item in an empty stall
+(defmacro item-to-available-list (itemform listform)
+  (let ((cellvar (gensym "cell"))
+	(thisvar (gensym "this")))
+    `(do ((,cellvar ,listform (cdr ,cellvar))
+	  (,thisvar ,itemform))
+	 ((null ,cellvar)
+	 ; toss it away
+	 nil)
+      (when (atomic-conditional-setf (car ,cellvar) ,thisvar nil)
+	(return)))))
+
 (defparameter *collectors* (list nil nil nil nil nil nil nil nil))
 
 (defun put-back-collector (col)
   (declare (optimize (speed 3) (safety 1)))
-  (mp::without-scheduling
-    (do ((cols *collectors* (cdr cols)))
-	((null cols)
-	 ; toss it away
-	 nil)
-      (if* (null (car cols))
-	 then (setf (car cols) col)
-	      (return)))))
+  (item-to-available-list col *collectors*))
 
 (defun pub-id-char-p (char)
   (declare (optimize (speed 3) (safety 1)))
@@ -83,15 +100,7 @@
 
 (defun get-tokenbuf ()
   (declare (optimize (speed 3) (safety 1)))
-  (let (buf)
-    (mp::without-scheduling
-      (do* ((bufs *tokenbufs* (cdr bufs))
-	    (this (car bufs) (car bufs)))
-	  ((null bufs))
-	(if* this
-	   then (setf (car bufs) nil)
-		(setq buf this)
-		(return))))
+  (let ((buf (item-from-available-list *tokenbufs*)))
     (if* buf
        then (setf (tokenbuf-cur buf) 0)
 	    (setf (tokenbuf-max buf) 0)
@@ -231,26 +240,11 @@
 
 (defun put-back-tokenbuf (buf)
   (declare (optimize (speed 3) (safety 1)))
-  (mp::without-scheduling
-    (do ((bufs *tokenbufs* (cdr bufs)))
-	((null bufs)
-	 ; toss it away
-	 nil)
-      (if* (null (car bufs))
-	 then (setf (car bufs) buf)
-	      (return)))))
+  (item-to-available-list buf *tokenbufs*))
 
 (defun get-collector ()
   (declare (optimize (speed 3) (safety 1)))
-  (let (col)
-    (mp::without-scheduling
-      (do* ((cols *collectors* (cdr cols))
-	    (this (car cols) (car cols)))
-	  ((null cols))
-	(if* this
-	   then (setf (car cols) nil)
-		(setq col this)
-		(return))))
+  (let ((col (item-from-available-list *collectors*)))
     (if*  col
        then (setf (collector-next col) 0)
 	    col
