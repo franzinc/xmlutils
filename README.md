@@ -49,9 +49,8 @@ version 6.0 or later.
 Documentation
 -------------
 
-[HTML parser](https://github.com/franzinc/xmlutils/blob/master/phtml.htm)
-and [XML parser](https://github.com/franzinc/xmlutils/blob/master/pxml.htm)
-documentation are included in the repository.
+The HTML parser and XML parser documentation are included in the
+repository as phtml.htm and pxml.htm.
 
 License
 -------
