@@ -957,7 +957,7 @@
 ;;;;;;;;;;; quick and dirty parse
 
 ; the elements with no body and thus no end tag
-(dolist (opt '(:area :base :basefont :bgsound :br :button :col 
+(dolist (opt '(:area :base :basefont :bgsound :br :col 
 	       ;;:colgroup - no, this is an element with contents
 	       :embed :hr :img :frame
 	       :input :isindex :keygen :link :meta 
