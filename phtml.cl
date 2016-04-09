@@ -20,7 +20,6 @@
 ;; Suite 330, Boston, MA  02111-1307  USA
 ;;
 
-;; $Id: phtml.cl,v 1.27 2004/03/30 17:51:32 jkf Exp $
 
 ;; phtml.cl  - parse html
 
