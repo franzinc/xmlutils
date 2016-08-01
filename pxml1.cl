@@ -6,7 +6,6 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml1.cl,v 1.13 2004/01/16 19:31:38 layer Exp $")
 
 ;; go through a list of items and grab one that isn't nil
 ;; a successful grab leaves nil in place of the grabbed item

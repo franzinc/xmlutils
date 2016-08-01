@@ -18,19 +18,6 @@
 
 (in-package :net.xml.parser)
 
-(unless (fboundp 'pxml-dribble-bug-hook)
-  (let ((pxml-version-strings nil))
-    (defun pxml-dribble-bug-hook (stream-or-string)
-      (if (stringp stream-or-string)
-	  (push stream-or-string pxml-version-strings)
-	(loop for string in (reverse pxml-version-strings)
-	    do (write-string string stream-or-string)
-	       (terpri stream-or-string))))
-
-    (push 'pxml-dribble-bug-hook excl:*dribble-bug-hooks*)))
-
-(funcall 'pxml-dribble-bug-hook "$Id: pxml0.cl,v 1.14 2005/08/03 05:17:14 layer Exp $")
-
 (excl::compiler-let ((*record-source-file-info* nil))
 (defparameter *pxml-version* (list 7 0 2))
 (defun pxml-version (&optional v1-or-s v2 v3 error-p &aux (v1 v1-or-s))

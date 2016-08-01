@@ -8,7 +8,6 @@
 
 (in-package :net.xml.parser)
 
-(pxml-dribble-bug-hook "$Id: pxml2.cl,v 1.15 2005/08/03 05:17:14 layer Exp $")
 
 ;; state titles can be better chosen and explained
 
