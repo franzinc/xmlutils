@@ -55,11 +55,7 @@ repository as phtml.htm and pxml.htm.
 License
 -------
 
-The source code is licensed under the terms of the
-[Lisp Lesser GNU Public License](http://opensource.franz.com/preamble.html), 
-known as the LLGPL. The LLGPL consists of a preamble and the
-LGPL. Where these conflict, the preamble takes precedence.  This project is
-referenced in the preamble as the LIBRARY.
+The [LICENSE](https://github.com/franzinc/xmlutils/blob/master/LICENSE).
 
 References
 ----------
